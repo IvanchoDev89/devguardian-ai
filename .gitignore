@@ -1,0 +1,199 @@
+# Laravel
+laravel-backend/.env
+laravel-backend/storage/app/*
+laravel-backend/storage/framework/cache/*
+laravel-backend/storage/framework/sessions/*
+laravel-backend/storage/framework/testing/*
+laravel-backend/storage/framework/views/*
+laravel-backend/storage/logs/*
+laravel-backend/phpunit.xml
+laravel-backend/.phpunit.result.cache
+laravel-backend/Homestead.json
+laravel-backend/Homestead.yaml
+laravel-backend/npm-debug.log
+laravel-backend/yarn-error.log
+
+# Laravel specific files
+laravel-backend/vendor/
+laravel-backend/node_modules/
+laravel-backend/public/hot
+laravel-backend/public/storage
+laravel-backend/storage/*.key
+laravel-backend/.idea
+laravel-backend/.vscode
+laravel-backend/nova
+
+# Python AI Service
+ai-service/.env
+ai-service/__pycache__/
+ai-service/*/__pycache__/
+ai-service/*/*/__pycache__/
+ai-service/*.py[cod]
+ai-service/*$py.class
+ai-service/*.so
+ai-service/.Python
+ai-service/build/
+ai-service/develop-eggs/
+ai-service/dist/
+ai-service/downloads/
+ai-service/eggs/
+ai-service/.eggs/
+ai-service/lib/
+ai-service/lib64/
+ai-service/parts/
+ai-service/sdist/
+ai-service/var/
+ai-service/wheels/
+ai-service/*.egg-info/
+ai-service/.installed.cfg
+ai-service/*.egg
+ai-service/MANIFEST
+ai-service/.pytest_cache/
+ai-service/.coverage
+ai-service/htmlcov/
+ai-service/.tox/
+ai-service/.coverage.*
+ai-service.cache
+ai-service nosetests.xml
+ai-service coverage.xml
+ai-service *.cover
+ai-service .hypothesis/
+ai-service .pybuilder/
+ai-service target/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.nuxt/
+frontend/.output/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/lerna-debug.log*
+frontend/.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Docker
+.dockerignore
+
+# Kubernetes secrets
+kubernetes/secrets/
+*.secret
+
+# Database
+*.sqlite
+*.db
+
+# Backup files
+*.backup
+*.bak
+
+# Local configuration
+config.local.*
+settings.local.*
+
+# Certificates
+*.pem
+*.key
+*.crt
+*.p12
+
+# Local development
+.local
+local/

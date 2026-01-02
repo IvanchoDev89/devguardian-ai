@@ -1,0 +1,193 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-laravel:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: timescale/timescaledb:latest-pg16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: pgsql, redis, bcmath
+        coverage: xdebug
+    
+    - name: Copy environment file
+      run: cp laravel-backend/.env.example laravel-backend/.env
+    
+    - name: Install dependencies
+      working-directory: ./laravel-backend
+      run: composer install --no-progress --prefer-dist --optimize-autoloader
+    
+    - name: Generate application key
+      working-directory: ./laravel-backend
+      run: php artisan key:generate
+    
+    - name: Run migrations
+      working-directory: ./laravel-backend
+      run: php artisan migrate --force
+    
+    - name: Run tests
+      working-directory: ./laravel-backend
+      run: php artisan test --coverage-clover=coverage.xml
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./laravel-backend/coverage.xml
+        flags: laravel
+
+  test-ai-service:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      working-directory: ./ai-service
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Run tests
+      working-directory: ./ai-service
+      run: pytest --cov=app --cov-report=xml
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./ai-service/coverage.xml
+        flags: ai-service
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: ./frontend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Run tests
+      working-directory: ./frontend
+      run: npm run test:unit
+    
+    - name: Build
+      working-directory: ./frontend
+      run: npm run build
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run security audit (PHP)
+      working-directory: ./laravel-backend
+      run: composer audit
+    
+    - name: Run security audit (Python)
+      working-directory: ./ai-service
+      run: pip-audit
+    
+    - name: Run security audit (Node.js)
+      working-directory: ./frontend
+      run: npm audit --audit-level moderate
+
+  build-and-push:
+    needs: [test-laravel, test-ai-service, test-frontend, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build and push Laravel image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./laravel-backend
+        file: ./docker/laravel.Dockerfile
+        push: true
+        tags: |
+          ghcr.io/${{ github.repository }}/laravel:latest
+          ghcr.io/${{ github.repository }}/laravel:${{ github.sha }}
+    
+    - name: Build and push AI service image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./ai-service
+        push: true
+        tags: |
+          ghcr.io/${{ github.repository }}/ai-service:latest
+          ghcr.io/${{ github.repository }}/ai-service:${{ github.sha }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production..."
+        # Add your deployment commands here
+        # kubectl apply -f kubernetes/

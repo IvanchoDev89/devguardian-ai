@@ -1,0 +1,177 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with TimescaleDB
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: devguardian-postgres
+    environment:
+      POSTGRES_DB: devguardian
+      POSTGRES_USER: devguardian
+      POSTGRES_PASSWORD: devguardian_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - devguardian-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devguardian"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cluster
+  redis:
+    image: redis:7-alpine
+    container_name: devguardian-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - devguardian-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Laravel Backend
+  laravel:
+    build:
+      context: ./laravel-backend
+      dockerfile: ../docker/laravel.Dockerfile
+    container_name: devguardian-laravel
+    environment:
+      APP_NAME: "DevGuardian AI"
+      APP_ENV: local
+      APP_KEY: base64:YourAppKeyHere
+      APP_DEBUG: true
+      APP_URL: http://localhost:8000
+      
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: devguardian
+      DB_USERNAME: devguardian
+      DB_PASSWORD: devguardian_password
+      
+      REDIS_HOST: redis
+      REDIS_PASSWORD: null
+      REDIS_PORT: 6379
+      
+      AI_SERVICE_URL: http://ai-service:8000
+      
+      # OAuth credentials (replace with actual values)
+      GITHUB_CLIENT_ID: your_github_client_id
+      GITHUB_CLIENT_SECRET: your_github_client_secret
+      GITLAB_CLIENT_ID: your_gitlab_client_id
+      GITLAB_CLIENT_SECRET: your_gitlab_client_secret
+      
+      # Queue configuration
+      QUEUE_CONNECTION: redis
+      
+      # Octane configuration
+      OCTANE_SERVER: swoole
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./laravel-backend:/var/www/html
+      - laravel_storage:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - devguardian-network
+    command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000
+
+  # Laravel Horizon (Queue Worker)
+  laravel-worker:
+    build:
+      context: ./laravel-backend
+      dockerfile: ../docker/laravel.Dockerfile
+    container_name: devguardian-laravel-worker
+    environment:
+      APP_NAME: "DevGuardian AI"
+      APP_ENV: local
+      APP_KEY: base64:YourAppKeyHere
+      APP_DEBUG: true
+      
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: devguardian
+      DB_USERNAME: devguardian
+      DB_PASSWORD: devguardian_password
+      
+      REDIS_HOST: redis
+      REDIS_PASSWORD: null
+      REDIS_PORT: 6379
+      
+      AI_SERVICE_URL: http://ai-service:8000
+      
+      QUEUE_CONNECTION: redis
+    volumes:
+      - ./laravel-backend:/var/www/html
+      - laravel_storage:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - devguardian-network
+    command: php artisan horizon
+
+  # AI Service
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: devguardian-ai-service
+    environment:
+      PORT: 8000
+      HOST: 0.0.0.0
+      REDIS_URL: redis://redis:6379
+      LOG_LEVEL: info
+    ports:
+      - "8001:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - devguardian-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: devguardian-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/ssl:/etc/nginx/ssl
+    depends_on:
+      - laravel
+      - ai-service
+    networks:
+      - devguardian-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  laravel_storage:
+
+networks:
+  devguardian-network:
+    driver: bridge
