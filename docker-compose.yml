@@ -48,7 +48,7 @@ services:
       APP_NAME: "DevGuardian AI"
       APP_ENV: local
       APP_KEY: base64:YourAppKeyHere
-      APP_DEBUG: true
+      APP_DEBUG: "true"
       APP_URL: http://localhost:8000
       
       DB_CONNECTION: pgsql
@@ -99,7 +99,7 @@ services:
       APP_NAME: "DevGuardian AI"
       APP_ENV: local
       APP_KEY: base64:YourAppKeyHere
-      APP_DEBUG: true
+      APP_DEBUG: "true"
       
       DB_CONNECTION: pgsql
       DB_HOST: postgres

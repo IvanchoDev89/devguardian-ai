@@ -1,20 +1,48 @@
+# AI Service
+ai-service/venv/
+ai-service/__pycache__/
+ai-service/*/__pycache__/
+ai-service/*.pyc
+ai-service/*/*.pyc
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.nuxt/
+frontend/.output/
+frontend/.vite/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/lerna-debug.log*
+frontend/.DS_Store
+
 # Laravel
-laravel-backend/.env
-laravel-backend/storage/app/*
+laravel-backend/vendor/
+laravel-backend/node_modules/
+laravel-backend/storage/*.key
+laravel-backend/storage/app/public/*
 laravel-backend/storage/framework/cache/*
 laravel-backend/storage/framework/sessions/*
 laravel-backend/storage/framework/testing/*
 laravel-backend/storage/framework/views/*
 laravel-backend/storage/logs/*
-laravel-backend/phpunit.xml
-laravel-backend/.phpunit.result.cache
-laravel-backend/Homestead.json
+laravel-backend/bootstrap/cache/config.php
+laravel-backend/bootstrap/cache/routes-v7.php
+laravel-backend/bootstrap/cache/*.phpjson
 laravel-backend/Homestead.yaml
 laravel-backend/npm-debug.log
 laravel-backend/yarn-error.log
 
 # Laravel specific files
-laravel-backend/vendor/
+laravel-backend/.env
+laravel-backend/.phpunit.result.cache
+laravel-backend/Homestead.json
+laravel-backend/nova
 laravel-backend/node_modules/
 laravel-backend/public/hot
 laravel-backend/public/storage
