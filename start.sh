@@ -13,21 +13,36 @@ fi
 echo "✅ Docker is running"
 echo ""
 
+# Clean up any existing containers
+echo "🧹 Cleaning up existing containers..."
+sudo docker-compose down -v 2>/dev/null || true
+
 # Start the database first
 echo "🗄️ Starting PostgreSQL database..."
 sudo docker-compose up -d postgres
 
 # Wait for database to be ready
 echo "⏳ Waiting for database to be ready..."
-sleep 10
+for i in {1..30}; do
+    if sudo docker-compose exec -T postgres pg_isready -U devguardian > /dev/null 2>&1; then
+        echo "✅ Database is ready"
+        break
+    fi
+    echo "Waiting for database... ($i/30)"
+    sleep 2
+done
 
-# Check if database is ready
-if sudo docker-compose exec -T postgres pg_isready -U devguardian > /dev/null 2>&1; then
-    echo "✅ Database is ready"
-else
-    echo "❌ Database failed to start"
+# Double check database connection
+if ! sudo docker-compose exec -T postgres pg_isready -U devguardian > /dev/null 2>&1; then
+    echo "❌ Database failed to start properly"
+    echo "🔍 Checking database logs:"
+    sudo docker-compose logs postgres | tail -10
     exit 1
 fi
+
+# Create database if it doesn't exist
+echo "🔧 Setting up database..."
+sudo docker-compose exec -T postgres psql -U devguardian -c "CREATE DATABASE IF NOT EXISTS devguardian;" 2>/dev/null || true
 
 # Start Redis
 echo "🚀 Starting Redis..."
@@ -43,19 +58,21 @@ else
     exit 1
 fi
 
-# Start Laravel backend
-echo "🐘 Starting Laravel backend..."
+# Run Laravel migrations
+echo "🐘 Running Laravel migrations..."
 sudo docker-compose up -d laravel
+sleep 10
 
-# Wait for Laravel
-sleep 15
-
-# Check Laravel health
-if curl -s http://localhost:8000/health > /dev/null 2>&1; then
-    echo "✅ Laravel backend is ready"
-else
-    echo "⚠️ Laravel backend might still be starting..."
-fi
+# Wait for Laravel to be ready and run migrations
+for i in {1..20}; do
+    if sudo docker-compose exec -T laravel php artisan migrate:status > /dev/null 2>&1; then
+        echo "✅ Laravel is ready, running migrations..."
+        sudo docker-compose exec -T laravel php artisan migrate --force
+        break
+    fi
+    echo "Waiting for Laravel... ($i/20)"
+    sleep 3
+done
 
 # Start AI service
 echo "🤖 Starting AI service..."
@@ -93,7 +110,10 @@ echo "🔍 Check system status:"
 echo "sudo docker-compose ps"
 echo ""
 echo "🛑 Stop system:"
-echo "sudo docker-compose down"
+echo "./stop.sh"
 echo ""
 echo "📊 View logs:"
 echo "sudo docker-compose logs -f [service-name]"
+echo ""
+echo "🗄️ Database connection test:"
+echo "sudo docker-compose exec postgres psql -U devguardian -d devguardian -c \"SELECT version();\""
