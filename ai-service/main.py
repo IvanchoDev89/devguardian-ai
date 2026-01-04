@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import time
 import os
 
-from core.schemas import (
+from .core.schemas import (
     CodeFixRequest,
     GeneratedFix,
     ValidationResult,
@@ -13,8 +13,8 @@ from core.schemas import (
     ErrorResponse,
     HealthResponse
 )
-from core.services.ai_fix_service import MockAIFixService
-from core.utils import (
+from .core.services.ai_fix_service import MockAIFixService
+from .core.utils import (
     setup_logging,
     get_correlation_id,
     CorrelationId,

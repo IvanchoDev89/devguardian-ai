@@ -151,6 +151,20 @@ services:
       timeout: 10s
       retries: 3
 
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: devguardian-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - laravel
+      - ai-service
+    networks:
+      - devguardian-network
+
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
@@ -164,6 +178,7 @@ services:
     depends_on:
       - laravel
       - ai-service
+      - frontend
     networks:
       - devguardian-network
 
