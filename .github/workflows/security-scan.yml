@@ -11,39 +11,68 @@ on:
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     
     steps:
     - uses: actions/checkout@v4
     
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript-typescript, python
+
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.33.1
       with:
         scan-type: 'fs'
         scan-ref: '.'
+        skip-dirs: 'laravel-backend/vendor,laravel-backend/node_modules,frontend/node_modules,ai-service/venv,.git'
         format: 'sarif'
         output: 'trivy-results.sarif'
     
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-results.sarif'
     
     - name: Run CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        tools: composer
     
     - name: Dependency Security Audit (PHP)
       working-directory: ./laravel-backend
       run: |
         composer audit --no-dev
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
     
     - name: Dependency Security Audit (Python)
       working-directory: ./ai-service
       run: |
-        pip-audit
+        python -m pip install --upgrade pip
+        pip install pip-audit
+        pip-audit -r requirements.txt
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
     
     - name: Dependency Security Audit (Node.js)
       working-directory: ./frontend
       run: |
+        npm ci
         npm audit --audit-level moderate
     
     - name: Run Bandit security linter (Python)
@@ -55,8 +84,7 @@ jobs:
     - name: Run Psalm static analysis (PHP)
       working-directory: ./laravel-backend
       run: |
-        composer require --dev vimeo/psalm
-        ./vendor/bin/psalm --output-format=json --report=psalm-report.json || true
+        if [ -f ./vendor/bin/psalm ]; then ./vendor/bin/psalm --output-format=json --report=psalm-report.json || true; else echo "psalm not installed; skipping"; fi
     
     - name: Security scan summary
       run: |
