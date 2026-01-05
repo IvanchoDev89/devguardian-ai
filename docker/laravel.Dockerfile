@@ -47,10 +47,10 @@ WORKDIR /var/www/html
 COPY --chown=www-data:www-data . /var/www/html
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# Install NPM dependencies and build assets
-RUN npm install && npm run build
+# Install NPM dependencies and build assets (commented for now)
+# RUN npm install && npm run build
 
 # Create storage directories
 RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views \

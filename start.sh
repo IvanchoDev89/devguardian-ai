@@ -16,6 +16,8 @@ echo ""
 # Clean up any existing containers
 echo "🧹 Cleaning up existing containers..."
 sudo docker-compose down -v 2>/dev/null || true
+sudo docker stop devguardian-postgres 2>/dev/null || true
+sudo docker rm devguardian-postgres 2>/dev/null || true
 
 # Start the database first
 echo "🗄️ Starting PostgreSQL database..."
@@ -24,7 +26,7 @@ sudo docker-compose up -d postgres
 # Wait for database to be ready
 echo "⏳ Waiting for database to be ready..."
 for i in {1..30}; do
-    if sudo docker-compose exec -T postgres pg_isready -U devguardian > /dev/null 2>&1; then
+    if sudo docker exec devguardian-postgres pg_isready -U devguardian > /dev/null 2>&1; then
         echo "✅ Database is ready"
         break
     fi
@@ -33,7 +35,7 @@ for i in {1..30}; do
 done
 
 # Double check database connection
-if ! sudo docker-compose exec -T postgres pg_isready -U devguardian > /dev/null 2>&1; then
+if ! sudo docker exec devguardian-postgres pg_isready -U devguardian > /dev/null 2>&1; then
     echo "❌ Database failed to start properly"
     echo "🔍 Checking database logs:"
     sudo docker-compose logs postgres | tail -10
