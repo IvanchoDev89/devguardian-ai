@@ -36,7 +36,13 @@ jobs:
       
       - name: Generate application key
         working-directory: ./laravel-backend
-        run: php artisan key:generate
+        run: php artisan key:generate --force
+      
+      - name: Clear caches
+        working-directory: ./laravel-backend
+        run: |
+          php artisan config:clear
+          php artisan cache:clear
       
       - name: Run migrations
         working-directory: ./laravel-backend
@@ -67,7 +73,9 @@ jobs:
         working-directory: ./ai-service
         run: |
           python3 -m compileall -q .
-          PYTHONPATH=. python3 -c "import app.core.utils; import app.core.services.ai_fix_service; import main; print('ai-service ok')"
+          python3 -c "import sys; sys.path.insert(0, '.'); import app.core.utils; print('utils OK')"
+          python3 -c "import sys; sys.path.insert(0, '.'); import app.core.services.ai_fix_service; print('ai_fix_service OK')"
+          python3 -c "import sys; sys.path.insert(0, '.'); import main; print('main OK')"
 
   test-frontend:
     runs-on: ubuntu-latest
@@ -84,11 +92,11 @@ jobs:
       
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm ci --no-audit --no-fund
       
       - name: Type check
         working-directory: ./frontend
-        run: npx vue-tsc --noEmit
+        run: npm run type-check
       
       - name: Build
         working-directory: ./frontend
