@@ -9,38 +9,39 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Create TimescaleDB hypertable for security events
-        DB::statement("
-            CREATE TABLE security_events (
-                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                organization_id UUID NOT NULL,
-                repository_id UUID,
-                vulnerability_id UUID,
-                event_type VARCHAR(100) NOT NULL,
-                event_data JSONB,
-                severity VARCHAR(20),
-                timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                metadata JSONB,
-                created_at TIMESTAMPTZ DEFAULT NOW(),
-                updated_at TIMESTAMPTZ DEFAULT NOW()
-            )
-        ");
+        Schema::create('security_events', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('organization_id');
+            $table->uuid('repository_id')->nullable();
+            $table->uuid('vulnerability_id')->nullable();
+            $table->string('event_type', 100);
+            $table->json('event_data')->nullable();
+            $table->string('severity', 20)->nullable();
+            $table->timestamp('timestamp');
+            $table->json('metadata')->nullable();
+            $table->timestamps();
+            
+            $table->index(['organization_id']);
+            $table->index(['repository_id']);
+            $table->index(['vulnerability_id']);
+            $table->index(['event_type']);
+            $table->index(['timestamp']);
+            $table->index(['severity']);
+        });
         
-        // Create indexes
-        DB::statement('CREATE INDEX idx_security_events_organization_id ON security_events (organization_id)');
-        DB::statement('CREATE INDEX idx_security_events_repository_id ON security_events (repository_id)');
-        DB::statement('CREATE INDEX idx_security_events_vulnerability_id ON security_events (vulnerability_id)');
-        DB::statement('CREATE INDEX idx_security_events_type ON security_events (event_type)');
-        DB::statement('CREATE INDEX idx_security_events_timestamp ON security_events (timestamp)');
-        DB::statement('CREATE INDEX idx_security_events_severity ON security_events (severity)');
-        
-        // Convert to TimescaleDB hypertable
-        DB::statement("SELECT create_hypertable('security_events', 'timestamp', chunk_time_interval => INTERVAL '1 day')");
-        
-        // Create foreign key constraints
-        DB::statement('ALTER TABLE security_events ADD CONSTRAINT fk_security_events_organization_id FOREIGN KEY (organization_id) REFERENCES organizations (id) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE security_events ADD CONSTRAINT fk_security_events_repository_id FOREIGN KEY (repository_id) REFERENCES repositories (id) ON DELETE CASCADE');
-        DB::statement('ALTER TABLE security_events ADD CONSTRAINT fk_security_events_vulnerability_id FOREIGN KEY (vulnerability_id) REFERENCES vulnerabilities (id) ON DELETE CASCADE');
+        // Add foreign key constraints only if using PostgreSQL
+        if (config('database.default') === 'pgsql') {
+            DB::statement('ALTER TABLE security_events ADD CONSTRAINT fk_security_events_organization_id FOREIGN KEY (organization_id) REFERENCES organizations (id) ON DELETE CASCADE');
+            DB::statement('ALTER TABLE security_events ADD CONSTRAINT fk_security_events_repository_id FOREIGN KEY (repository_id) REFERENCES repositories (id) ON DELETE CASCADE');
+            DB::statement('ALTER TABLE security_events ADD CONSTRAINT fk_security_events_vulnerability_id FOREIGN KEY (vulnerability_id) REFERENCES vulnerabilities (id) ON DELETE CASCADE');
+            
+            // Convert to TimescaleDB hypertable if TimescaleDB extension is available
+            try {
+                DB::statement("SELECT create_hypertable('security_events', 'timestamp', chunk_time_interval => INTERVAL '1 day')");
+            } catch (\Exception $e) {
+                // TimescaleDB not available, continue with regular table
+            }
+        }
     }
 
     public function down(): void

@@ -8,23 +8,32 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('organization_id')->nullable();
-            $table->string('name', 255);
-            $table->string('email', 255)->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password', 255);
-            $table->enum('role', ['admin', 'member', 'viewer'])->default('member');
-            $table->boolean('is_active')->default(true);
-            $table->jsonb('preferences')->nullable();
-            $table->rememberToken();
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            // Add new columns if they don't exist
+            if (!Schema::hasColumn('users', 'organization_id')) {
+                $table->uuid('organization_id')->nullable()->after('id');
+            }
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->enum('role', ['admin', 'member', 'viewer'])->default('member')->after('password');
+            }
+            if (!Schema::hasColumn('users', 'is_active')) {
+                $table->boolean('is_active')->default(true)->after('role');
+            }
+            if (!Schema::hasColumn('users', 'preferences')) {
+                $table->json('preferences')->nullable()->after('is_active');
+            }
             
-            $table->foreign('organization_id')->references('id')->on('organizations')->onDelete('set null');
+            // Add indexes (SQLite will ignore if they already exist)
             $table->index(['organization_id', 'role']);
             $table->index(['email']);
         });
+        
+        // Add foreign key only for PostgreSQL
+        if (config('database.default') === 'pgsql') {
+            Schema::table('users', function (Blueprint $table) {
+                $table->foreign('organization_id')->references('id')->on('organizations')->onDelete('set null');
+            });
+        }
     }
 
     public function down(): void

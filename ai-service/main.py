@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException, Depends, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import time
 import os
 
-from .core.schemas import (
+from app.core.schemas import (
     CodeFixRequest,
     GeneratedFix,
     ValidationResult,
@@ -13,15 +14,15 @@ from .core.schemas import (
     ErrorResponse,
     HealthResponse
 )
-from .core.services.ai_fix_service import MockAIFixService
-from .core.utils import (
+from app.core.services.ai_fix_service import AIFixServiceInterface, MockAIFixService
+from app.core.utils import (
     setup_logging,
-    get_correlation_id,
     CorrelationId,
     log_request,
     log_response,
     log_error,
-    AIServiceError
+    AIServiceError,
+    metrics
 )
 
 

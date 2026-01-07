@@ -31,7 +31,7 @@ class AIFixServiceInterface(ABC):
     @abstractmethod
     async def analyze_vulnerability(self, request: AnalyzeVulnerabilityRequest, correlation_id: str) -> VulnerabilityAnalysis:
         """Analyze a vulnerability to understand root cause."""
-    pass
+        pass
 
 
 class MockAIFixService(AIFixServiceInterface):
@@ -191,5 +191,3 @@ class MockAIFixService(AIFixServiceInterface):
             raise AIServiceError(f"Failed to analyze vulnerability: {str(e)}")
 
 
-# Import asyncio for the mock service
-import asyncio

@@ -31,15 +31,14 @@ return new class extends Migration
             $table->index(['severity']);
             $table->index(['cvss_score']);
             $table->index(['detected_at']);
-            
-            // Partitioning setup (will be handled in PostgreSQL directly)
-            $table->timestamp('created_at')->useCurrent();
         });
         
-        // Create partitioned table function for monthly partitions
-        DB::statement('CREATE TABLE vulnerabilities (LIKE public.vulnerabilities INCLUDING ALL)');
-        DB::statement('ALTER TABLE vulnerabilities ADD COLUMN partition_month DATE GENERATED ALWAYS AS (date_trunc(\'month\', created_at)) STORED');
-        DB::statement('ALTER TABLE vulnerabilities PARTITION BY RANGE (partition_month)');
+        // Create partitioned table function for monthly partitions (PostgreSQL only)
+        if (config('database.default') === 'pgsql') {
+            DB::statement('CREATE TABLE IF NOT EXISTS vulnerabilities_partitioned (LIKE public.vulnerabilities INCLUDING ALL)');
+            DB::statement('ALTER TABLE vulnerabilities_partitioned ADD COLUMN IF NOT EXISTS partition_month DATE GENERATED ALWAYS AS (date_trunc(\'month\', created_at)) STORED');
+            DB::statement('ALTER TABLE vulnerabilities_partitioned PARTITION BY RANGE (partition_month)');
+        }
     }
 
     public function down(): void
