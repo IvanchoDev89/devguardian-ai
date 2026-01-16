@@ -63,10 +63,13 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install -r requirements-ci.txt
       
-      - name: Basic syntax check
+      - name: Basic import and compile checks
         working-directory: ./ai-service
         run: |
-          python3 -m py_compile main.py
+          python3 -m compileall -q .
+          python3 -c "import sys; sys.path.insert(0, '.'); import app.core.utils; print('utils OK')"
+          python3 -c "import sys; sys.path.insert(0, '.'); import app.core.services.ai_fix_service; print('ai_fix_service OK')"
+          python3 -c "import sys; sys.path.insert(0, '.'); import main; print('main OK')"
           python3 -c "import fastapi; print('FastAPI available')"
           python3 -c "import structlog; print('Structlog available')"
 
