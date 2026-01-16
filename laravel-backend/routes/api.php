@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\RepositoryController;
 use App\Http\Controllers\Api\VulnerabilityController;
 use App\Http\Controllers\Api\VulnerabilityScannerController;
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
     // Organizations
     Route::apiResource('organizations', OrganizationController::class);
     

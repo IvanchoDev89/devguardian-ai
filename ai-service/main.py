@@ -21,7 +21,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:8000"],  # Frontend and backend URLs
+    allow_origins=["http://localhost:3000", "http://localhost:8001"],  # Frontend and backend URLs
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
@@ -87,8 +87,8 @@ async def global_exception_handler(request, exc):
     )
 
 if __name__ == "__main__":
-    # Get port from environment variable or default to 8001
-    port = int(os.getenv("PORT", 8001))
+    # Get port from environment variable or default to 8000
+    port = int(os.getenv("PORT", 8000))
     
     # Run application
     uvicorn.run(

@@ -145,8 +145,28 @@ export const aiFixApi = {
     return aiApiClient.get('/api/ai-fix')
   },
 
-  async generateAiFix(vulnerabilityId: string) {
-    return aiApiClient.post('/api/ai-fix/generate', { vulnerability_id: vulnerabilityId })
+  async generateFix(file: File, vulnerabilityType: string = 'general') {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('vulnerability_type', vulnerabilityType)
+    
+    try {
+      const response = await fetch(`${AI_API_BASE_URL}/api/ai-fix/generate-fix`, {
+        method: 'POST',
+        body: formData,
+      })
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return { data }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Unknown error' }
+    }
+  },
+
+  async validateFix(fixId: string) {
+    return aiApiClient.post('/api/ai-fix/validate-fix', { fix_id: fixId })
   },
 
   async applyAiFix(fixId: string) {

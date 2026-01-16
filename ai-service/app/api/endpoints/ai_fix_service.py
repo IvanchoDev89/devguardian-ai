@@ -6,6 +6,7 @@ import os
 import shutil
 from datetime import datetime
 import uuid
+import magic
 
 router = APIRouter(prefix="/api/ai-fix", tags=["ai-fix"])
 
@@ -19,10 +20,31 @@ async def generate_fix(
     Generate AI-powered fix for detected vulnerability
     """
     try:
+        # Validate file type and size
+        if file.size > 10 * 1024 * 1024:  # 10MB limit
+            raise HTTPException(status_code=413, detail="File too large (max 10MB)")
+        
+        # Check file extension
+        allowed_extensions = {'.py', '.js', '.ts', '.php', '.java', '.cpp', '.c', '.go', '.rs'}
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in allowed_extensions:
+            raise HTTPException(status_code=400, detail="File type not allowed")
+        
         # Create temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
-            shutil.copyfileobj(file.file, temp_file)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_file:
+            content = await file.read()
+            temp_file.write(content)
             temp_file_path = temp_file.name
+        
+        # Validate file content type
+        try:
+            file_type = magic.from_file(temp_file_path, mime=True)
+            if not file_type.startswith('text/') and not file_type in ['application/x-php', 'application/x-httpd-php']:
+                os.unlink(temp_file_path)
+                raise HTTPException(status_code=400, detail="Invalid file content type")
+        except:
+            # Fallback if python-magic is not available
+            pass
         
         # Read file content
         with open(temp_file_path, 'r', encoding='utf-8', errors='ignore') as f:
