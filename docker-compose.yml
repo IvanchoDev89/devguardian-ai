@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: devguardian
       POSTGRES_PASSWORD: secure_password_123
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
     command: redis-server --appendonly yes
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -57,14 +57,14 @@ services:
       
       DB_CONNECTION: pgsql
       DB_HOST: postgres
-      DB_PORT: 5432
+      DB_PORT: 5433
       DB_DATABASE: devguardian_ai
       DB_USERNAME: devguardian
       DB_PASSWORD: secure_password_123
       
       REDIS_HOST: redis
       REDIS_PASSWORD: null
-      REDIS_PORT: 6379
+      REDIS_PORT: 6380
       
       AI_SERVICE_URL: http://ai-service:8000
       
@@ -108,14 +108,14 @@ services:
       
       DB_CONNECTION: pgsql
       DB_HOST: postgres
-      DB_PORT: 5432
+      DB_PORT: 5433
       DB_DATABASE: devguardian_ai
       DB_USERNAME: devguardian
       DB_PASSWORD: secure_password_123
       
       REDIS_HOST: redis
       REDIS_PASSWORD: null
-      REDIS_PORT: 6379
+      REDIS_PORT: 6380
       
       AI_SERVICE_URL: http://ai-service:8000
       
@@ -143,10 +143,10 @@ services:
       PORT: 8000
       HOST: 0.0.0.0
       ENVIRONMENT: development
-      DEBUG: true
+      DEBUG: "true"
       REDIS_URL: redis://redis:6379
       LOG_LEVEL: info
-      STRUCTURED_LOGGING: true
+      STRUCTURED_LOGGING: "true"
       MODEL_PATH: /app/models
       MODEL_VERSION: v1.0
       MAX_CONCURRENT_REQUESTS: 10
@@ -157,7 +157,7 @@ services:
       WORKER_PROCESSES: 4
       MAX_REQUESTS_PER_WORKER: 1000
       REQUEST_TIMEOUT: 300
-      METRICS_ENABLED: true
+      METRICS_ENABLED: "true"
       HEALTH_CHECK_INTERVAL: 30
     volumes:
       - ./ai-service:/app
