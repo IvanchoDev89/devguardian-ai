@@ -25,7 +25,7 @@ sudo docker run -d \
     --name devguardian-postgres \
     -e POSTGRES_DB=devguardian \
     -e POSTGRES_USER=devguardian \
-    -e POSTGRES_PASSWORD=devguardian_password \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
     -p 5432:5432 \
     timescale/timescaledb:latest-pg16
 

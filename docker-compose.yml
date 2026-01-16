@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: devguardian_ai
       POSTGRES_USER: devguardian
-      POSTGRES_PASSWORD: secure_password_123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
     volumes:
@@ -60,7 +60,7 @@ services:
       DB_PORT: 5433
       DB_DATABASE: devguardian_ai
       DB_USERNAME: devguardian
-      DB_PASSWORD: secure_password_123
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
       
       REDIS_HOST: redis
       REDIS_PASSWORD: null
@@ -111,7 +111,7 @@ services:
       DB_PORT: 5433
       DB_DATABASE: devguardian_ai
       DB_USERNAME: devguardian
-      DB_PASSWORD: secure_password_123
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
       
       REDIS_HOST: redis
       REDIS_PASSWORD: null
