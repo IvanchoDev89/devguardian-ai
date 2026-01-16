@@ -35,4 +35,39 @@ return [
         ],
     ],
 
+    // AI Service Configuration
+    'ai_service' => [
+        'url' => env('AI_SERVICE_URL', 'http://localhost:8003'),
+        'timeout' => env('AI_SERVICE_TIMEOUT', 30),
+        'secret_key' => env('AI_SERVICE_SECRET_KEY'),
+        'endpoints' => [
+            'scan' => '/api/security/scan',
+            'batch_scan' => '/api/security/scan/batch',
+            'generate_fix' => '/api/ai-fix/generate-fix',
+            'health' => '/health'
+        ]
+    ],
+
+    // OAuth Configuration
+    'oauth' => [
+        'github' => [
+            'client_id' => env('GITHUB_CLIENT_ID'),
+            'client_secret' => env('GITHUB_CLIENT_SECRET'),
+            'redirect' => env('GITHUB_REDIRECT_URI'),
+            'scope' => 'repo user:email',
+        ],
+        'gitlab' => [
+            'client_id' => env('GITLAB_CLIENT_ID'),
+            'client_secret' => env('GITLAB_CLIENT_SECRET'),
+            'redirect' => env('GITLAB_REDIRECT_URI'),
+            'scope' => 'read_repository read_user profile email',
+        ],
+        'bitbucket' => [
+            'client_id' => env('BITBUCKET_CLIENT_ID'),
+            'client_secret' => env('BITBUCKET_CLIENT_SECRET'),
+            'redirect' => env('BITBUCKET_REDIRECT_URI'),
+            'scope' => 'repository:write account',
+        ],
+    ],
+
 ];

@@ -11,7 +11,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\LoginViewResponse::class,
+            fn() => new class implements \Laravel\Fortify\Contracts\LoginViewResponse {
+                public function toResponse($request) {
+                    return response()->view('auth.login');
+                }
+            }
+        );
     }
 
     /**

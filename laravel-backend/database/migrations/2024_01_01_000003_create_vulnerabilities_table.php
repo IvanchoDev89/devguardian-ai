@@ -33,12 +33,7 @@ return new class extends Migration
             $table->index(['detected_at']);
         });
         
-        // Create partitioned table function for monthly partitions (PostgreSQL only)
-        if (config('database.default') === 'pgsql') {
-            DB::statement('CREATE TABLE IF NOT EXISTS vulnerabilities_partitioned (LIKE public.vulnerabilities INCLUDING ALL)');
-            DB::statement('ALTER TABLE vulnerabilities_partitioned ADD COLUMN IF NOT EXISTS partition_month DATE GENERATED ALWAYS AS (date_trunc(\'month\', created_at)) STORED');
-            DB::statement('ALTER TABLE vulnerabilities_partitioned PARTITION BY RANGE (partition_month)');
-        }
+        // Note: PostgreSQL partitioning will be implemented separately
     }
 
     public function down(): void

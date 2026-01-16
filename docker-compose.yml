@@ -5,10 +5,11 @@ services:
   postgres:
     image: timescale/timescaledb:latest-pg16
     container_name: devguardian-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: devguardian
+      POSTGRES_DB: devguardian_ai
       POSTGRES_USER: devguardian
-      POSTGRES_PASSWORD: devguardian_password
+      POSTGRES_PASSWORD: secure_password_123
     ports:
       - "5432:5432"
     volumes:
@@ -17,7 +18,7 @@ services:
     networks:
       - devguardian-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U devguardian"]
+      test: ["CMD-SHELL", "pg_isready -U devguardian -d devguardian_ai"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,6 +27,8 @@ services:
   redis:
     image: redis:7-alpine
     container_name: devguardian-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
     volumes:
@@ -44,19 +47,20 @@ services:
       context: ./laravel-backend
       dockerfile: ../docker/laravel.Dockerfile
     container_name: devguardian-laravel
+    restart: unless-stopped
     environment:
       APP_NAME: "DevGuardian AI"
       APP_ENV: local
-      APP_KEY: base64:YourAppKeyHere
+      APP_KEY: ${APP_KEY}
       APP_DEBUG: "true"
-      APP_URL: http://localhost:8000
+      APP_URL: http://localhost:8001
       
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_DATABASE: devguardian
+      DB_DATABASE: devguardian_ai
       DB_USERNAME: devguardian
-      DB_PASSWORD: devguardian_password
+      DB_PASSWORD: secure_password_123
       
       REDIS_HOST: redis
       REDIS_PASSWORD: null
@@ -65,10 +69,10 @@ services:
       AI_SERVICE_URL: http://ai-service:8000
       
       # OAuth credentials (replace with actual values)
-      GITHUB_CLIENT_ID: your_github_client_id
-      GITHUB_CLIENT_SECRET: your_github_client_secret
-      GITLAB_CLIENT_ID: your_gitlab_client_id
-      GITLAB_CLIENT_SECRET: your_gitlab_client_secret
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      GITLAB_CLIENT_ID: ${GITLAB_CLIENT_ID}
+      GITLAB_CLIENT_SECRET: ${GITLAB_CLIENT_SECRET}
       
       # Queue configuration
       QUEUE_CONNECTION: redis
@@ -76,7 +80,7 @@ services:
       # Octane configuration
       OCTANE_SERVER: swoole
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - ./laravel-backend:/var/www/html
       - laravel_storage:/var/www/html/storage
@@ -95,18 +99,19 @@ services:
       context: ./laravel-backend
       dockerfile: ../docker/laravel.Dockerfile
     container_name: devguardian-laravel-worker
+    restart: unless-stopped
     environment:
       APP_NAME: "DevGuardian AI"
       APP_ENV: local
-      APP_KEY: base64:YourAppKeyHere
+      APP_KEY: ${APP_KEY}
       APP_DEBUG: "true"
       
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_DATABASE: devguardian
+      DB_DATABASE: devguardian_ai
       DB_USERNAME: devguardian
-      DB_PASSWORD: devguardian_password
+      DB_PASSWORD: secure_password_123
       
       REDIS_HOST: redis
       REDIS_PASSWORD: null
@@ -133,13 +138,32 @@ services:
       context: ./ai-service
       dockerfile: Dockerfile
     container_name: devguardian-ai-service
+    restart: unless-stopped
     environment:
       PORT: 8000
       HOST: 0.0.0.0
+      ENVIRONMENT: development
+      DEBUG: true
       REDIS_URL: redis://redis:6379
       LOG_LEVEL: info
+      STRUCTURED_LOGGING: true
+      MODEL_PATH: /app/models
+      MODEL_VERSION: v1.0
+      MAX_CONCURRENT_REQUESTS: 10
+      SECRET_KEY: ${AI_SERVICE_SECRET_KEY}
+      CORS_ORIGINS: '["http://localhost:3000", "http://localhost:8001"]'
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY}
+      WORKER_PROCESSES: 4
+      MAX_REQUESTS_PER_WORKER: 1000
+      REQUEST_TIMEOUT: 300
+      METRICS_ENABLED: true
+      HEALTH_CHECK_INTERVAL: 30
+    volumes:
+      - ./ai-service:/app
+      - ai_models:/app/models
     ports:
-      - "8001:8000"
+      - "8000:8000"
     depends_on:
       redis:
         condition: service_healthy
@@ -157,8 +181,15 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: devguardian-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:8001
+      VITE_AI_SERVICE_URL: http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     ports:
-      - "3000:80"
+      - "3000:3000"
     depends_on:
       - laravel
       - ai-service
@@ -169,6 +200,7 @@ services:
   nginx:
     image: nginx:alpine
     container_name: devguardian-nginx
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
@@ -184,8 +216,13 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
   laravel_storage:
+    driver: local
+  ai_models:
+    driver: local
 
 networks:
   devguardian-network:
