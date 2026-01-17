@@ -146,9 +146,7 @@ jobs:
       
       - name: Run security audit (Node.js)
         working-directory: ./frontend
-        run: |
-          npm ci
-          npm audit --audit-level moderate
+        run: npm audit --audit-level moderate
 
   build-and-push:
     needs: [test-laravel, test-ai-service, test-frontend, security-scan]
