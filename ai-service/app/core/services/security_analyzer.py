@@ -2,14 +2,47 @@ import torch
 import torch.nn as nn
 import numpy as np
 import pandas as pd
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from transformers import AutoTokenizer, AutoModel
 import re
 import json
 from datetime import datetime
+import hashlib
+from dataclasses import dataclass
+from enum import Enum
+
+class VulnerabilityType(Enum):
+    SQL_INJECTION = "sql_injection"
+    XSS = "xss"
+    PATH_TRAVERSAL = "path_traversal"
+    COMMAND_INJECTION = "command_injection"
+    INSECURE_DESERIALIZATION = "insecure_deserialization"
+    WEAK_CRYPTOGRAPHY = "weak_cryptography"
+    INFORMATION_DISCLOSURE = "information_disclosure"
+    BROKEN_AUTHENTICATION = "broken_authentication"
+
+class SeverityLevel(Enum):
+    CRITICAL = "critical"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+    INFO = "info"
+
+@dataclass
+class VulnerabilityFinding:
+    type: VulnerabilityType
+    severity: SeverityLevel
+    confidence: float
+    line_number: int
+    column: int
+    description: str
+    code_snippet: str
+    remediation: str
+    cwe_id: Optional[str] = None
+    cvss_score: Optional[float] = None
 
 class SecurityVulnerabilityAnalyzer:
-    """AI-powered security vulnerability analyzer using PyTorch"""
+    """Enhanced AI-powered security vulnerability analyzer with advanced ML capabilities"""
     
     def __init__(self, model_name: str = "microsoft/codebert-base"):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -17,37 +50,77 @@ class SecurityVulnerabilityAnalyzer:
         self.model = AutoModel.from_pretrained(model_name).to(self.device)
         self.model.eval()
         
-        # Vulnerability patterns
+        # Enhanced vulnerability patterns with context awareness
         self.vulnerability_patterns = {
             'sql_injection': [
-                r'(SELECT|INSERT|UPDATE|DELETE).*FROM.*WHERE',
-                r'UNION.*SELECT',
-                r'DROP.*TABLE',
-                r'EXEC.*sp_',
-                r'\'.*OR.*\'.*=.*\'',
+                (r'(SELECT|INSERT|UPDATE|DELETE).*FROM.*WHERE', SeverityLevel.HIGH, "CWE-89"),
+                (r'UNION.*SELECT', SeverityLevel.HIGH, "CWE-89"),
+                (r'DROP\s+(TABLE|DATABASE|INDEX)', SeverityLevel.CRITICAL, "CWE-89"),
+                (r'EXEC\s*\(\s*sp_', SeverityLevel.CRITICAL, "CWE-89"),
+                (r'\'\s*OR\s*\'[^\']*\'\s*=\s*\'', SeverityLevel.HIGH, "CWE-89"),
+                (r'\"\s*OR\s*\"[^\"]*\"\s*=\s*\"', SeverityLevel.HIGH, "CWE-89"),
+                (r'\$\w+\s*=\s*\$_(GET|POST|REQUEST)', SeverityLevel.MEDIUM, "CWE-89"),
             ],
             'xss': [
-                r'<script[^>]*>.*?</script>',
-                r'javascript:',
-                r'on\w+\s*=\s*["\'][^"\']*["\']',
-                r'<iframe[^>]*>.*?</iframe>',
-                r'eval\s*\(',
+                (r'<script[^>]*>.*?</script>', SeverityLevel.HIGH, "CWE-79"),
+                (r'javascript:', SeverityLevel.HIGH, "CWE-79"),
+                (r'on\w+\s*=\s*["\'][^"\']*["\']', SeverityLevel.MEDIUM, "CWE-79"),
+                (r'<iframe[^>]*>.*?</iframe>', SeverityLevel.HIGH, "CWE-79"),
+                (r'eval\s*\(', SeverityLevel.CRITICAL, "CWE-79"),
+                (r'document\.write\s*\(', SeverityLevel.HIGH, "CWE-79"),
+                (r'innerHTML\s*=', SeverityLevel.MEDIUM, "CWE-79"),
+                (r'outerHTML\s*=', SeverityLevel.HIGH, "CWE-79"),
             ],
             'path_traversal': [
-                r'\.\./.*',
-                r'\.\.\\.*',
-                r'%2e%2e%2f',
-                r'%2e%2e\\',
-                r'/etc/passwd',
-                r'/etc/shadow',
+                (r'\.\.\/.*', SeverityLevel.HIGH, "CWE-22"),
+                (r'\.\.\\.*', SeverityLevel.HIGH, "CWE-22"),
+                (r'%2e%2e%2f', SeverityLevel.HIGH, "CWE-22"),
+                (r'%2e%2e\\', SeverityLevel.HIGH, "CWE-22"),
+                (r'\/etc\/passwd', SeverityLevel.HIGH, "CWE-200"),
+                (r'\/etc\/shadow', SeverityLevel.CRITICAL, "CWE-200"),
+                (r'\/proc\/version', SeverityLevel.MEDIUM, "CWE-200"),
+                (r'\/windows\/system32', SeverityLevel.MEDIUM, "CWE-22"),
             ],
             'command_injection': [
-                r';.*rm',
-                r';.*cat',
-                r';.*ls',
-                r'\|.*nc',
-                r'`.*`',
-                r'\$\([^)]*\)',
+                (r';\s*rm\s+-rf', SeverityLevel.CRITICAL, "CWE-78"),
+                (r';\s*cat\s+', SeverityLevel.HIGH, "CWE-78"),
+                (r';\s*ls\s+', SeverityLevel.MEDIUM, "CWE-78"),
+                (r'\|\s*nc\s+', SeverityLevel.HIGH, "CWE-78"),
+                (r'`[^`]*`', SeverityLevel.HIGH, "CWE-78"),
+                (r'\$\([^)]*\)', SeverityLevel.HIGH, "CWE-78"),
+                (r'exec\s*\(', SeverityLevel.HIGH, "CWE-78"),
+                (r'shell_exec\s*\(', SeverityLevel.HIGH, "CWE-78"),
+                (r'system\s*\(', SeverityLevel.HIGH, "CWE-78"),
+            ],
+            'insecure_deserialization': [
+                (r'unserialize\s*\(', SeverityLevel.HIGH, "CWE-502"),
+                (r'pickle\.loads?\s*\(', SeverityLevel.HIGH, "CWE-502"),
+                (r'marshal\.loads?\s*\(', SeverityLevel.CRITICAL, "CWE-502"),
+                (r'yaml\.load\s*\(', SeverityLevel.HIGH, "CWE-502"),
+                (r'json\.loads?\s*\(', SeverityLevel.MEDIUM, "CWE-502"),
+            ],
+            'weak_cryptography': [
+                (r'md5\s*\(', SeverityLevel.MEDIUM, "CWE-327"),
+                (r'sha1\s*\(', SeverityLevel.MEDIUM, "CWE-327"),
+                (r'base64_encode\s*\(', SeverityLevel.LOW, "CWE-327"),
+                (r'crypt\s*\(', SeverityLevel.MEDIUM, "CWE-327"),
+                (r'openssl_encrypt\s*\([^)]*\'ecb\'', SeverityLevel.HIGH, "CWE-327"),
+                (r'openssl_encrypt\s*\([^)]*\'des\'', SeverityLevel.HIGH, "CWE-327"),
+            ],
+            'information_disclosure': [
+                (r'var_dump\s*\(', SeverityLevel.MEDIUM, "CWE-200"),
+                (r'print_r\s*\(', SeverityLevel.MEDIUM, "CWE-200"),
+                (r'error_reporting\s*\(', SeverityLevel.LOW, "CWE-200"),
+                (r'phpinfo\s*\(', SeverityLevel.HIGH, "CWE-200"),
+                (r'debug_backtrace\s*\(', SeverityLevel.MEDIUM, "CWE-200"),
+            ],
+            'broken_authentication': [
+                (r'password\s*=\s*["\'][^"\']*["\']', SeverityLevel.HIGH, "CWE-287"),
+                (r'api_key\s*=\s*["\'][^"\']*["\']', SeverityLevel.HIGH, "CWE-287"),
+                (r'secret\s*=\s*["\'][^"\']*["\']', SeverityLevel.HIGH, "CWE-287"),
+                (r'token\s*=\s*["\'][^"\']*["\']', SeverityLevel.MEDIUM, "CWE-287"),
+            ]
+        }
             ],
             'insecure_deserialization': [
                 r'O:\d+:"',
