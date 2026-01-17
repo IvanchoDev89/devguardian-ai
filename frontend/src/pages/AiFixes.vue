@@ -429,14 +429,3 @@ onMounted(() => {
   loadAiFixes()
 })
 </script>
-
-    const response = await aiFixApi.getAiFixes()
-    if (response.error) {
-      error.value = response.error
-    } else {
-      aiFixes.value = response.data || []
-    }
-  } catch (err) {
-    error.value = 'Failed to load AI fixes'
-  } finally {
-    loading.value = false
