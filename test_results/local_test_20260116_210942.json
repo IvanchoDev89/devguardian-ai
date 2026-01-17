@@ -1,0 +1,63 @@
+{
+  "test_suite": {
+    "name": "local_test",
+    "description": "Custom test suite with 1 repositories",
+    "configuration": {
+      "name": "local_test",
+      "description": "Custom test suite with 1 repositories",
+      "repositories": [
+        "./test_repository"
+      ],
+      "scan_depth": "standard",
+      "enable_ml_detection": true,
+      "enable_pattern_detection": true,
+      "parallel_processing": true,
+      "max_workers": 2,
+      "output_format": "json"
+    }
+  },
+  "summary": {
+    "total_repositories": 1,
+    "successful_analyses": 0,
+    "failed_analyses": 1,
+    "total_files_analyzed": 0,
+    "total_vulnerabilities": 0,
+    "overall_risk_score": 0.0,
+    "total_scan_time": 0.016822099685668945,
+    "average_scan_time": 0.016822099685668945,
+    "most_common_vulnerability": null,
+    "highest_risk_repository": "test_repository"
+  },
+  "severity_breakdown": {},
+  "type_breakdown": {},
+  "repository_results": [
+    {
+      "repository_url": "./test_repository",
+      "repository_name": "test_repository",
+      "clone_path": "analysis_workspace/test_repository",
+      "analysis_date": "2026-01-16T21:09:42.072584",
+      "total_files": 0,
+      "scanned_files": 0,
+      "total_vulnerabilities": 0,
+      "severity_breakdown": {},
+      "type_breakdown": {},
+      "risk_score": 0.0,
+      "scan_duration": 0.016822099685668945,
+      "vulnerabilities": [],
+      "recommendations": [],
+      "status": "failed",
+      "error_message": "Git clone failed: Cloning into 'analysis_workspace/test_repository'...\nwarning: --depth is ignored in local clones; use file:// instead.\nwarning: Could not find remote branch main to clone.\nfatal: Remote branch main not found in upstream origin\n",
+      "commit_hash": null,
+      "branch": "main"
+    }
+  ],
+  "recommendations": [
+    "\ud83d\udd04 Implement automated security scanning in CI/CD pipelines",
+    "\ud83d\udcda Provide security training for development teams",
+    "\ud83d\udd27 Establish secure coding standards and guidelines",
+    "\ud83d\udcca Implement security metrics and monitoring dashboards",
+    "\ud83d\udee1\ufe0f Create incident response procedures for security events",
+    "\ud83d\udd0d Conduct regular penetration testing and security assessments"
+  ],
+  "generated_at": "2026-01-16T21:09:42.072754"
+}

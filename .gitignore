@@ -228,3 +228,4 @@ settings.local.*
 # Local development
 .local
 local/
+test_repository/
