@@ -254,7 +254,8 @@
     </div>
   </div>
 </template>
-            <script setup lang="ts">
+
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { api } from '@/services/api'
 
