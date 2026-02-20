@@ -93,6 +93,11 @@ const routes = [
     component: () => import('./pages/Pricing.vue')
   },
   {
+    path: '/docs',
+    name: 'Docs',
+    component: () => import('./pages/Documentation.vue')
+  },
+  {
     path: '/billing',
     name: 'Billing',
     component: () => import('./pages/Billing.vue'),

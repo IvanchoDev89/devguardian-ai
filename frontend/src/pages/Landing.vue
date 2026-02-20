@@ -107,6 +107,61 @@
       </div>
     </div>
 
+    <!-- Pricing Section -->
+    <div class="py-20 bg-slate-800/50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+            Simple, Transparent Pricing
+          </h2>
+          <p class="text-xl text-gray-400">
+            Start free, scale as you grow
+          </p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <!-- Free -->
+          <div class="bg-slate-900/50 rounded-xl p-8 border border-slate-700">
+            <h3 class="text-xl font-bold text-white mb-2">Free</h3>
+            <div class="text-4xl font-bold text-white mb-4">$0<span class="text-lg text-gray-400">/mo</span></div>
+            <ul class="space-y-3 text-gray-400 mb-8">
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>100 scans/month</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Basic vulnerability detection</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Email support</li>
+            </ul>
+            <router-link to="/signup" class="block w-full py-3 px-4 bg-slate-700 text-white text-center rounded-lg hover:bg-slate-600 transition">Get Started</router-link>
+          </div>
+          
+          <!-- Pro -->
+          <div class="bg-gradient-to-b from-cyan-500/20 to-blue-500/20 rounded-xl p-8 border border-cyan-500 relative">
+            <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-semibold px-4 py-1 rounded-full">Popular</div>
+            <h3 class="text-xl font-bold text-white mb-2">Pro</h3>
+            <div class="text-4xl font-bold text-white mb-4">$29<span class="text-lg text-gray-400">/mo</span></div>
+            <ul class="space-y-3 text-gray-300 mb-8">
+              <li class="flex items-center"><svg class="w-5 h-5 text-cyan-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>1,000 scans/month</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-cyan-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>AI-powered fixes</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-cyan-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Priority support</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-cyan-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>API access</li>
+            </ul>
+            <router-link to="/signup?plan=pro" class="block w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-center rounded-lg hover:from-cyan-600 hover:to-blue-600 transition">Upgrade to Pro</router-link>
+          </div>
+          
+          <!-- Enterprise -->
+          <div class="bg-slate-900/50 rounded-xl p-8 border border-slate-700">
+            <h3 class="text-xl font-bold text-white mb-2">Enterprise</h3>
+            <div class="text-4xl font-bold text-white mb-4">$199<span class="text-lg text-gray-400">/mo</span></div>
+            <ul class="space-y-3 text-gray-400 mb-8">
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>10,000 scans/month</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Everything in Pro</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Dedicated support</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>SSO/SAML</li>
+            </ul>
+            <router-link to="/contact" class="block w-full py-3 px-4 bg-slate-700 text-white text-center rounded-lg hover:bg-slate-600 transition">Contact Sales</router-link>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- CTA Section -->
     <div class="py-20 relative">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

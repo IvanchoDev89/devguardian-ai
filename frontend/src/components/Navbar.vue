@@ -52,6 +52,7 @@
             Pentest
           </router-link>
           <router-link 
+            v-if="isAdmin"
             to="/super-admin" 
             class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
             :class="{ 'text-white bg-red-600': $route.path === '/super-admin' }"
@@ -59,11 +60,11 @@
             Admin
           </router-link>
           <router-link 
-            to="/pricing" 
+            to="/docs" 
             class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            :class="{ 'text-white bg-cyan-600': $route.path === '/pricing' }"
+            :class="{ 'text-white bg-purple-600': $route.path === '/docs' }"
           >
-            Pricing
+            Docs
           </router-link>
         </div>
 
@@ -173,10 +174,17 @@
             Pentest
           </router-link>
           <router-link 
+            v-if="isAdmin"
             to="/super-admin" 
             class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
           >
             Admin
+          </router-link>
+          <router-link 
+            to="/docs" 
+            class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+          >
+            Docs
           </router-link>
         </div>
       </div>
@@ -199,6 +207,7 @@ const showMobileMenu = ref(false)
 
 const user = computed(() => authStore.user as any)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const isAdmin = computed(() => user.value?.role === 'admin' || user.value?.role === 'super_admin')
 
 const handleLogout = () => {
   authStore.logout()
