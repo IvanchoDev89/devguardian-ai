@@ -58,6 +58,13 @@
           >
             Admin
           </router-link>
+          <router-link 
+            to="/pricing" 
+            class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            :class="{ 'text-white bg-cyan-600': $route.path === '/pricing' }"
+          >
+            Pricing
+          </router-link>
         </div>
 
         <!-- Right side items -->

@@ -86,6 +86,17 @@ const routes = [
     name: 'Pentesting',
     component: () => import('./pages/Pentesting.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/pricing',
+    name: 'Pricing',
+    component: () => import('./pages/Pricing.vue')
+  },
+  {
+    path: '/billing',
+    name: 'Billing',
+    component: () => import('./pages/Billing.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

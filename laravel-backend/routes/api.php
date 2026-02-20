@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\VulnerabilityController;
 use App\Http\Controllers\Api\VulnerabilityScannerController;
 use App\Http\Controllers\Api\SuperAdminController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ApiKeyController;
+use App\Http\Controllers\Api\PlanController;
 
 // Auth Routes (public)
 Route::prefix('auth')->group(function () {
@@ -14,6 +16,23 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+});
+
+// Plans/Pricing (public)
+Route::prefix('plans')->group(function () {
+    Route::get('/', [PlanController::class, 'index']);
+    Route::get('/{id}', [PlanController::class, 'show']);
+});
+
+// API Keys Management
+Route::prefix('api-keys')->group(function () {
+    Route::get('/', [ApiKeyController::class, 'index']);
+    Route::post('/', [ApiKeyController::class, 'store']);
+    Route::get('/{id}', [ApiKeyController::class, 'show']);
+    Route::put('/{id}', [ApiKeyController::class, 'update']);
+    Route::delete('/{id}', [ApiKeyController::class, 'destroy']);
+    Route::post('/{id}/rotate', [ApiKeyController::class, 'rotate']);
+    Route::get('/{id}/usage', [ApiKeyController::class, 'usage']);
 });
 
 Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
