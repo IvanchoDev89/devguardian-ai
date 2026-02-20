@@ -230,16 +230,18 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { vulnerabilityService } from '../services/api'
 
 interface Vulnerability {
   id: string
   title: string
   description: string
   severity: 'critical' | 'high' | 'medium' | 'low'
-  status: 'open' | 'fixing' | 'fixed'
+  status: 'open' | 'in_progress' | 'fixing' | 'resolved'
   repository: string
   file: string
   cweId: string
+  cvss_score?: number
   detectedAt: string
 }
 
@@ -264,41 +266,40 @@ const stats = ref<Stats>({
   fixed: 0
 })
 
-const vulnerabilities = ref<Vulnerability[]>([
-  {
-    id: '1',
-    title: 'SQL Injection in Authentication Module',
-    description: 'User input is directly concatenated into SQL query without proper sanitization',
-    severity: 'critical',
-    status: 'open',
-    repository: 'backend-api',
-    file: 'app/Http/Controllers/AuthController.php',
-    cweId: 'CWE-89',
-    detectedAt: '2 hours ago'
-  },
-  {
-    id: '2',
-    title: 'Cross-Site Scripting (XSS) in User Profile',
-    description: 'User profile data is not properly escaped before rendering in HTML',
-    severity: 'high',
-    status: 'fixing',
-    repository: 'frontend-app',
-    file: 'src/components/Profile.vue',
-    cweId: 'CWE-79',
-    detectedAt: '5 hours ago'
-  },
-  {
-    id: '3',
-    title: 'Insecure Random Number Generation',
-    description: 'Using Math.random() for security-sensitive operations',
-    severity: 'medium',
-    status: 'fixed',
-    repository: 'mobile-app',
-    file: 'src/utils/crypto.js',
-    cweId: 'CWE-338',
-    detectedAt: '1 day ago'
+const vulnerabilities = ref<Vulnerability[]>([])
+
+const loadVulnerabilities = async () => {
+  loading.value = true
+  try {
+    const response = await vulnerabilityService.getVulnerabilities()
+    if (response.success && response.data) {
+      vulnerabilities.value = (Array.isArray(response.data) ? response.data : []).map((v: any) => ({
+        id: v.id?.toString() || '0',
+        title: v.title || 'Unknown Vulnerability',
+        description: v.description || '',
+        severity: v.severity || 'medium',
+        status: v.status === 'open' ? 'open' : v.status === 'in_progress' ? 'fixing' : v.status === 'resolved' ? 'resolved' : 'open',
+        repository: v.repository || 'unknown',
+        file: v.file || v.repository || '',
+        cweId: v.cwe_id || v.cweId || '',
+        cvss_score: v.cvss_score,
+        detectedAt: v.detected_at || v.created_at || new Date().toISOString()
+      }))
+    }
+  } catch (error) {
+    console.error('Failed to load vulnerabilities:', error)
+  } finally {
+    loading.value = false
+    updateStats()
   }
-])
+}
+
+const updateStats = () => {
+  stats.value.total = vulnerabilities.value.length
+  stats.value.critical = vulnerabilities.value.filter(v => v.severity === 'critical').length
+  stats.value.high = vulnerabilities.value.filter(v => v.severity === 'high').length
+  stats.value.fixed = vulnerabilities.value.filter(v => v.status === 'resolved' || v.status === 'fixed').length
+}
 
 const filteredVulnerabilities = computed(() => {
   let filtered = vulnerabilities.value
@@ -412,10 +413,6 @@ const viewDetails = (id: string) => {
 }
 
 onMounted(() => {
-  // Update stats
-  stats.value.total = vulnerabilities.value.length
-  stats.value.critical = vulnerabilities.value.filter(v => v.severity === 'critical').length
-  stats.value.high = vulnerabilities.value.filter(v => v.severity === 'high').length
-  stats.value.fixed = vulnerabilities.value.filter(v => v.status === 'fixed').length
+  loadVulnerabilities()
 })
 </script>
