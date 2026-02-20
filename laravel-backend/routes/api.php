@@ -6,6 +6,15 @@ use App\Http\Controllers\Api\RepositoryController;
 use App\Http\Controllers\Api\VulnerabilityController;
 use App\Http\Controllers\Api\VulnerabilityScannerController;
 use App\Http\Controllers\Api\SuperAdminController;
+use App\Http\Controllers\Api\AuthController;
+
+// Auth Routes (public)
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+});
 
 Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
     // Organizations

@@ -186,6 +186,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { authService } from '../services/api'
 
 const router = useRouter()
 
@@ -206,26 +207,29 @@ const handleSignup = async () => {
   error.value = ''
   
   try {
-    // Validate passwords match
     if (form.value.password !== form.value.confirmPassword) {
       error.value = 'Passwords do not match'
       loading.value = false
       return
     }
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Mock successful signup
-    const mockUser = {
-      id: 1,
+    const response = await authService.register({
       name: form.value.name,
       email: form.value.email,
-      company: form.value.company,
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'
-    }
+      password: form.value.password,
+    })
     
-    const mockToken = 'mock_token_12345'
+    if (response.success) {
+      router.push('/dashboard')
+    } else {
+      error.value = response.message || 'Registration failed'
+    }
+  } catch (err: any) {
+    error.value = err.message || 'Registration failed. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
     
     localStorage.setItem('auth_token', mockToken)
     localStorage.setItem('user', JSON.stringify(mockUser))

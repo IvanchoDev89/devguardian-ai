@@ -140,6 +140,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { authService } from '../services/api'
 
 const router = useRouter()
 
@@ -157,26 +158,18 @@ const handleLogin = async () => {
   error.value = ''
   
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const response = await authService.login({
+      email: form.value.email,
+      password: form.value.password
+    })
     
-    // Mock authentication
-    if (form.value.email === 'demo@devguardian.ai' && form.value.password === 'demo123') {
-      // Store mock token
-      localStorage.setItem('auth_token', 'mock_token_12345')
-      localStorage.setItem('user', JSON.stringify({
-        id: 1,
-        name: 'Demo User',
-        email: form.value.email,
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'
-      }))
-      
+    if (response.success) {
       router.push('/dashboard')
     } else {
-      error.value = 'Invalid credentials. Try demo@devguardian.ai / demo123'
+      error.value = response.message || 'Invalid credentials'
     }
-  } catch (err) {
-    error.value = 'Login failed. Please try again.'
+  } catch (err: any) {
+    error.value = err.message || 'Login failed. Please try again.'
   } finally {
     loading.value = false
   }
