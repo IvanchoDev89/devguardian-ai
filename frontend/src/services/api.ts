@@ -489,3 +489,34 @@ export const pentestApi = {
     }
   }
 }
+
+// Billing Service
+export const billingService = {
+  async getSubscription() {
+    return apiClient.get('/billing/subscription')
+  },
+
+  async createCheckout(planId: string) {
+    return apiClient.post('/billing/checkout', { plan_id: planId })
+  },
+
+  async changePlan(planId: string) {
+    return apiClient.post('/billing/change-plan', { plan_id: planId })
+  },
+
+  async cancelSubscription() {
+    return apiClient.post('/billing/cancel')
+  },
+
+  async getInvoices() {
+    return apiClient.get('/billing/invoices')
+  },
+
+  async getPaymentMethods() {
+    return apiClient.get('/billing/payment-methods')
+  },
+
+  async addPaymentMethod(paymentMethodId: string) {
+    return apiClient.post('/billing/payment-methods', { payment_method_id: paymentMethodId })
+  }
+}

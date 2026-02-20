@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\SuperAdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ApiKeyController;
 use App\Http\Controllers\Api\PlanController;
+use App\Http\Controllers\Api\BillingController;
 
 // Auth Routes (public)
 Route::prefix('auth')->group(function () {
@@ -23,6 +24,21 @@ Route::prefix('plans')->group(function () {
     Route::get('/', [PlanController::class, 'index']);
     Route::get('/{id}', [PlanController::class, 'show']);
 });
+
+// Billing & Subscription
+Route::prefix('billing')->group(function () {
+    Route::get('/subscription', [BillingController::class, 'getSubscription']);
+    Route::post('/checkout', [BillingController::class, 'createCheckoutSession']);
+    Route::post('/customer', [BillingController::class, 'createCustomer']);
+    Route::post('/change-plan', [BillingController::class, 'changePlan']);
+    Route::post('/cancel', [BillingController::class, 'cancelSubscription']);
+    Route::get('/invoices', [BillingController::class, 'getInvoices']);
+    Route::get('/payment-methods', [BillingController::class, 'getPaymentMethods']);
+    Route::post('/payment-methods', [BillingController::class, 'addPaymentMethod']);
+});
+
+// Stripe Webhook
+Route::post('/webhooks/stripe', [BillingController::class, 'webhook']);
 
 // API Keys Management
 Route::prefix('api-keys')->group(function () {
