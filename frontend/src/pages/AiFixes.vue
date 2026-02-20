@@ -257,7 +257,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { api } from '@/services/api'
+import { aiFixApi } from '@/services/api'
 
 interface AiFix {
   id: string
@@ -338,8 +338,8 @@ const loadAiFixes = async () => {
   error.value = ''
   
   try {
-    const response = await api.get('/ai-fixes')
-    aiFixes.value = response.data.data || []
+    const response = await aiFixApi.getAiFixes()
+    aiFixes.value = response.data || []
   } catch (err: any) {
     error.value = 'Failed to load AI fixes: ' + (err.response?.data?.message || err.message)
     console.error('Error loading AI fixes:', err)
@@ -358,8 +358,8 @@ const closeModal = () => {
 
 const approveFix = async (fixId: string) => {
   try {
-    await api.post(`/ai-fixes/${fixId}/approve`)
-    // Update the fix in the local array
+    await aiFixApi.approveFix(fixId, true)
+    // Update fix in local array
     const fix = aiFixes.value.find(f => f.id === fixId)
     if (fix) {
       fix.status = 'approved'
@@ -371,8 +371,8 @@ const approveFix = async (fixId: string) => {
 
 const applyFix = async (fixId: string) => {
   try {
-    await api.post(`/ai-fixes/${fixId}/apply`)
-    // Update the fix in the local array
+    await aiFixApi.applyFix(fixId)
+    // Update fix in local array
     const fix = aiFixes.value.find(f => f.id === fixId)
     if (fix) {
       fix.status = 'applied'
@@ -384,8 +384,8 @@ const applyFix = async (fixId: string) => {
 
 const rejectFix = async (fixId: string) => {
   try {
-    await api.post(`/ai-fixes/${fixId}/reject`)
-    // Update the fix in the local array
+    await aiFixApi.rejectFix(fixId, false)
+    // Update fix in local array
     const fix = aiFixes.value.find(f => f.id === fixId)
     if (fix) {
       fix.status = 'rejected'

@@ -8,6 +8,8 @@ from datetime import datetime
 # Import API endpoints
 from app.api.endpoints.security import router as security_router
 from app.api.endpoints.ai_fix_service import router as ai_fix_router
+from app.api.endpoints.ai_fixes import router as ai_fixes_router
+from app.api.endpoints.pytorch_scanner import router as pytorch_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -30,6 +32,8 @@ app.add_middleware(
 # Include routers
 app.include_router(security_router)
 app.include_router(ai_fix_router)
+app.include_router(ai_fixes_router, prefix="/api")
+app.include_router(pytorch_router, prefix="/api")
 
 @app.get("/")
 async def root():
@@ -42,6 +46,8 @@ async def root():
         "endpoints": {
             "security": "/api/security",
             "ai_fix": "/api/ai-fix",
+            "ai_fixes": "/api/ai-fixes",
+            "pytorch_scanner": "/api/pytorch-scanner",
             "docs": "/docs",
             "health": "/api/security/health"
         }

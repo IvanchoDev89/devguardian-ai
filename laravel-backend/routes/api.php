@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\OrganizationController;
 use App\Http\Controllers\Api\RepositoryController;
 use App\Http\Controllers\Api\VulnerabilityController;
 use App\Http\Controllers\Api\VulnerabilityScannerController;
+use App\Http\Controllers\Api\SuperAdminController;
 
 Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
     // Organizations
@@ -70,4 +71,14 @@ Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
             return response()->json($response->json());
         })->name('generate-fix');
     });
+});
+
+// Super Admin Routes - Public for development
+Route::prefix('v1/admin')->group(function () {
+    Route::get('/dashboard', [SuperAdminController::class, 'dashboard']);
+    Route::post('/system-scan', [SuperAdminController::class, 'runSystemScan']);
+    Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs']);
+    Route::post('/users', [SuperAdminController::class, 'manageUsers']);
+    Route::post('/generate-report', [SuperAdminController::class, 'generateReport']);
+    Route::get('/stats', [SuperAdminController::class, 'stats']);
 });

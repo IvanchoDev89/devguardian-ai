@@ -172,17 +172,17 @@ class VulnerabilityFix(BaseModel):
     test_cases: Optional[List[str]] = Field(None, description="Test cases for the fix")
 
 class FixGenerationRequest(BaseModel):
-    """Request for AI fix generation"""
-    vulnerability: VulnerabilityDetail = Field(..., description="Vulnerability to fix")
-    context_code: Optional[str] = Field(None, description="Additional context code")
-    fix_style: str = Field("secure", description="Fix style: secure, minimal, comprehensive")
-    preserve_functionality: bool = Field(True, description="Preserve original functionality")
+    """Request for generating AI fixes"""
+    vulnerabilities: List[VulnerabilityDetail] = Field(..., description="List of vulnerabilities to generate fixes for")
+    repository_id: Optional[str] = Field(None, description="Repository ID")
+    scan_id: Optional[str] = Field(None, description="Scan ID")
+    auto_approve: bool = Field(False, description="Automatically approve generated fixes")
 
 class FixGenerationResponse(BaseModel):
     """Response for AI fix generation"""
-    fix_id: str = Field(..., description="Unique identifier for the fix")
-    status: str = Field(..., description="Fix generation status")
-    fix: Optional[VulnerabilityFix] = Field(None, description="Generated fix")
-    alternatives: Optional[List[VulnerabilityFix]] = Field(None, description="Alternative fixes")
-    generation_time: float = Field(..., ge=0.0, description="Time taken to generate fix in seconds")
+    success: bool = Field(..., description="Whether fix generation was successful")
+    fixes_generated: int = Field(..., description="Number of fixes generated")
+    fixes: List[dict] = Field(..., description="Generated fixes")
+    message: str = Field(..., description="Response message")
+    generation_time: Optional[float] = Field(None, description="Time taken to generate fixes in seconds")
     error: Optional[str] = Field(None, description="Error message if generation failed")

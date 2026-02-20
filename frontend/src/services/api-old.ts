@@ -62,7 +62,7 @@ export const apiClient = {
     }
   },
 
-  async remove<T>(endpoint: string): Promise<ApiResponse<T>> {
+  async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'DELETE',
@@ -166,7 +166,7 @@ export const aiFixApi = {
   },
 
   async deleteFix(fixId: string) {
-    return aiServiceClient.remove(`/ai-fixes/${fixId}`)
+    return aiServiceClient.delete(`/ai-fixes/${fixId}`)
   },
 
   async getFixStats() {

@@ -1,0 +1,200 @@
+{
+  "test_summary": {
+    "total_tests": 17,
+    "passed_tests": 17,
+    "failed_tests": 0,
+    "success_rate": "100.0%",
+    "duration": "3.10s",
+    "start_time": "2026-01-17T12:19:45.310354",
+    "end_time": "2026-01-17T12:19:48.413540"
+  },
+  "test_results": [
+    {
+      "test": "AI Service Health Check",
+      "success": true,
+      "message": "Service is healthy and operational",
+      "details": {
+        "status": "healthy",
+        "version": "1.0.0"
+      },
+      "timestamp": "2026-01-17T12:19:45.314410"
+    },
+    {
+      "test": "AI Fixes Generation",
+      "success": true,
+      "message": "Generated 5 AI fixes successfully",
+      "details": {
+        "fixes_generated": 5,
+        "vulnerability_types": [
+          "path_traversal",
+          "sql_injection",
+          "command_injection",
+          "xss",
+          "hardcoded_credentials"
+        ],
+        "severities": [
+          "medium",
+          "critical",
+          "high"
+        ]
+      },
+      "timestamp": "2026-01-17T12:19:45.857062"
+    },
+    {
+      "test": "Fix Structure Validation - Fix 1",
+      "success": true,
+      "message": "Fix structure is valid and complete",
+      "details": {
+        "fix_type": "sql_injection",
+        "severity": "critical",
+        "confidence": "95%"
+      },
+      "timestamp": "2026-01-17T12:19:45.857141"
+    },
+    {
+      "test": "Fix Structure Validation - Fix 2",
+      "success": true,
+      "message": "Fix structure is valid and complete",
+      "details": {
+        "fix_type": "xss",
+        "severity": "high",
+        "confidence": "88%"
+      },
+      "timestamp": "2026-01-17T12:19:45.857173"
+    },
+    {
+      "test": "Fix Structure Validation - Fix 3",
+      "success": true,
+      "message": "Fix structure is valid and complete",
+      "details": {
+        "fix_type": "command_injection",
+        "severity": "critical",
+        "confidence": "92%"
+      },
+      "timestamp": "2026-01-17T12:19:45.857199"
+    },
+    {
+      "test": "Fix Structure Validation - Fix 4",
+      "success": true,
+      "message": "Fix structure is valid and complete",
+      "details": {
+        "fix_type": "hardcoded_credentials",
+        "severity": "high",
+        "confidence": "98%"
+      },
+      "timestamp": "2026-01-17T12:19:45.857222"
+    },
+    {
+      "test": "Fix Structure Validation - Fix 5",
+      "success": true,
+      "message": "Fix structure is valid and complete",
+      "details": {
+        "fix_type": "path_traversal",
+        "severity": "medium",
+        "confidence": "85%"
+      },
+      "timestamp": "2026-01-17T12:19:45.857245"
+    },
+    {
+      "test": "Get Fix Details",
+      "success": true,
+      "message": "Successfully retrieved fix details",
+      "details": {
+        "fix_id": "c905d28b-6ddd-4cd5-b578-d84fece6410f",
+        "status": "pending"
+      },
+      "timestamp": "2026-01-17T12:19:46.364229"
+    },
+    {
+      "test": "Approve Fix",
+      "success": true,
+      "message": "Fix approved successfully",
+      "details": {
+        "fix_id": "c905d28b-6ddd-4cd5-b578-d84fece6410f"
+      },
+      "timestamp": "2026-01-17T12:19:46.376827"
+    },
+    {
+      "test": "Apply Fix",
+      "success": true,
+      "message": "Fix applied successfully",
+      "details": {
+        "fix_id": "c905d28b-6ddd-4cd5-b578-d84fece6410f",
+        "applied_at": "2026-01-17T12:19:46.387403",
+        "has_fixed_code": true
+      },
+      "timestamp": "2026-01-17T12:19:46.389135"
+    },
+    {
+      "test": "Get All Fixes",
+      "success": true,
+      "message": "Retrieved 9 fixes",
+      "details": {
+        "total_fixes": 9
+      },
+      "timestamp": "2026-01-17T12:19:46.891932"
+    },
+    {
+      "test": "Reject Fix",
+      "success": true,
+      "message": "Fix rejected successfully",
+      "details": {
+        "fix_id": "1ccac16c-eee7-42d9-82af-cb03f12672a4"
+      },
+      "timestamp": "2026-01-17T12:19:46.894553"
+    },
+    {
+      "test": "Error Handling - Invalid Fix ID",
+      "success": true,
+      "message": "Correctly returned 404 for invalid fix ID",
+      "details": {
+        "status_code": 404
+      },
+      "timestamp": "2026-01-17T12:19:47.398805"
+    },
+    {
+      "test": "Error Handling - Empty Vulnerabilities",
+      "success": true,
+      "message": "Handled empty vulnerabilities list gracefully",
+      "details": {
+        "fixes_generated": 0
+      },
+      "timestamp": "2026-01-17T12:19:47.403802"
+    },
+    {
+      "test": "Error Handling - Apply Unapproved Fix",
+      "success": true,
+      "message": "Correctly rejected application of unapproved fix",
+      "details": {
+        "status_code": 400
+      },
+      "timestamp": "2026-01-17T12:19:47.407186"
+    },
+    {
+      "test": "Performance - Health Check Response Time",
+      "success": true,
+      "message": "Health check responded in 0.00s",
+      "details": {
+        "response_time": 0.0022630691528320312
+      },
+      "timestamp": "2026-01-17T12:19:47.909782"
+    },
+    {
+      "test": "Performance - Fix Retrieval Response Time",
+      "success": true,
+      "message": "Fix retrieval responded in 0.00s",
+      "details": {
+        "response_time": 0.003491640090942383
+      },
+      "timestamp": "2026-01-17T12:19:47.913317"
+    }
+  ],
+  "ai_fixes_created": 5,
+  "client_readiness": {
+    "service_health": true,
+    "fix_generation": true,
+    "lifecycle_management": false,
+    "error_handling": true,
+    "performance_acceptable": true
+  }
+}
