@@ -237,7 +237,7 @@ interface Vulnerability {
   title: string
   description: string
   severity: 'critical' | 'high' | 'medium' | 'low'
-  status: 'open' | 'in_progress' | 'fixing' | 'resolved'
+  status: 'open' | 'in_progress' | 'fixing' | 'resolved' | 'fixed'
   repository: string
   file: string
   cweId: string

@@ -158,16 +158,12 @@ const handleLogin = async () => {
   error.value = ''
   
   try {
-    const response = await authService.login({
+    await authService.login({
       email: form.value.email,
       password: form.value.password
     })
     
-    if (response.success) {
-      router.push('/dashboard')
-    } else {
-      error.value = response.message || 'Invalid credentials'
-    }
+    router.push('/dashboard')
   } catch (err: any) {
     error.value = err.message || 'Login failed. Please try again.'
   } finally {

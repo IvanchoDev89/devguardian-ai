@@ -213,17 +213,13 @@ const handleSignup = async () => {
       return
     }
     
-    const response = await authService.register({
+    await authService.register({
       name: form.value.name,
       email: form.value.email,
       password: form.value.password,
     })
     
-    if (response.success) {
-      router.push('/dashboard')
-    } else {
-      error.value = response.message || 'Registration failed'
-    }
+    router.push('/dashboard')
   } catch (err: any) {
     error.value = err.message || 'Registration failed. Please try again.'
   } finally {
