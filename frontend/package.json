@@ -1,7 +1,8 @@
 {
-    "name": "devguardian-frontend",
+    "name": "codesentinel-frontend",
     "private": true,
     "version": "1.0.0",
+    "description": "CodeSentinel - Precision Code Security Scanner Frontend",
     "type": "module",
     "scripts": {
         "dev": "vite --host 0.0.0.0 --port 3000",

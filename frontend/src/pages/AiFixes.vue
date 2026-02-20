@@ -339,7 +339,7 @@ const loadAiFixes = async () => {
   
   try {
     const response = await aiFixApi.getAiFixes()
-    aiFixes.value = response.data || []
+    aiFixes.value = (response.data as AiFix[]) || []
   } catch (err: any) {
     error.value = 'Failed to load AI fixes: ' + (err.response?.data?.message || err.message)
     console.error('Error loading AI fixes:', err)
@@ -384,7 +384,7 @@ const applyFix = async (fixId: string) => {
 
 const rejectFix = async (fixId: string) => {
   try {
-    await aiFixApi.rejectFix(fixId, false)
+    await aiFixApi.rejectFix(fixId, 'Rejected by user')
     // Update fix in local array
     const fix = aiFixes.value.find(f => f.id === fixId)
     if (fix) {

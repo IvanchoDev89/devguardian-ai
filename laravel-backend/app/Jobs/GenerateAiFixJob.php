@@ -19,47 +19,66 @@ class GenerateAiFixJob implements ShouldQueue
         private array $options = []
     ) {}
 
+
     public function handle(
         VulnerabilityRepository $vulnerabilityRepository,
         AiFixRepository $aiFixRepository
     ): void {
         try {
+            // Find vulnerability
             $vulnerability = $vulnerabilityRepository->findById($this->vulnerabilityId);
-            
             if (!$vulnerability) {
-                \Log::error("Vulnerability not found: {$this->vulnerabilityId}");
+                \Log::error('Vulnerability not found', [
+                    'vulnerability_id' => $this->vulnerabilityId,
+                    'job' => __CLASS__
+                ]);
                 return;
             }
 
             // Get vulnerable code
             $codeContent = $this->getVulnerableCode($vulnerability);
-            
+            if (empty($codeContent)) {
+                \Log::warning('Vulnerable code not found or empty', [
+                    'vulnerability_id' => $this->vulnerabilityId,
+                    'file_path' => $vulnerability->location['path'] ?? null,
+                    'job' => __CLASS__
+                ]);
+            }
+
             // Generate AI fix
             $fixResult = $this->sendToAiFixService($codeContent, $vulnerability->identifier);
-            
+            if (!is_array($fixResult) || empty($fixResult['fixed_code'])) {
+                throw new \Exception('AI fix service returned invalid result');
+            }
+
             // Store the fix
             $aiFixRepository->create([
                 'id' => \Illuminate\Support\Str::uuid(),
                 'vulnerability_id' => $this->vulnerabilityId,
                 'fixed_code' => $fixResult['fixed_code'],
-                'confidence' => $fixResult['confidence'],
-                'explanation' => $fixResult['explanation'],
-                'recommendations' => $fixResult['recommendations'],
+                'confidence' => $fixResult['confidence'] ?? null,
+                'explanation' => $fixResult['explanation'] ?? '',
+                'recommendations' => $fixResult['recommendations'] ?? [],
                 'status' => 'generated',
                 'created_at' => now(),
             ]);
 
             // Update vulnerability status
             $vulnerabilityRepository->update($this->vulnerabilityId, ['status' => 'fixing']);
-            
-            \Log::info("AI fix generated for vulnerability {$this->vulnerabilityId}", [
-                'confidence' => $fixResult['confidence'],
-                'fix_id' => $fixResult['fix_id']
+
+            \Log::info('AI fix generated', [
+                'vulnerability_id' => $this->vulnerabilityId,
+                'confidence' => $fixResult['confidence'] ?? null,
+                'fix_id' => $fixResult['fix_id'] ?? null,
+                'job' => __CLASS__
             ]);
 
         } catch (\Exception $e) {
-            \Log::error("AI fix generation failed for vulnerability {$this->vulnerabilityId}: " . $e->getMessage());
-            
+            \Log::error('AI fix generation failed', [
+                'vulnerability_id' => $this->vulnerabilityId,
+                'error' => $e->getMessage(),
+                'job' => __CLASS__
+            ]);
             // Update vulnerability status to indicate failure
             $vulnerabilityRepository->update($this->vulnerabilityId, ['status' => 'fix_failed']);
         }

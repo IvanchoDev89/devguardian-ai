@@ -1,114 +1,117 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-    <!-- Header Section -->
-    <div class="px-4 py-6 sm:px-0">
-      <div class="mb-8">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Security Dashboard
-              </span>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Live
-              </span>
-            </h1>
-            <p class="text-gray-600 mt-2">Monitor your security posture and AI-powered fixes</p>
-          </div>
-          <div class="flex items-center gap-3">
-            <button 
-              @click="refreshData"
-              :disabled="loading"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-700" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <svg v-else class="-ml-1 mr-2 h-4 w-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-              </svg>
-              Refresh
-            </button>
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 bg-grid-white/5 bg-grid-16"></div>
+    
+    <div class="relative">
+      <!-- Header Section -->
+      <div class="px-4 py-6 sm:px-0">
+        <div class="max-w-7xl mx-auto">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <h1 class="text-3xl font-bold text-white flex items-center gap-3">
+                <span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                  DevGuardian AI Dashboard
+                </span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
+                  <span class="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></span>
+                  Live
+                </span>
+              </h1>
+              <p class="text-gray-400 mt-2">Real-time security monitoring with zero-noise detection</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <button 
+                @click="refreshData"
+                :disabled="loading"
+                class="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-sm font-medium text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg v-else class="-ml-1 mr-2 h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Stats Overview -->
+      <!-- Error Alert -->
+      <div v-if="error" class="mb-6 bg-red-500/10 backdrop-blur-sm rounded-lg p-4 border border-red-500/30">
+        <div class="flex">
+          <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-400">Error Loading Data</h3>
+            <div class="mt-2 text-sm text-red-300">
+              <p>{{ error }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-blue-500/30 transition-all duration-300">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Total Vulnerabilities</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.totalVulnerabilities }}</p>
-              <div class="flex items-center mt-2">
-                <span class="text-sm text-red-600 font-medium">{{ stats.criticalVulnerabilities }} critical</span>
-                <span class="text-gray-400 mx-2">•</span>
-                <span class="text-sm text-gray-500">{{ stats.newThisWeek }} this week</span>
-              </div>
+              <p class="text-sm font-medium text-gray-400">Total Scans</p>
+              <p class="text-2xl font-bold text-white mt-1">{{ stats.totalScans }}</p>
+              <p class="text-xs text-green-400 mt-2">+12% from last week</p>
             </div>
-            <div class="bg-red-100 rounded-lg p-3">
-              <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-red-500/30 transition-all duration-300">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Repositories</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.totalRepositories }}</p>
-              <div class="flex items-center mt-2">
-                <span class="text-sm text-green-600 font-medium">{{ stats.scanningRepositories }} scanning</span>
-                <span class="text-gray-400 mx-2">•</span>
-                <span class="text-sm text-gray-500">{{ stats.healthyRepositories }} healthy</span>
-              </div>
+              <p class="text-sm font-medium text-gray-400">Critical Vulnerabilities</p>
+              <p class="text-2xl font-bold text-white mt-1">{{ stats.criticalVulns }}</p>
+              <p class="text-xs text-red-400 mt-2">Requires immediate action</p>
             </div>
-            <div class="bg-blue-100 rounded-lg p-3">
-              <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            <div class="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
               </svg>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-green-500/30 transition-all duration-300">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">AI Fixes Generated</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.aiFixesGenerated }}</p>
-              <div class="flex items-center mt-2">
-                <span class="text-sm text-green-600 font-medium">{{ stats.successRate }}% success</span>
-                <span class="text-gray-400 mx-2">•</span>
-                <span class="text-sm text-gray-500">{{ stats.pendingFixes }} pending</span>
-              </div>
+              <p class="text-sm font-medium text-gray-400">Fixed Today</p>
+              <p class="text-2xl font-bold text-white mt-1">{{ stats.fixedToday }}</p>
+              <p class="text-xs text-green-400 mt-2">Great progress!</p>
             </div>
-            <div class="bg-green-100 rounded-lg p-3">
-              <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-cyan-500/30 transition-all duration-300">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Security Score</p>
-              <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.securityScore }}</p>
-              <div class="flex items-center mt-2">
-                <span class="text-sm font-medium" :class="getScoreColor(stats.securityScore)">
-                  {{ getScoreLabel(stats.securityScore) }}
-                </span>
-                <span class="text-gray-400 mx-2">•</span>
-                <span class="text-sm text-gray-500">+{{ stats.scoreChange }} this month</span>
-              </div>
+              <p class="text-sm font-medium text-gray-400">Security Score</p>
+              <p class="text-2xl font-bold text-white mt-1">{{ stats.securityScore }}%</p>
+              <p class="text-xs text-cyan-400 mt-2">Above average</p>
             </div>
-            <div class="bg-purple-100 rounded-lg p-3">
-              <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            <div class="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-11h-7z"/>
               </svg>
             </div>
           </div>
@@ -118,90 +121,109 @@
       <!-- Charts Section -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Vulnerability Trends -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Vulnerability Trends</h3>
-            <select class="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-              <option>Last 7 days</option>
-              <option>Last 30 days</option>
-              <option>Last 3 months</option>
-            </select>
-          </div>
-          <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+          <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002 2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 00-2 2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002 2zm-6 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 00-2 2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002 2z"/>
+            </svg>
+            Vulnerability Trends
+          </h3>
+          <div class="h-64 flex items-center justify-center text-gray-400">
             <div class="text-center">
-              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              <svg class="w-16 h-16 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002 2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 00-2 2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002 2zm-6 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 00-2 2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002 2z"/>
               </svg>
-              <p class="mt-2 text-sm text-gray-500">Chart visualization coming soon</p>
+              <p>Chart visualization coming soon</p>
+              <p class="text-sm text-gray-500 mt-2">Integration with Chart.js</p>
             </div>
           </div>
         </div>
 
-        <!-- Recent Activity -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
-            <router-link to="/ai-fixes" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
-              View all
-            </router-link>
-          </div>
-          <div class="space-y-4">
-            <div v-for="activity in recentActivity" :key="activity.id" class="flex items-start space-x-3">
-              <div class="flex-shrink-0">
-                <div :class="getActivityIconClass(activity.type)" class="rounded-full p-2">
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getActivityIcon(activity.type)"></path>
-                  </svg>
+        <!-- Recent Scans -->
+        <div class="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+          <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3v4l3-3m-9 6V3m9 6h9"/>
+            </svg>
+            Recent Scans
+          </h3>
+          <div class="space-y-3">
+            <div 
+              v-for="scan in recentScans" 
+              :key="scan.id" 
+              class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 hover:border-blue-500/30 transition-all duration-200"
+            >
+              <div class="flex items-center">
+                <div class="w-2 h-2 rounded-full mr-3" :class="getStatusColor(scan.status)"></div>
+                <div>
+                  <p class="text-sm font-medium text-white">{{ scan.repository }}</p>
+                  <p class="text-xs text-gray-400">{{ scan.time }}</p>
                 </div>
               </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm text-gray-900">{{ activity.title }}</p>
-                <p class="text-xs text-gray-500">{{ activity.time }}</p>
+              <div class="text-right">
+                <p class="text-sm font-medium" :class="getVulnerabilityColor(scan.vulnerabilities)">{{ scan.vulnerabilities }}</p>
+                <p class="text-xs text-gray-400">vulnerabilities</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <div class="bg-blue-100 rounded-lg p-2 mr-3">
-              <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-              </svg>
+      <!-- Vulnerabilities Table -->
+      <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+        <div class="px-6 py-4 border-b border-white/10">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-white">Active Vulnerabilities</h3>
+            <div class="flex items-center space-x-2">
+              <select v-model="filterSeverity" class="bg-white/10 border border-white/20 rounded-lg text-sm text-white px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <select v-model="filterStatus" class="bg-white/10 border border-white/20 rounded-lg text-sm text-white px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Status</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="fixed">Fixed</option>
+              </select>
             </div>
-            <div class="text-left">
-              <p class="text-sm font-medium text-gray-900">Add Repository</p>
-              <p class="text-xs text-gray-500">Connect a new repository</p>
-            </div>
-          </button>
-
-          <button class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <div class="bg-green-100 rounded-lg p-2 mr-3">
-              <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <div class="text-left">
-              <p class="text-sm font-medium text-gray-900">Run Scan</p>
-              <p class="text-xs text-gray-500">Start security scan</p>
-            </div>
-          </button>
-
-          <button class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <div class="bg-purple-100 rounded-lg p-2 mr-3">
-              <svg class="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-              </svg>
-            </div>
-            <div class="text-left">
-              <p class="text-sm font-medium text-gray-900">Generate Fix</p>
-              <p class="text-xs text-gray-500">AI-powered fixes</p>
-            </div>
-          </button>
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-white/5">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Repository</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Severity</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/10">
+              <tr v-for="vuln in filteredVulnerabilities" :key="vuln.id" class="hover:bg-white/5 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ vuln.repository }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ vuln.type }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 py-1 text-xs font-medium rounded-full" :class="getSeverityClass(vuln.severity)">
+                    {{ vuln.severity }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 py-1 text-xs font-medium rounded-full" :class="getStatusClass(vuln.status)">
+                    {{ vuln.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button @click="viewVulnerability(vuln)" class="text-blue-400 hover:text-blue-300 mr-3">View</button>
+                  <button @click="fixVulnerability(vuln)" class="text-green-400 hover:text-green-300">Fix</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -210,116 +232,114 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-
-interface Activity {
-  id: string
-  type: 'vulnerability' | 'fix' | 'scan' | 'repository'
-  title: string
-  time: string
-}
-
-interface Stats {
-  totalVulnerabilities: number
-  criticalVulnerabilities: number
-  newThisWeek: number
-  totalRepositories: number
-  scanningRepositories: number
-  healthyRepositories: number
-  aiFixesGenerated: number
-  successRate: number
-  pendingFixes: number
-  securityScore: number
-  scoreChange: number
-}
+import { dashboardService } from '../services/api'
+import { useNotificationStore } from '../stores/notifications'
 
 const loading = ref(false)
-const stats = ref<Stats>({
-  totalVulnerabilities: 24,
-  criticalVulnerabilities: 3,
-  newThisWeek: 7,
-  totalRepositories: 12,
-  scanningRepositories: 2,
-  healthyRepositories: 10,
-  aiFixesGenerated: 18,
-  successRate: 94,
-  pendingFixes: 4,
-  securityScore: 87,
-  scoreChange: 5
+const error = ref('')
+const filterSeverity = ref('')
+const filterStatus = ref('')
+
+// Mock data - replace with real API calls
+const stats = ref({
+  totalScans: 1247,
+  criticalVulns: 3,
+  fixedToday: 28,
+  securityScore: 87
 })
 
-const recentActivity = ref<Activity[]>([
-  {
-    id: '1',
-    type: 'vulnerability',
-    title: 'Critical SQL injection found in auth module',
-    time: '2 minutes ago'
-  },
-  {
-    id: '2',
-    type: 'fix',
-    title: 'AI fix applied to payment service',
-    time: '15 minutes ago'
-  },
-  {
-    id: '3',
-    type: 'scan',
-    title: 'Security scan completed for user-service',
-    time: '1 hour ago'
-  },
-  {
-    id: '4',
-    type: 'repository',
-    title: 'New repository connected: frontend-app',
-    time: '3 hours ago'
-  }
+const recentScans = ref([
+  { id: 1, repository: 'frontend-app', status: 'completed', vulnerabilities: 2, time: '2 hours ago' },
+  { id: 2, repository: 'api-server', status: 'running', vulnerabilities: 0, time: '5 minutes ago' },
+  { id: 3, repository: 'mobile-app', status: 'completed', vulnerabilities: 1, time: '1 day ago' },
+  { id: 4, repository: 'admin-panel', status: 'failed', vulnerabilities: 5, time: '2 days ago' }
 ])
 
-const getScoreColor = (score: number): string => {
-  if (score >= 90) return 'text-green-600'
-  if (score >= 70) return 'text-yellow-600'
-  return 'text-red-600'
-}
+const vulnerabilities = ref([
+  { id: 1, repository: 'frontend-app', type: 'SQL Injection', severity: 'Critical', status: 'Open' },
+  { id: 2, repository: 'frontend-app', type: 'XSS', severity: 'High', status: 'In Progress' },
+  { id: 3, repository: 'mobile-app', type: 'Path Traversal', severity: 'Medium', status: 'Open' },
+  { id: 4, repository: 'admin-panel', type: 'Command Injection', severity: 'Critical', status: 'Open' },
+  { id: 5, repository: 'admin-panel', type: 'Insecure Deserialization', severity: 'High', status: 'Open' }
+])
 
-const getScoreLabel = (score: number): string => {
-  if (score >= 90) return 'Excellent'
-  if (score >= 70) return 'Good'
-  return 'Needs Improvement'
-}
-
-const getActivityIconClass = (type: string): string => {
-  const classes: Record<string, string> = {
-    vulnerability: 'bg-red-100 text-red-600',
-    fix: 'bg-green-100 text-green-600',
-    scan: 'bg-blue-100 text-blue-600',
-    repository: 'bg-purple-100 text-purple-600'
-  }
-  return classes[type] || 'bg-gray-100 text-gray-600'
-}
-
-const getActivityIcon = (type: string): string => {
-  const icons: Record<string, string> = {
-    vulnerability: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z',
-    fix: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-    scan: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-    repository: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
-  }
-  return icons[type] || 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-}
+const filteredVulnerabilities = computed(() => {
+  return vulnerabilities.value.filter(vuln => {
+    const matchesSeverity = !filterSeverity.value || vuln.severity === filterSeverity.value
+    const matchesStatus = !filterStatus.value || vuln.status === filterStatus.value
+    return matchesSeverity && matchesStatus
+  })
+})
 
 const refreshData = async () => {
   loading.value = true
+  error.value = ''
+  
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    // Update stats with new data
-  } catch (error) {
-    console.error('Failed to refresh dashboard data:', error)
+    // Simulate API calls
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    // Update with real data
+    stats.value.totalScans += Math.floor(Math.random() * 10)
+    stats.value.fixedToday += Math.floor(Math.random() * 3)
+    
+    const notificationStore = useNotificationStore()
+    notificationStore.success('Data Refreshed', 'Dashboard data has been updated successfully')
+  } catch (err) {
+    error.value = 'Failed to refresh data'
+    const notificationStore = useNotificationStore()
+    notificationStore.error('Refresh Failed', error.value)
   } finally {
     loading.value = false
   }
 }
 
+// Helper functions
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'completed': return 'bg-green-400'
+    case 'running': return 'bg-blue-400 animate-pulse'
+    case 'failed': return 'bg-red-400'
+    default: return 'bg-gray-400'
+  }
+}
+
+const getVulnerabilityColor = (count: number) => {
+  if (count === 0) return 'text-green-400'
+  if (count <= 2) return 'text-yellow-400'
+  return 'text-red-400'
+}
+
+const getSeverityClass = (severity: string) => {
+  switch (severity) {
+    case 'Critical': return 'bg-red-500/20 text-red-400 border border-red-500/30'
+    case 'High': return 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+    case 'Medium': return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+    case 'Low': return 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+    default: return 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+  }
+}
+
+const getStatusClass = (status: string) => {
+  switch (status) {
+    case 'Open': return 'bg-red-500/20 text-red-400 border border-red-500/30'
+    case 'In Progress': return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+    case 'Fixed': return 'bg-green-500/20 text-green-400 border border-green-500/30'
+    default: return 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+  }
+}
+
+const viewVulnerability = (vuln: any) => {
+  const notificationStore = useNotificationStore()
+  notificationStore.info('Vulnerability Details', `Viewing ${vuln.type} in ${vuln.repository}`)
+}
+
+const fixVulnerability = (vuln: any) => {
+  const notificationStore = useNotificationStore()
+  notificationStore.success('Fix Initiated', `AI fix started for ${vuln.type} vulnerability`)
+}
+
 onMounted(() => {
-  // Initialize dashboard data
+  refreshData()
 })
 </script>

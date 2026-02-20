@@ -9,6 +9,9 @@ Route::get('/', function () {
 });
 
 // Authentication Routes
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
+});
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
