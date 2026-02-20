@@ -10,6 +10,9 @@ from app.api.endpoints.security import router as security_router
 from app.api.endpoints.ai_fix_service import router as ai_fix_router
 from app.api.endpoints.ai_fixes import router as ai_fixes_router
 from app.api.endpoints.pytorch_scanner import router as pytorch_router
+from app.api.endpoints.advanced_ml import router as advanced_ml_router
+from app.api.endpoints.pentesting import router as pentest_router
+from app.api.endpoints.zero_day_api import router as zero_day_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -34,6 +37,14 @@ app.include_router(security_router)
 app.include_router(ai_fix_router)
 app.include_router(ai_fixes_router, prefix="/api")
 app.include_router(pytorch_router, prefix="/api")
+app.include_router(advanced_ml_router, prefix="/api")
+app.include_router(pentest_router, prefix="/api")
+app.include_router(zero_day_router)
+
+# Health check endpoint
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 @app.get("/")
 async def root():
@@ -48,6 +59,9 @@ async def root():
             "ai_fix": "/api/ai-fix",
             "ai_fixes": "/api/ai-fixes",
             "pytorch_scanner": "/api/pytorch-scanner",
+            "advanced_ml": "/api/advanced-ml",
+            "pentest": "/api/pentest",
+            "zero_day": "/api/zero-day",
             "docs": "/docs",
             "health": "/api/security/health"
         }

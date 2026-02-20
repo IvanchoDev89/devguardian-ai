@@ -10,8 +10,8 @@ import uuid
 from datetime import datetime
 import json
 
-from ..core.services.pytorch_vulnerability_scanner import PyTorchVulnerabilityScanner
-from ..core.models.scan_models import VulnerabilityDetail, FixGenerationRequest, FixGenerationResponse
+from app.core.services.pytorch_vulnerability_scanner import PyTorchVulnerabilityScanner
+from app.core.models.scan_models import VulnerabilityDetail, FixGenerationRequest, FixGenerationResponse
 
 router = APIRouter(prefix="/ai-fixes", tags=["AI Fixes"])
 

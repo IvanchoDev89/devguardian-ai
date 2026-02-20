@@ -1,176 +1,286 @@
-// API client for DevGuardian AI
+import { useNotificationStore } from '../stores/notifications'
 
-const API_BASE_URL = '/api'
-const AI_SERVICE_BASE_URL = 'http://localhost:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api'
+const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8000/api'
 
-interface ApiResponse<T> {
+interface ApiResponse<T = any> {
+  success: boolean
   data?: T
-  error?: string
   message?: string
+  errors?: Record<string, string[]>
 }
 
-// Backend API client
-export const apiClient = {
-  async get<T>(endpoint: string): Promise<ApiResponse<T>> {
-    try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
-      return { data }
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown error' }
-    }
-  },
-
-  async post<T>(endpoint: string, body: any): Promise<ApiResponse<T>> {
-    try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      })
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
-      return { data }
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown error' }
-    }
-  },
-
-  async put<T>(endpoint: string, body: any): Promise<ApiResponse<T>> {
-    try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      })
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
-      return { data }
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown error' }
-    }
-  },
-
-  async remove<T>(endpoint: string): Promise<ApiResponse<T>> {
-    try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: 'DELETE',
-      })
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
-      return { data }
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown error' }
-    }
-  },
+class ApiError extends Error {
+  constructor(message: string, public status?: number) {
+    super(message)
+    this.name = 'ApiError'
+  }
 }
 
-// AI Service API client
-export const aiServiceClient = {
-  async get<T>(endpoint: string): Promise<ApiResponse<T>> {
-    try {
-      const response = await fetch(`${AI_SERVICE_BASE_URL}${endpoint}`)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
-      return { data }
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown error' }
-    }
-  },
+class ApiClient {
+  private baseUrl: string
+  private defaultHeaders: Record<string, string>
 
-  async post<T>(endpoint: string, body: any): Promise<ApiResponse<T>> {
-    try {
-      const response = await fetch(`${AI_SERVICE_BASE_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      })
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
-      return { data }
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown error' }
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl
+    this.defaultHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
     }
-  },
+  }
+
+  private async request<T = any>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}`
+    const token = localStorage.getItem('auth_token')
+    
+    const headers = {
+      ...this.defaultHeaders,
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new ApiError(
+          errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+          response.status
+        )
+      }
+
+      return await response.json()
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error
+      }
+      throw new ApiError(error instanceof Error ? error.message : 'Network error')
+    }
+  }
+
+  async get<T = any>(endpoint: string, params?: Record<string, any>): Promise<T> {
+    const url = params ? `${endpoint}?${new URLSearchParams(params)}` : endpoint
+    return this.request<T>(url)
+  }
+
+  async post<T = any>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined
+    })
+  }
+
+  async put<T = any>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined
+    })
+  }
+
+  async delete<T = any>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'DELETE'
+    })
+  }
 }
 
-// Repository API
-export const repositoryApi = {
+// API Services
+const apiClient = new ApiClient(API_BASE_URL)
+const aiServiceClient = new ApiClient(AI_SERVICE_URL)
+
+// Auth Service
+export const authService = {
+  async login(credentials: { email: string; password: string }) {
+    try {
+      const response = await apiClient.post<ApiResponse<{ token: string; user: any }>>('/auth/login', credentials)
+      
+      if (response.success && response.data) {
+        localStorage.setItem('auth_token', response.data.token)
+        localStorage.setItem('user', JSON.stringify(response.data.user))
+        return { success: true, user: response.data.user }
+      } else {
+        throw new ApiError(response.message || 'Login failed')
+      }
+    } catch (error) {
+      const notificationStore = useNotificationStore()
+      notificationStore.error('Login Failed', error instanceof Error ? error.message : 'Authentication failed')
+      throw error
+    }
+  },
+
+  async logout() {
+    try {
+      await apiClient.post('/auth/logout')
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('user')
+    }
+  },
+
+  async register(userData: { name: string; email: string; password: string; company?: string }) {
+    try {
+      const response = await apiClient.post<ApiResponse<{ token: string; user: any }>>('/auth/register', userData)
+      
+      if (response.success && response.data) {
+        localStorage.setItem('auth_token', response.data.token)
+        localStorage.setItem('user', JSON.stringify(response.data.user))
+        return { success: true, user: response.data.user }
+      } else {
+        throw new ApiError(response.message || 'Registration failed')
+      }
+    } catch (error) {
+      const notificationStore = useNotificationStore()
+      notificationStore.error('Registration Failed', error instanceof Error ? error.message : 'Registration failed')
+      throw error
+    }
+  }
+}
+
+// Dashboard Service
+export const dashboardService = {
+  async getStats() {
+    return apiClient.get<ApiResponse>('/dashboard/stats')
+  },
+
+  async getRecentScans() {
+    return apiClient.get<ApiResponse>('/dashboard/recent-scans')
+  },
+
+  async getVulnerabilities(params?: { page?: number; severity?: string; status?: string }) {
+    return apiClient.get<ApiResponse>('/dashboard/vulnerabilities', params)
+  }
+}
+
+// Repository Service
+export const repositoryService = {
   async getRepositories() {
-    return apiClient.get('/repositories')
+    return apiClient.get<ApiResponse>('/repositories')
   },
 
-  async addRepository(repoData: any) {
-    return apiClient.post('/repositories', repoData)
+  async addRepository(repoData: { url: string; name: string }) {
+    return apiClient.post<ApiResponse>('/repositories', repoData)
   },
 
-  async scanRepository(repoId: string) {
-    return apiClient.post(`/repositories/${repoId}/scan`, {})
+  async deleteRepository(id: string) {
+    return apiClient.delete<ApiResponse>(`/repositories/${id}`)
   },
+
+  async scanRepository(id: string) {
+    return apiClient.post<ApiResponse>(`/repositories/${id}/scan`)
+  }
 }
 
-// Vulnerability API
-export const vulnerabilityApi = {
-  async getVulnerabilities() {
-    return apiClient.get('/vulnerabilities')
+// Vulnerability Service
+export const vulnerabilityService = {
+  async getVulnerabilities(params?: { page?: number; severity?: string; status?: string }) {
+    return apiClient.get<ApiResponse>('/vulnerabilities', params)
   },
 
   async getVulnerability(id: string) {
-    return apiClient.get(`/vulnerabilities/${id}`)
+    return apiClient.get<ApiResponse>(`/vulnerabilities/${id}`)
   },
+
+  async updateVulnerability(id: string, data: { status?: string; notes?: string }) {
+    return apiClient.put<ApiResponse>(`/vulnerabilities/${id}`, data)
+  },
+
+  async createFix(vulnerabilityId: string, fixData: { code: string; description: string }) {
+    return apiClient.post<ApiResponse>(`/vulnerabilities/${vulnerabilityId}/fixes`, fixData)
+  }
 }
 
-// AI Fix API
+// AI Service
+export const aiService = {
+  async scanCode(code: string, options?: { scanType?: string; checkBlindSQL?: boolean }) {
+    return aiServiceClient.post<ApiResponse>('/security/scan', { 
+      code, 
+      options: options || {} 
+    })
+  },
+
+  async generateFix(vulnerabilityId: string, code: string) {
+    return aiServiceClient.post<ApiResponse>('/ai/fix', {
+      vulnerability_id: vulnerabilityId,
+      code
+    })
+  },
+
+  async analyzeCode(code: string) {
+    return aiServiceClient.post<ApiResponse>('/code/analyze', { code })
+  }
+}
+
+// Settings Service
+export const settingsService = {
+  async getSettings() {
+    return apiClient.get<ApiResponse>('/settings')
+  },
+
+  async updateSettings(settings: any) {
+    return apiClient.put<ApiResponse>('/settings', settings)
+  },
+
+  async getNotifications() {
+    return apiClient.get<ApiResponse>('/settings/notifications')
+  },
+
+  async updateNotifications(notifications: any) {
+    return apiClient.put<ApiResponse>('/settings/notifications', notifications)
+  }
+}
+
+// Health check
+export const healthApi = {
+  async checkBackend() {
+    return apiClient.get<ApiResponse>('/health')
+  },
+
+  async checkAiService() {
+    return aiServiceClient.get<ApiResponse>('/health')
+  }
+}
+
+// AI Fix Service
 export const aiFixApi = {
   async getAiFixes() {
-    return aiServiceClient.get('/ai-fixes')
+    return aiServiceClient.get<ApiResponse>('/ai-fixes')
   },
 
   async generateFixes(vulnerabilities: any[]) {
-    return aiServiceClient.post('/ai-fixes/generate', { vulnerabilities })
+    return aiServiceClient.post<ApiResponse>('/ai-fixes/generate', { vulnerabilities })
   },
 
   async approveFix(fixId: string, approved: boolean, notes?: string) {
-    return aiServiceClient.post(`/ai-fixes/${fixId}/approve`, { approved, notes })
+    return aiServiceClient.post<ApiResponse>(`/ai-fixes/${fixId}/approve`, { approved, notes })
   },
 
   async applyFix(fixId: string) {
-    return aiServiceClient.post(`/ai-fixes/${fixId}/apply`, {})
+    return aiServiceClient.post<ApiResponse>(`/ai-fixes/${fixId}/apply`)
   },
 
   async rejectFix(fixId: string, notes?: string) {
-    return aiServiceClient.post(`/ai-fixes/${fixId}/approve`, { approved: false, notes })
+    return aiServiceClient.post<ApiResponse>(`/ai-fixes/${fixId}/reject`, { approved: false, notes })
   },
 
   async getFixDetails(fixId: string) {
-    return aiServiceClient.get(`/ai-fixes/${fixId}`)
+    return aiServiceClient.get<ApiResponse>(`/ai-fixes/${fixId}`)
   },
 
   async deleteFix(fixId: string) {
-    return aiServiceClient.remove(`/ai-fixes/${fixId}`)
+    return aiServiceClient.delete<ApiResponse>(`/ai-fixes/${fixId}`)
   },
 
   async getFixStats() {
-    return aiServiceClient.get('/ai-fixes/stats')
+    return aiServiceClient.get<ApiResponse>('/ai-fixes/stats')
   },
 
   async generateFix(file: File, vulnerabilityType: string = 'general') {
@@ -179,7 +289,7 @@ export const aiFixApi = {
     formData.append('vulnerability_type', vulnerabilityType)
     
     try {
-      const response = await fetch(`${AI_SERVICE_BASE_URL}/pytorch-scanner/scan/file`, {
+      const response = await fetch(`${AI_SERVICE_URL}/pytorch-scanner/scan/file`, {
         method: 'POST',
         body: formData,
       })
@@ -191,16 +301,161 @@ export const aiFixApi = {
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error' }
     }
-  },
+  }
 }
 
-// Health check
-export const healthApi = {
-  async checkBackend() {
-    return apiClient.get('/health')
+// Advanced ML API
+export const advancedMlApi = {
+  async getCapabilities() {
+    return aiServiceClient.get<ApiResponse>('/advanced-ml/ml-capabilities')
   },
 
-  async checkAiService() {
-    return aiServiceClient.get('/health')
+  async runAdvancedScan(scanData: any) {
+    return aiServiceClient.post<ApiResponse>('/advanced-ml/advanced-scan', scanData)
   },
+
+  async getModelPerformance() {
+    return aiServiceClient.get<ApiResponse>('/advanced-ml/model-performance')
+  },
+
+  async trainModel(trainingData: any) {
+    return aiServiceClient.post<ApiResponse>('/advanced-ml/train-model', trainingData)
+  },
+
+  async getTrainingStatus(trainingId: string) {
+    return aiServiceClient.get<ApiResponse>(`/advanced-ml/training-status/${trainingId}`)
+  }
+}
+
+// Automation API
+export const automationApi = {
+  async getWorkflows() {
+    return aiServiceClient.get<ApiResponse>('/advanced-ml/workflows')
+  },
+
+  async createWorkflow(workflowData: any) {
+    return aiServiceClient.post<ApiResponse>('/advanced-ml/setup-workflow', workflowData)
+  },
+
+  async triggerWorkflow(workflowId: string, data?: any) {
+    return aiServiceClient.post<ApiResponse>(`/advanced-ml/trigger-workflow/${workflowId}`, data || {})
+  },
+
+  async deleteWorkflow(workflowId: string) {
+    return aiServiceClient.delete<ApiResponse>(`/advanced-ml/workflows/${workflowId}`)
+  },
+
+  async getWorkflowStats() {
+    return aiServiceClient.get<ApiResponse>('/advanced-ml/workflow-stats')
+  }
+}
+
+// Security Audit API
+export const securityAuditApi = {
+  async runAudit(auditConfig: any) {
+    return aiServiceClient.post<ApiResponse>('/security-audit/run', auditConfig)
+  },
+
+  async getAuditResults(auditId: string) {
+    return aiServiceClient.get<ApiResponse>(`/security-audit/results/${auditId}`)
+  },
+
+  async getAuditHistory() {
+    return aiServiceClient.get<ApiResponse>('/security-audit/history')
+  },
+
+  async exportReport(auditId: string, format: string) {
+    return aiServiceClient.get<ApiResponse>(`/security-audit/export/${auditId}?format=${format}`)
+  },
+
+  async getSecurityMetrics() {
+    return aiServiceClient.get<ApiResponse>('/security-audit/metrics')
+  }
+}
+
+// Unified API service for easy access
+export const apiService = {
+  // Backend APIs
+  get: apiClient.get,
+  post: apiClient.post,
+  put: apiClient.put,
+  delete: apiClient.delete,
+  
+  // AI Service APIs
+  aiGet: aiServiceClient.get,
+  aiPost: aiServiceClient.post,
+  aiDelete: aiServiceClient.delete,
+  
+  // Specific APIs
+  repository: repositoryService,
+  vulnerability: vulnerabilityService,
+  aiFix: aiFixApi,
+  health: healthApi,
+  advancedMl: advancedMlApi,
+  automation: automationApi,
+  securityAudit: securityAuditApi
+}
+
+// Super Admin API
+export const superAdminApi = {
+  async getDashboard(timeRange: string = '24h') {
+    return apiClient.get<ApiResponse>(`/v1/admin/dashboard`, { range: timeRange })
+  },
+
+  async runSystemScan(scanType: string, target: string) {
+    return apiClient.post<ApiResponse>('/v1/admin/system-scan', { scan_type: scanType, target })
+  },
+
+  async getAuditLogs(limit: number = 100, offset: number = 0) {
+    return apiClient.get<ApiResponse>('/v1/admin/audit-logs', { limit, offset })
+  },
+
+  async manageUsers(action: string, userData?: any) {
+    return apiClient.post<ApiResponse>('/v1/admin/users', { action, ...userData })
+  },
+
+  async generateReport(type: string, dateFrom: string, dateTo: string, format: string) {
+    return apiClient.post<ApiResponse>('/v1/admin/generate-report', {
+      type,
+      date_from: dateFrom,
+      date_to: dateTo,
+      format
+    })
+  }
+}
+
+// Pentesting API
+export const pentestApi = {
+  async startScan(scanConfig: {
+    target: string
+    target_type: string
+    auth_type?: string
+    credentials?: string
+    intensity?: string
+    use_zero_day_detection?: boolean
+    exploitability_analysis?: boolean
+    generate_poc?: boolean
+  }) {
+    return aiServiceClient.post<ApiResponse>('/pentest/start-scan', scanConfig)
+  },
+
+  async getScanStatus(scanId: string) {
+    return aiServiceClient.get<ApiResponse>(`/pentest/scan/${scanId}`)
+  },
+
+  async getScanFindings(scanId: string) {
+    return aiServiceClient.get<ApiResponse>(`/pentest/scan/${scanId}/findings`)
+  },
+
+  async listScans() {
+    return aiServiceClient.get<ApiResponse>('/pentest/scans')
+  },
+
+  async stopScan(scanId: string) {
+    return aiServiceClient.post<ApiResponse>(`/pentest/scan/${scanId}/stop`)
+  },
+
+  async getZeroDayThreats() {
+    return aiServiceClient.get<ApiResponse>('/pentest/zero-day-threats')
+  }
 }

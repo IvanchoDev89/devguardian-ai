@@ -1,64 +1,131 @@
 <template>
-  <div id="app">
-    <nav class="bg-white shadow-sm border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex">
-            <div class="flex-shrink-0 flex items-center">
-              <h1 class="text-xl font-bold text-gray-900">DevGuardian AI</h1>
-            </div>
-            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <router-link
-                to="/"
-                class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                :class="route.path === '/' ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
-              >
-                Dashboard
-              </router-link>
-              <router-link
-                to="/repositories"
-                class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                :class="route.path === '/repositories' ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
-              >
-                Repositories
-              </router-link>
-              <router-link
-                to="/vulnerabilities"
-                class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                :class="route.path === '/vulnerabilities' ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
-              >
-                Vulnerabilities
-              </router-link>
-              <router-link
-                to="/ai-fixes"
-                class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                :class="route.path === '/ai-fixes' ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
-              >
-                AI Fixes
-              </router-link>
-            </div>
-          </div>
-          <div class="flex items-center">
-            <router-link
-              to="/settings"
-              class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              :class="route.path === '/settings' ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'"
-            >
-              Settings
-            </router-link>
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+  <div id="app" class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <!-- Navigation -->
+    <Navbar />
+    
+    <!-- Toast Notifications -->
+    <div class="fixed top-20 right-4 z-50 space-y-2">
+      <Toast
+        v-for="notification in notifications"
+        :key="notification.id"
+        :show="true"
+        :type="notification.type"
+        :title="notification.title"
+        :message="notification.message"
+        :action="notification.action"
+        @close="removeNotification(notification.id)"
+        @action="handleNotificationAction(notification)"
+      />
+    </div>
+    
+    <!-- Main Content -->
+    <main>
       <router-view />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { onMounted, computed } from 'vue'
+import { useAuthStore } from './stores/auth'
+import { useNotificationStore } from './stores/notifications'
+import Navbar from './components/Navbar.vue'
+import Toast from './components/Toast.vue'
 
-const route = useRoute()
+const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
+
+const notifications = computed(() => notificationStore.notifications)
+
+const removeNotification = (id: string) => {
+  notificationStore.removeNotification(id)
+}
+
+const handleNotificationAction = (notification: any) => {
+  // Handle notification actions (like retry, view details, etc.)
+  console.log('Notification action:', notification.action, notification)
+}
+
+onMounted(() => {
+  // Initialize auth state
+  authStore.initAuth()
+})
 </script>
+
+<style>
+/* Global styles for DevGuardian AI */
+#app {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Grid background pattern */
+.bg-grid-white\/5 {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.bg-grid-16 {
+  background-size: 16px 16px;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Focus styles */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+/* Animation utilities */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Glassmorphism effects */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+.backdrop-blur-md {
+  backdrop-filter: blur(8px);
+}
+
+.backdrop-blur-lg {
+  backdrop-filter: blur(16px);
+}
+</style>
