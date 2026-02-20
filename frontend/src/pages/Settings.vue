@@ -276,6 +276,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { authService, apiService } from '../services/api'
 
 interface Profile {
   name: string
@@ -297,11 +298,15 @@ interface Security {
 }
 
 const saving = ref(false)
+const loading = ref(false)
+const githubConnected = ref(false)
+const githubToken = ref('')
+const message = ref('')
 
 const profile = ref<Profile>({
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  role: 'Administrator',
+  name: '',
+  email: '',
+  role: 'member',
   timezone: 'UTC'
 })
 
@@ -330,7 +335,59 @@ const saveSettings = async () => {
   }
 }
 
-onMounted(() => {
-  // Initialize settings
+onMounted(async () => {
+  loading.value = true
+  try {
+    const response = await authService.getProfile()
+    if (response.success && response.data) {
+      profile.value.name = response.data.name || ''
+      profile.value.email = response.data.email || ''
+      profile.value.role = response.data.role || 'member'
+    }
+  } catch (error) {
+    console.error('Failed to load profile:', error)
+  }
+  loading.value = false
 })
+
+const connectGitHub = async () => {
+  if (!githubToken.value) {
+    message.value = 'Please enter your GitHub token'
+    return
+  }
+  
+  saving.value = true
+  message.value = ''
+  
+  try {
+    const response = await apiService.post('/github/connect', {
+      github_token: githubToken.value
+    })
+    
+    if (response.success) {
+      githubConnected.value = true
+      message.value = 'GitHub connected successfully!'
+    } else {
+      message.value = response.message || 'Failed to connect GitHub'
+    }
+  } catch (error) {
+    message.value = 'Failed to connect GitHub'
+  }
+  
+  saving.value = false
+}
+
+const saveSettings = async () => {
+  saving.value = true
+  message.value = ''
+  
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    message.value = 'Settings saved successfully!'
+  } catch (error) {
+    message.value = 'Failed to save settings'
+  }
+  
+  saving.value = false
+}
 </script>

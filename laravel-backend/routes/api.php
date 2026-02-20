@@ -63,7 +63,12 @@ Route::prefix('v1')->middleware(['throttle:60,1', 'api.key'])->group(function ()
     // Repositories
     Route::apiResource('repositories', RepositoryController::class);
     Route::post('repositories/{repository}/scan', [RepositoryController::class, 'scan']);
+    Route::post('repositories/{repository}/refresh', [RepositoryController::class, 'refresh']);
     Route::get('repositories/{repository}/vulnerabilities', [RepositoryController::class, 'vulnerabilities']);
+    
+    // GitHub Integration
+    Route::post('github/connect', [RepositoryController::class, 'connect']);
+    Route::get('github/repositories', [RepositoryController::class, 'listGitHub']);
     
     // Vulnerabilities - Enhanced scanner routes
     Route::prefix('vulnerabilities')->name('vulnerabilities.')->group(function () {

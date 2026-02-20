@@ -3,82 +3,270 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Core\Domain\Repositories\RepositoryRepository;
-use App\Core\Domain\Repositories\VulnerabilityRepository;
-use App\Jobs\ScanRepositoryJob;
+use App\Services\GitHubService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class RepositoryController extends Controller
 {
-    public function __construct(
-        private RepositoryRepository $repositoryRepository,
-        private VulnerabilityRepository $vulnerabilityRepository
-    ) {}
+    private $github;
 
-    public function index(): JsonResponse
+    public function __construct()
     {
-        $repositories = $this->repositoryRepository->all();
-        return response()->json($repositories);
+        $this->github = new GitHubService();
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $userId = $request->user_id ?? 1;
+        
+        $repositories = DB::table('repositories')
+            ->where('user_id', $userId)
+            ->orderByDesc('last_scan_at')
+            ->limit(50)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $repositories
+        ]);
     }
 
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
             'url' => 'required|url',
-            'organization_id' => 'required|uuid|exists:organizations,id',
-            'settings' => 'nullable|array'
+            'name' => 'nullable|string|max:255',
         ]);
 
-        $repository = $this->repositoryRepository->create($validated);
-        return response()->json($repository, 201);
-    }
-
-    public function show(string $id): JsonResponse
-    {
-        $repository = $this->repositoryRepository->findById($id);
+        $parsed = $this->github->parseGitUrl($validated['url']);
         
-        if (!$repository) {
-            return response()->json(['error' => 'Repository not found'], 404);
+        if (!$parsed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid GitHub repository URL'
+            ], 400);
         }
 
-        return response()->json($repository);
+        $userId = $request->user_id ?? 1;
+        
+        $repoId = DB::table('repositories')->insertGetId([
+            'user_id' => $userId,
+            'name' => $validated['name'] ?? $parsed['repo'],
+            'url' => $validated['url'],
+            'owner' => $parsed['owner'],
+            'repo' => $parsed['repo'],
+            'default_branch' => 'main',
+            'is_private' => true,
+            'last_scan_at' => null,
+            'vulnerability_count' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $repository = DB::table('repositories')->find($repoId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Repository added successfully',
+            'data' => $repository
+        ], 201);
     }
 
-    public function scan(string $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
-        $repository = $this->repositoryRepository->findById($id);
-        
+        $repository = DB::table('repositories')
+            ->where('id', $id)
+            ->first();
+
         if (!$repository) {
-            return response()->json(['error' => 'Repository not found'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Repository not found'
+            ], 404);
         }
 
-        ScanRepositoryJob::dispatch($repository->id);
-        
-        return response()->json(['message' => 'Repository scan started'], 202);
+        return response()->json([
+            'success' => true,
+            'data' => $repository
+        ]);
     }
 
-    public function vulnerabilities(string $id): JsonResponse
+    public function destroy(Request $request, string $id): JsonResponse
     {
-        $repository = $this->repositoryRepository->findById($id);
-        
-        if (!$repository) {
-            return response()->json(['error' => 'Repository not found'], 404);
-        }
+        $deleted = DB::table('repositories')
+            ->where('id', $id)
+            ->delete();
 
-        $vulnerabilities = $this->vulnerabilityRepository->findByRepositoryId($id);
-        return response()->json($vulnerabilities);
-    }
-
-    public function destroy(string $id): JsonResponse
-    {
-        $deleted = $this->repositoryRepository->delete($id);
-        
         if (!$deleted) {
-            return response()->json(['error' => 'Repository not found'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Repository not found'
+            ], 404);
         }
 
-        return response()->json(null, 204);
+        return response()->json([
+            'success' => true,
+            'message' => 'Repository deleted successfully'
+        ]);
+    }
+
+    public function scan(Request $request, string $id): JsonResponse
+    {
+        $repository = DB::table('repositories')
+            ->where('id', $id)
+            ->first();
+
+        if (!$repository) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Repository not found'
+            ], 404);
+        }
+
+        $scanId = Str::uuid()->toString();
+        
+        DB::table('scan_jobs')->insert([
+            'id' => $scanId,
+            'user_id' => $repository->user_id,
+            'repository_id' => $id,
+            'scan_type' => 'full',
+            'status' => 'pending',
+            'config' => json_encode([
+                'target' => $repository->url,
+                'target_type' => 'source_code',
+            ]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Scan initiated successfully',
+            'data' => [
+                'scan_id' => $scanId,
+                'repository_id' => $id,
+                'status' => 'pending'
+            ]
+        ], 202);
+    }
+
+    public function vulnerabilities(Request $request, string $id): JsonResponse
+    {
+        $vulnerabilities = DB::table('vulnerabilities')
+            ->where('repository_id', $id)
+            ->orderByDesc('created_at')
+            ->limit(100)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $vulnerabilities
+        ]);
+    }
+
+    public function refresh(Request $request, string $id): JsonResponse
+    {
+        $repository = DB::table('repositories')
+            ->where('id', $id)
+            ->first();
+
+        if (!$repository) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Repository not found'
+            ], 404);
+        }
+
+        $github = new GitHubService($request->bearerToken());
+        $repoData = $github->getRepository($repository->owner, $repository->repo);
+
+        if (!$repoData) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch repository from GitHub'
+            ], 400);
+        }
+
+        DB::table('repositories')
+            ->where('id', $id)
+            ->update([
+                'name' => $repoData['name'],
+                'default_branch' => $repoData['default_branch'] ?? 'main',
+                'is_private' => $repoData['private'] ?? true,
+                'language' => $repoData['language'] ?? null,
+                'updated_at' => now(),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Repository refreshed successfully'
+        ]);
+    }
+
+    public function connect(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'github_token' => 'required|string',
+        ]);
+
+        $github = new GitHubService($validated['github_token']);
+        $user = $github->getUser();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid GitHub token'
+            ], 401);
+        }
+
+        DB::table('users')
+            ->where('id', $request->user_id ?? 1)
+            ->update([
+                'github_token' => $validated['github_token'],
+                'github_id' => $user['id'],
+                'updated_at' => now(),
+            ]);
+
+        $repositories = $github->getRepositories();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'GitHub connected successfully',
+            'data' => [
+                'user' => [
+                    'id' => $user['id'],
+                    'login' => $user['login'],
+                    'name' => $user['name'],
+                    'avatar' => $user['avatar_url'],
+                ],
+                'repositories_count' => count($repositories)
+            ]
+        ]);
+    }
+
+    public function listGitHub(Request $request): JsonResponse
+    {
+        $github = new GitHubService($request->bearerToken());
+        $repos = $github->getRepositories();
+
+        $formatted = array_map(function ($repo) {
+            return [
+                'id' => $repo['id'],
+                'name' => $repo['name'],
+                'full_name' => $repo['full_name'],
+                'private' => $repo['private'],
+                'language' => $repo['language'],
+                'updated_at' => $repo['updated_at'],
+                'url' => $repo['html_url'],
+            ];
+        }, $repos);
+
+        return response()->json([
+            'success' => true,
+            'data' => $formatted
+        ]);
     }
 }

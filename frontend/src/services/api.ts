@@ -142,6 +142,10 @@ export const authService = {
       notificationStore.error('Registration Failed', error instanceof Error ? error.message : 'Registration failed')
       throw error
     }
+  },
+
+  async getProfile() {
+    return apiClient.get<ApiResponse>('/auth/me')
   }
 }
 
