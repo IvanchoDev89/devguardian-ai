@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ApiKeyController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\BillingController;
+use App\Http\Controllers\Api\OAuthController;
 
 // Auth Routes (public)
 Route::prefix('auth')->group(function () {
@@ -17,6 +18,10 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    
+    // GitHub OAuth
+    Route::get('/github', [OAuthController::class, 'githubRedirect']);
+    Route::get('/github/callback', [OAuthController::class, 'githubCallback']);
 });
 
 // Plans/Pricing (public)
@@ -51,7 +56,7 @@ Route::prefix('api-keys')->group(function () {
     Route::get('/{id}/usage', [ApiKeyController::class, 'usage']);
 });
 
-Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
+Route::prefix('v1')->middleware(['throttle:60,1', 'api.key'])->group(function () {
     // Organizations
     Route::apiResource('organizations', OrganizationController::class);
     
