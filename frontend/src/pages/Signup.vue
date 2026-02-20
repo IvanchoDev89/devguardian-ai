@@ -230,17 +230,6 @@ const handleSignup = async () => {
     loading.value = false
   }
 }
-    
-    localStorage.setItem('auth_token', mockToken)
-    localStorage.setItem('user', JSON.stringify(mockUser))
-    
-    router.push('/dashboard')
-  } catch (err) {
-    error.value = 'Signup failed. Please try again.'
-  } finally {
-    loading.value = false
-  }
-}
 
 const handleGitHubSignup = () => {
   // TODO: Implement GitHub OAuth

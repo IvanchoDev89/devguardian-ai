@@ -322,19 +322,6 @@ const security = ref<Security>({
   apiAccess: true
 })
 
-const saveSettings = async () => {
-  saving.value = true
-  try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    console.log('Settings saved:', { profile, notifications, security })
-  } catch (error) {
-    console.error('Failed to save settings:', error)
-  } finally {
-    saving.value = false
-  }
-}
-
 onMounted(async () => {
   loading.value = true
   try {
