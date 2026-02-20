@@ -436,26 +436,56 @@ export const pentestApi = {
     exploitability_analysis?: boolean
     generate_poc?: boolean
   }) {
-    return aiServiceClient.post<ApiResponse>('/pentest/start-scan', scanConfig)
+    try {
+      const data = await aiServiceClient.post('/pentest/start-scan', scanConfig)
+      return { success: true, data }
+    } catch (err) {
+      return { success: false, message: 'Failed to start scan', data: null }
+    }
   },
 
   async getScanStatus(scanId: string) {
-    return aiServiceClient.get<ApiResponse>(`/pentest/scan/${scanId}`)
+    try {
+      const data = await aiServiceClient.get(`/pentest/scan/${scanId}`)
+      return { success: true, data }
+    } catch (err) {
+      return { success: false, message: 'Failed to get scan status', data: null }
+    }
   },
 
   async getScanFindings(scanId: string) {
-    return aiServiceClient.get<ApiResponse>(`/pentest/scan/${scanId}/findings`)
+    try {
+      const data = await aiServiceClient.get(`/pentest/scan/${scanId}/findings`)
+      return { success: true, data }
+    } catch (err) {
+      return { success: false, message: 'Failed to get findings', data: null }
+    }
   },
 
   async listScans() {
-    return aiServiceClient.get<ApiResponse>('/pentest/scans')
+    try {
+      const data = await aiServiceClient.get('/pentest/scans')
+      return { success: true, data }
+    } catch (err) {
+      return { success: false, message: 'Failed to list scans', data: [] }
+    }
   },
 
   async stopScan(scanId: string) {
-    return aiServiceClient.post<ApiResponse>(`/pentest/scan/${scanId}/stop`)
+    try {
+      const data = await aiServiceClient.post(`/pentest/scan/${scanId}/stop`, {})
+      return { success: true, data }
+    } catch (err) {
+      return { success: false, message: 'Failed to stop scan', data: null }
+    }
   },
 
   async getZeroDayThreats() {
-    return aiServiceClient.get<ApiResponse>('/pentest/zero-day-threats')
+    try {
+      const data = await aiServiceClient.get('/pentest/zero-day-threats')
+      return { success: true, data }
+    } catch (err) {
+      return { success: false, message: 'Failed to get threats', data: null }
+    }
   }
 }
