@@ -276,7 +276,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { authService, apiService } from '../services/api'
+import { authService, settingsService } from '../services/api'
+import { useNotificationStore } from '../stores/notifications'
 
 interface Profile {
   name: string
@@ -301,7 +302,7 @@ const saving = ref(false)
 const loading = ref(false)
 const githubConnected = ref(false)
 const githubToken = ref('')
-const message = ref('')
+const notificationStore = useNotificationStore()
 
 const profile = ref<Profile>({
   name: '',
@@ -325,40 +326,52 @@ const security = ref<Security>({
 onMounted(async () => {
   loading.value = true
   try {
-    const response = await authService.getProfile()
+    const response = await settingsService.getSettings()
     if (response.success && response.data) {
       profile.value.name = response.data.name || ''
       profile.value.email = response.data.email || ''
       profile.value.role = response.data.role || 'member'
+      
+      if (response.data.notifications) {
+        notifications.value.email = response.data.notifications.email_vulnerabilities ?? true
+      }
+      
+      if (response.data.security) {
+        security.value.sessionTimeout = response.data.security.session_timeout ?? 30
+      }
     }
   } catch (error) {
-    console.error('Failed to load profile:', error)
+    console.error('Failed to load settings:', error)
   }
   loading.value = false
 })
 
 const connectGitHub = async () => {
   if (!githubToken.value) {
-    message.value = 'Please enter your GitHub token'
+    notificationStore.error('Error', 'Please enter your GitHub token')
     return
   }
   
   saving.value = true
-  message.value = ''
   
   try {
-    const response = await apiService.post('/github/connect', {
-      github_token: githubToken.value
-    })
+    const response = await fetch('http://localhost:8001/api/v1/github/connect', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      },
+      body: JSON.stringify({ github_token: githubToken.value })
+    }).then(r => r.json())
     
     if (response.success) {
       githubConnected.value = true
-      message.value = 'GitHub connected successfully!'
+      notificationStore.success('Connected', 'GitHub account connected successfully')
     } else {
-      message.value = response.message || 'Failed to connect GitHub'
+      notificationStore.error('Error', response.message || 'Failed to connect GitHub')
     }
   } catch (error) {
-    message.value = 'Failed to connect GitHub'
+    notificationStore.error('Error', 'Failed to connect GitHub account')
   }
   
   saving.value = false
@@ -366,13 +379,45 @@ const connectGitHub = async () => {
 
 const saveSettings = async () => {
   saving.value = true
-  message.value = ''
   
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    message.value = 'Settings saved successfully!'
+    const response = await settingsService.updateSettings({
+      name: profile.value.name,
+      notifications: {
+        email_vulnerabilities: notifications.value.email,
+        email_scans: notifications.value.email,
+        email_marketing: false
+      },
+      security: {
+        session_timeout: security.value.sessionTimeout,
+        require_2fa: security.value.mfa === 'Required'
+      }
+    })
+    
+    if (response.success) {
+      notificationStore.success('Saved', 'Settings saved successfully')
+      
+      // Update localStorage with new user data
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      user.name = profile.value.name
+      localStorage.setItem('user', JSON.stringify(user))
+    } else {
+      notificationStore.error('Error', response.message || 'Failed to save settings')
+    }
   } catch (error) {
-    message.value = 'Failed to save settings'
+    notificationStore.error('Error', 'Failed to save settings')
+  }
+  
+  saving.value = false
+}
+</script>
+      githubConnected.value = true
+      message.value = 'GitHub connected successfully!'
+    } else {
+      message.value = response.message || 'Failed to connect GitHub'
+    }
+  } catch (error) {
+    message.value = 'Failed to connect GitHub'
   }
   
   saving.value = false

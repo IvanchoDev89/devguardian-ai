@@ -168,15 +168,34 @@ export const authService = {
 // Dashboard Service
 export const dashboardService = {
   async getStats() {
-    return apiClient.get<ApiResponse>('/dashboard/stats')
+    return apiClient.get<ApiResponse>('/v1/dashboard/stats')
   },
 
   async getRecentScans() {
-    return apiClient.get<ApiResponse>('/dashboard/recent-scans')
+    return apiClient.get<ApiResponse>('/v1/dashboard/recent-scans')
   },
 
   async getVulnerabilities(params?: { page?: number; severity?: string; status?: string }) {
-    return apiClient.get<ApiResponse>('/dashboard/vulnerabilities', params)
+    return apiClient.get<ApiResponse>('/v1/dashboard/vulnerabilities', params)
+  }
+}
+
+// Settings Service
+export const settingsService = {
+  async getSettings() {
+    return apiClient.get<ApiResponse>('/v1/settings')
+  },
+
+  async updateSettings(settings: any) {
+    return apiClient.put<ApiResponse>('/v1/settings', settings)
+  },
+
+  async updatePassword(data: { current_password: string; new_password: string; new_password_confirmation: string }) {
+    return apiClient.post<ApiResponse>('/v1/settings/password', data)
+  },
+
+  async deleteAccount() {
+    return apiClient.delete<ApiResponse>('/v1/settings')
   }
 }
 
@@ -238,26 +257,6 @@ export const aiService = {
     return aiServiceClient.post<ApiResponse>('/code/analyze', { code })
   }
 }
-
-// Settings Service
-export const settingsService = {
-  async getSettings() {
-    return apiClient.get<ApiResponse>('/settings')
-  },
-
-  async updateSettings(settings: any) {
-    return apiClient.put<ApiResponse>('/settings', settings)
-  },
-
-  async getNotifications() {
-    return apiClient.get<ApiResponse>('/settings/notifications')
-  },
-
-  async updateNotifications(notifications: any) {
-    return apiClient.put<ApiResponse>('/settings/notifications', notifications)
-  }
-}
-
 // Health check
 export const healthApi = {
   async checkBackend() {

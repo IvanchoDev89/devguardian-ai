@@ -235,33 +235,22 @@ import { ref, computed, onMounted } from 'vue'
 import { dashboardService } from '../services/api'
 import { useNotificationStore } from '../stores/notifications'
 
-const loading = ref(false)
-const error = ref('')
 const filterSeverity = ref('')
 const filterStatus = ref('')
 
-// Mock data - replace with real API calls
+const loading = ref(false)
+const error = ref('')
+
+// Data from API
 const stats = ref({
-  totalScans: 1247,
-  criticalVulns: 3,
-  fixedToday: 28,
-  securityScore: 87
+  totalScans: 0,
+  criticalVulns: 0,
+  fixedToday: 0,
+  securityScore: 0
 })
 
-const recentScans = ref([
-  { id: 1, repository: 'frontend-app', status: 'completed', vulnerabilities: 2, time: '2 hours ago' },
-  { id: 2, repository: 'api-server', status: 'running', vulnerabilities: 0, time: '5 minutes ago' },
-  { id: 3, repository: 'mobile-app', status: 'completed', vulnerabilities: 1, time: '1 day ago' },
-  { id: 4, repository: 'admin-panel', status: 'failed', vulnerabilities: 5, time: '2 days ago' }
-])
-
-const vulnerabilities = ref([
-  { id: 1, repository: 'frontend-app', type: 'SQL Injection', severity: 'Critical', status: 'Open' },
-  { id: 2, repository: 'frontend-app', type: 'XSS', severity: 'High', status: 'In Progress' },
-  { id: 3, repository: 'mobile-app', type: 'Path Traversal', severity: 'Medium', status: 'Open' },
-  { id: 4, repository: 'admin-panel', type: 'Command Injection', severity: 'Critical', status: 'Open' },
-  { id: 5, repository: 'admin-panel', type: 'Insecure Deserialization', severity: 'High', status: 'Open' }
-])
+const recentScans = ref<any[]>([])
+const vulnerabilities = ref<any[]>([])
 
 const filteredVulnerabilities = computed(() => {
   return vulnerabilities.value.filter(vuln => {
@@ -276,17 +265,33 @@ const refreshData = async () => {
   error.value = ''
   
   try {
-    // Simulate API calls
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    // Fetch stats from API
+    const statsResponse = await dashboardService.getStats()
+    if (statsResponse.success && statsResponse.data) {
+      stats.value = {
+        totalScans: statsResponse.data.total_scans || 0,
+        criticalVulns: statsResponse.data.vulnerabilities?.critical || 0,
+        fixedToday: statsResponse.data.vulnerabilities?.fixed || 0,
+        securityScore: Math.max(0, 100 - (statsResponse.data.vulnerabilities?.critical * 10 || 0) - (statsResponse.data.vulnerabilities?.high * 5 || 0))
+      }
+    }
     
-    // Update with real data
-    stats.value.totalScans += Math.floor(Math.random() * 10)
-    stats.value.fixedToday += Math.floor(Math.random() * 3)
+    // Fetch recent scans from API
+    const scansResponse = await dashboardService.getRecentScans()
+    if (scansResponse.success && scansResponse.data) {
+      recentScans.value = scansResponse.data
+    }
+    
+    // Fetch vulnerabilities from API
+    const vulnsResponse = await dashboardService.getVulnerabilities()
+    if (vulnsResponse.success && vulnsResponse.data) {
+      vulnerabilities.value = vulnsResponse.data
+    }
     
     const notificationStore = useNotificationStore()
     notificationStore.success('Data Refreshed', 'Dashboard data has been updated successfully')
-  } catch (err) {
-    error.value = 'Failed to refresh data'
+  } catch (err: any) {
+    error.value = err.message || 'Failed to refresh data'
     const notificationStore = useNotificationStore()
     notificationStore.error('Refresh Failed', error.value)
   } finally {
