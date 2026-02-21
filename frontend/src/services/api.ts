@@ -29,7 +29,16 @@ class ApiClient {
     }
   }
 
-  private handleError(error: any, customMessage?: string): void {
+  private handleError(error: any, endpoint: string, customMessage?: string): void {
+    // Skip error handling for auth endpoints - they're handled by the caller
+    const isAuthEndpoint = endpoint.includes('/auth/login') || 
+                          endpoint.includes('/auth/register') ||
+                          endpoint.includes('/auth/logout')
+    
+    if (isAuthEndpoint) {
+      return // Let the caller handle auth errors
+    }
+    
     const notificationStore = useNotificationStore()
     
     if (error.status === 401) {
@@ -88,7 +97,7 @@ class ApiClient {
         )
         
         // Handle specific error codes
-        this.handleError(error)
+        this.handleError(error, endpoint)
         throw error
       }
 
@@ -98,7 +107,7 @@ class ApiClient {
         throw error
       }
       const apiError = new ApiError(error instanceof Error ? error.message : 'Network error')
-      this.handleError(apiError)
+      this.handleError(apiError, endpoint)
       throw apiError
     }
   }
