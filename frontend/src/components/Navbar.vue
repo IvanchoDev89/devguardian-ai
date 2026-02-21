@@ -15,7 +15,7 @@
         </div>
 
         <!-- Navigation Links - Desktop -->
-        <div class="hidden md:flex items-center space-x-1">
+        <div class="hidden lg:flex items-center space-x-1">
           <router-link 
             to="/dashboard" 
             class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
@@ -40,46 +40,38 @@
             Vulnerabilities
           </router-link>
 
-          <!-- More Dropdown -->
-          <div class="relative" @mouseenter="showMoreMenu = true" @mouseleave="showMoreMenu = false">
-            <button class="px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 flex items-center">
-              More
-              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            
-            <div 
-              v-if="showMoreMenu" 
-              class="absolute left-0 mt-2 w-48 bg-slate-800/95 backdrop-blur-md rounded-lg shadow-xl border border-white/10 py-1"
-            >
-              <router-link 
-                to="/ai-fixes" 
-                class="block px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
-              >
-                AI Fixes
-              </router-link>
-              <router-link 
-                to="/pentesting" 
-                class="block px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
-              >
-                Pentesting
-              </router-link>
-              <router-link 
-                to="/docs" 
-                class="block px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
-              >
-                Documentation
-              </router-link>
-              <router-link 
-                v-if="isAdmin"
-                to="/super-admin" 
-                class="block px-4 py-2 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors"
-              >
-                Admin Panel
-              </router-link>
-            </div>
-          </div>
+          <router-link 
+            to="/ai-fixes" 
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+            :class="$route.path === '/ai-fixes' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+          >
+            AI Fixes
+          </router-link>
+
+          <router-link 
+            to="/pentesting" 
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+            :class="$route.path === '/pentesting' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+          >
+            Pentesting
+          </router-link>
+
+          <router-link 
+            to="/docs" 
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+            :class="$route.path === '/docs' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+          >
+            Docs
+          </router-link>
+
+          <router-link 
+            v-if="isAdmin"
+            to="/super-admin" 
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+            :class="$route.path === '/super-admin' ? 'text-white bg-red-600' : 'text-red-400 hover:text-red-300 hover:bg-white/5'"
+          >
+            Admin
+          </router-link>
         </div>
 
         <!-- Right side items -->
@@ -123,6 +115,7 @@
                 <router-link 
                   to="/settings" 
                   class="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
+                  @click="showUserMenu = false"
                 >
                   <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -133,6 +126,7 @@
                 <router-link 
                   to="/billing" 
                   class="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
+                  @click="showUserMenu = false"
                 >
                   <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
@@ -267,7 +261,6 @@ const authStore = useAuthStore()
 
 const showUserMenu = ref(false)
 const showMobileMenu = ref(false)
-const showMoreMenu = ref(false)
 
 const user = computed(() => authStore.user as any)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
