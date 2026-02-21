@@ -99,6 +99,12 @@ const routes = [
     component: () => import('./pages/Documentation.vue')
   },
   {
+    path: '/super-admin',
+    name: 'SuperAdmin',
+    component: () => import('./pages/SuperAdmin.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/billing',
     name: 'Billing',
     component: () => import('./pages/Billing.vue'),
@@ -114,13 +120,31 @@ const router = createRouter({
 // Navigation guard for protected routes
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('auth_token')
+  const userStr = localStorage.getItem('user')
   const requiresAuth = to.meta.requiresAuth
+  const requiresAdmin = to.meta.requiresAdmin
   
+  // Check if route requires authentication
   if (requiresAuth && !token) {
     next('/login')
-  } else {
-    next()
+    return
   }
+  
+  // Check if route requires admin role
+  if (requiresAdmin && userStr) {
+    try {
+      const user = JSON.parse(userStr)
+      if (user.role !== 'admin' && user.role !== 'super_admin') {
+        next('/dashboard')
+        return
+      }
+    } catch (e) {
+      next('/dashboard')
+      return
+    }
+  }
+  
+  next()
 })
 
 const app = createApp(App)

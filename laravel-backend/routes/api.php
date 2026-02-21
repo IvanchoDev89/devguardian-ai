@@ -12,6 +12,9 @@ use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\OAuthController;
 
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\SettingsController;
+
 // Auth Routes (public)
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
@@ -57,6 +60,17 @@ Route::prefix('api-keys')->group(function () {
 });
 
 Route::prefix('v1')->middleware(['throttle:60,1', 'api.key'])->group(function () {
+    // Dashboard
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/dashboard/recent-scans', [DashboardController::class, 'recentScans']);
+    Route::get('/dashboard/vulnerabilities', [DashboardController::class, 'vulnerabilities']);
+    
+    // Settings
+    Route::get('/settings', [SettingsController::class, 'show']);
+    Route::put('/settings', [SettingsController::class, 'update']);
+    Route::post('/settings/password', [SettingsController::class, 'updatePassword']);
+    Route::delete('/settings', [SettingsController::class, 'delete']);
+    
     // Organizations
     Route::apiResource('organizations', OrganizationController::class);
     
@@ -127,8 +141,8 @@ Route::prefix('v1')->middleware(['throttle:60,1', 'api.key'])->group(function ()
     });
 });
 
-// Super Admin Routes - Public for development
-Route::prefix('v1/admin')->group(function () {
+// Super Admin Routes - Protected by auth and admin check
+Route::prefix('v1/admin')->middleware(['auth:api'])->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard']);
     Route::post('/system-scan', [SuperAdminController::class, 'runSystemScan']);
     Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs']);

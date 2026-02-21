@@ -10,6 +10,22 @@ use Carbon\Carbon;
 
 class SuperAdminController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $user = $request->user();
+            
+            if (!$user || !in_array($user->role, ['admin', 'super_admin'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Admin access required.'
+                ], 403);
+            }
+            
+            return $next($request);
+        });
+    }
+    
     public function dashboard(Request $request)
     {
         $timeRange = $request->get('range', '24h');
