@@ -13,6 +13,9 @@ use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\OAuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\EmailQueueController;
 use App\Http\Middleware\AuthenticateUser;
 
 // Register middleware aliases
@@ -87,6 +90,23 @@ Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
         Route::post('repositories/{repository}/scan', [RepositoryController::class, 'scan']);
         Route::post('repositories/{repository}/refresh', [RepositoryController::class, 'refresh']);
         Route::get('repositories/{repository}/vulnerabilities', [RepositoryController::class, 'vulnerabilities']);
+        
+        // Messages
+        Route::get('/messages', [MessageController::class, 'index']);
+        Route::post('/messages', [MessageController::class, 'send']);
+        Route::post('/messages/{id}/read', [MessageController::class, 'markAsRead']);
+        Route::get('/messages/unread', [MessageController::class, 'unreadCount']);
+        
+        // Notifications
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::get('/notifications/unread', [NotificationController::class, 'unreadCount']);
+        
+        // Email Queue
+        Route::get('/emails', [EmailQueueController::class, 'index']);
+        Route::post('/emails/send', [EmailQueueController::class, 'send']);
+        Route::post('/emails/send-bulk', [EmailQueueController::class, 'sendBulk']);
     });
     
     // Scanner routes - require user authentication
