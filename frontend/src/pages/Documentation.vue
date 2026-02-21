@@ -1,7 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-900 text-gray-100">
-    <Navbar />
-    
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="text-center mb-12">
         <h1 class="text-4xl font-bold text-white mb-4">API Documentation</h1>
@@ -281,7 +279,6 @@ Content-Type: application/json</pre>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import Navbar from '../components/Navbar.vue'
 
 const activeSection = ref('authentication')
 
