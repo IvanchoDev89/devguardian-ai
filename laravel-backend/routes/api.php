@@ -11,9 +11,12 @@ use App\Http\Controllers\Api\ApiKeyController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\OAuthController;
-
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Middleware\AuthenticateUser;
+
+// Register middleware aliases
+Route::aliasMiddleware('auth.user', AuthenticateUser::class);
 
 // Auth Routes (public)
 Route::prefix('auth')->group(function () {
@@ -59,17 +62,19 @@ Route::prefix('api-keys')->group(function () {
     Route::get('/{id}/usage', [ApiKeyController::class, 'usage']);
 });
 
-Route::prefix('v1')->middleware(['throttle:60,1', 'api.key'])->group(function () {
-    // Dashboard
-    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
-    Route::get('/dashboard/recent-scans', [DashboardController::class, 'recentScans']);
-    Route::get('/dashboard/vulnerabilities', [DashboardController::class, 'vulnerabilities']);
-    
-    // Settings
-    Route::get('/settings', [SettingsController::class, 'show']);
-    Route::put('/settings', [SettingsController::class, 'update']);
-    Route::post('/settings/password', [SettingsController::class, 'updatePassword']);
-    Route::delete('/settings', [SettingsController::class, 'delete']);
+Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
+    // Dashboard - requires user authentication
+    Route::middleware(['auth.user'])->group(function () {
+        Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+        Route::get('/dashboard/recent-scans', [DashboardController::class, 'recentScans']);
+        Route::get('/dashboard/vulnerabilities', [DashboardController::class, 'vulnerabilities']);
+        
+        // Settings
+        Route::get('/settings', [SettingsController::class, 'show']);
+        Route::put('/settings', [SettingsController::class, 'update']);
+        Route::post('/settings/password', [SettingsController::class, 'updatePassword']);
+        Route::delete('/settings', [SettingsController::class, 'delete']);
+    });
     
     // Organizations
     Route::apiResource('organizations', OrganizationController::class);
