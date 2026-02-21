@@ -184,13 +184,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { authService } from '../services/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+onMounted(() => {
+  // Redirect if already logged in
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    router.push('/dashboard')
+  }
+})
 
 const form = ref({
   name: '',

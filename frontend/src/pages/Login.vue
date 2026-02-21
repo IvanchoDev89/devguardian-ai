@@ -161,6 +161,12 @@ onMounted(() => {
   if (route.query.reason === 'unauthorized') {
     error.value = 'Your session has expired. Please log in again.'
   }
+  
+  // Redirect if already logged in
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    router.push('/dashboard')
+  }
 })
 
 const handleLogin = async () => {
