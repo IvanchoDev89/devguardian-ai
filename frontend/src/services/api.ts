@@ -249,19 +249,19 @@ export const settingsService = {
 // Repository Service
 export const repositoryService = {
   async getRepositories() {
-    return apiClient.get<ApiResponse>('/repositories')
+    return apiClient.get<ApiResponse>('/v1/repositories')
   },
 
   async addRepository(repoData: { url: string; name: string }) {
-    return apiClient.post<ApiResponse>('/repositories', repoData)
+    return apiClient.post<ApiResponse>('/v1/repositories', repoData)
   },
 
   async deleteRepository(id: string) {
-    return apiClient.delete<ApiResponse>(`/repositories/${id}`)
+    return apiClient.delete<ApiResponse>(`/v1/repositories/${id}`)
   },
 
   async scanRepository(id: string) {
-    return apiClient.post<ApiResponse>(`/repositories/${id}/scan`)
+    return apiClient.post<ApiResponse>(`/v1/repositories/${id}/scan`)
   }
 }
 
@@ -559,27 +559,27 @@ export const pentestApi = {
 // Billing Service
 export const billingService = {
   async getSubscription() {
-    return apiClient.get('/billing/subscription')
+    return apiClient.get('/v1/billing/subscription')
   },
 
   async createCheckout(planId: string) {
-    return apiClient.post('/billing/checkout', { plan_id: planId })
+    return apiClient.post('/v1/billing/checkout', { plan_id: planId })
   },
 
   async changePlan(planId: string) {
-    return apiClient.post('/billing/change-plan', { plan_id: planId })
+    return apiClient.post('/v1/billing/change-plan', { plan_id: planId })
   },
 
   async cancelSubscription() {
-    return apiClient.post('/billing/cancel')
+    return apiClient.post('/v1/billing/cancel')
   },
 
   async getInvoices() {
-    return apiClient.get('/billing/invoices')
+    return apiClient.get('/v1/billing/invoices')
   },
 
   async getPaymentMethods() {
-    return apiClient.get('/billing/payment-methods')
+    return apiClient.get('/v1/billing/payment-methods')
   },
 
   async addPaymentMethod(paymentMethodId: string) {
