@@ -105,10 +105,16 @@
                 <p class="text-sm font-medium text-white">{{ user?.name }}</p>
                 <p class="text-xs text-gray-400">{{ user?.email }}</p>
                 <span 
-                  v-if="user?.role === 'admin'" 
+                  v-if="userRole === 'admin'" 
                   class="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400"
                 >
                   Admin
+                </span>
+                <span 
+                  v-else-if="userRole === 'super_admin'" 
+                  class="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400"
+                >
+                  Super Admin
                 </span>
               </div>
               <div class="py-1">
@@ -264,7 +270,19 @@ const showMobileMenu = ref(false)
 
 const user = computed(() => authStore.user as any)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
-const isAdmin = computed(() => user.value?.role === 'admin' || user.value?.role === 'super_admin')
+const userRole = computed(() => {
+  if (user.value?.role) return user.value.role
+  const stored = localStorage.getItem('user')
+  if (stored) {
+    try {
+      return JSON.parse(stored).role
+    } catch {
+      return null
+    }
+  }
+  return null
+})
+const isAdmin = computed(() => userRole.value === 'admin' || userRole.value === 'super_admin')
 
 const handleLogout = () => {
   authStore.logout()
