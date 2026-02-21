@@ -10,7 +10,15 @@ class AuthenticateUser
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $token = $request->bearerToken() ?? $request->header('Authorization');
+        $token = $request->bearerToken();
+        
+        // Also check Authorization header without Bearer prefix
+        if (!$token) {
+            $authHeader = $request->header('Authorization');
+            if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
+                $token = substr($authHeader, 7);
+            }
+        }
 
         if (!$token) {
             return response()->json([
@@ -21,7 +29,15 @@ class AuthenticateUser
 
         // Decode the token (simple base64 encoded format from AuthController)
         try {
-            $parts = explode(':', base64_decode($token));
+            $decoded = base64_decode($token);
+            if (!$decoded) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid token'
+                ], 401);
+            }
+            
+            $parts = explode(':', $decoded);
             if (count($parts) < 2) {
                 return response()->json([
                     'success' => false,
@@ -58,7 +74,7 @@ class AuthenticateUser
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid token'
+                'message' => 'Invalid token: ' . $e->getMessage()
             ], 401);
         }
 
