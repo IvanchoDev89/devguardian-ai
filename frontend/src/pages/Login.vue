@@ -138,12 +138,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { authService } from '../services/api'
 import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const form = ref({
@@ -154,6 +155,13 @@ const form = ref({
 
 const loading = ref(false)
 const error = ref('')
+
+onMounted(() => {
+  // Check if redirected due to unauthorized access
+  if (route.query.reason === 'unauthorized') {
+    error.value = 'Your session has expired. Please log in again.'
+  }
+})
 
 const handleLogin = async () => {
   loading.value = true

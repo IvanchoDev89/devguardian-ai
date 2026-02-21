@@ -29,6 +29,38 @@ class ApiClient {
     }
   }
 
+  private handleError(error: any, customMessage?: string): void {
+    const notificationStore = useNotificationStore()
+    
+    if (error.status === 401) {
+      // Unauthorized - clear auth and redirect to login
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('user')
+      localStorage.removeItem('plan')
+      window.location.href = '/login?reason=unauthorized'
+      return
+    }
+    
+    if (error.status === 403) {
+      notificationStore.error('Access Denied', error.message || 'You do not have permission to perform this action')
+      return
+    }
+    
+    if (error.status === 422) {
+      notificationStore.error('Validation Error', error.message || 'Please check your input')
+      return
+    }
+    
+    if (error.status && error.status >= 500) {
+      notificationStore.error('Server Error', 'Something went wrong. Please try again later.')
+      return
+    }
+    
+    if (customMessage) {
+      notificationStore.error('Error', customMessage)
+    }
+  }
+
   private async request<T = any>(
     endpoint: string,
     options: RequestInit = {}
@@ -50,10 +82,14 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new ApiError(
+        const error = new ApiError(
           errorData.message || `HTTP ${response.status}: ${response.statusText}`,
           response.status
         )
+        
+        // Handle specific error codes
+        this.handleError(error)
+        throw error
       }
 
       return await response.json()
@@ -61,7 +97,9 @@ class ApiClient {
       if (error instanceof ApiError) {
         throw error
       }
-      throw new ApiError(error instanceof Error ? error.message : 'Network error')
+      const apiError = new ApiError(error instanceof Error ? error.message : 'Network error')
+      this.handleError(apiError)
+      throw apiError
     }
   }
 
