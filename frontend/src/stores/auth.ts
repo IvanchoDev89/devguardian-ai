@@ -8,6 +8,22 @@ export const useAuthStore = defineStore('auth', () => {
   const plan = ref<string>('free')
   const scansUsed = ref(0)
   
+  // Initialize auth state immediately
+  const initAuthState = () => {
+    const storedToken = localStorage.getItem('auth_token')
+    const storedUser = localStorage.getItem('user')
+    const storedPlan = localStorage.getItem('plan')
+    
+    if (storedToken && storedUser) {
+      token.value = storedToken
+      user.value = JSON.parse(storedUser)
+      plan.value = storedPlan || 'free'
+    }
+  }
+  
+  // Initialize immediately
+  initAuthState()
+  
   const isAuthenticated = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'admin' || user.value?.role === 'super_admin')
   const canScan = computed(() => {
@@ -24,8 +40,8 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.success && response.data) {
         user.value = response.data.user
         token.value = response.data.token
-        plan.value = response.data.user.plan || 'free'
-        scansUsed.value = response.data.user.scans_used || 0
+        plan.value = response.data.user?.plan || 'free'
+        scansUsed.value = response.data.user?.scans_used || 0
         
         localStorage.setItem('auth_token', response.data.token)
         localStorage.setItem('user', JSON.stringify(response.data.user))
@@ -51,15 +67,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
   
   const initAuth = () => {
-    const storedToken = localStorage.getItem('auth_token')
-    const storedUser = localStorage.getItem('user')
-    const storedPlan = localStorage.getItem('plan')
-    
-    if (storedToken && storedUser) {
-      token.value = storedToken
-      user.value = JSON.parse(storedUser)
-      plan.value = storedPlan || 'free'
-    }
+    initAuthState()
   }
   
   const incrementScans = () => {

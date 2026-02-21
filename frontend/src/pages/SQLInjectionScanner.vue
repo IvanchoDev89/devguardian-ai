@@ -428,9 +428,6 @@ connection.query(sql, [searchQuery], (err, result) => {
 }
 
 onMounted(() => {
-  // Auto-run sample scan for demonstration
-  setTimeout(() => {
-    runSampleScan()
-  }, 1000)
+  // Don't auto-run scan - let user choose when to scan
 })
 </script>
