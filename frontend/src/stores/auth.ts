@@ -65,6 +65,28 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('user')
     localStorage.removeItem('plan')
   }
+
+  const register = async (userData: { name: string; email: string; password: string }) => {
+    try {
+      const response = await apiClient.post<any>('/auth/register', userData)
+      
+      if (response.success && response.data) {
+        user.value = response.data.user
+        token.value = response.data.token
+        plan.value = response.data.user?.plan || 'free'
+        
+        localStorage.setItem('auth_token', response.data.token)
+        localStorage.setItem('user', JSON.stringify(response.data.user))
+        localStorage.setItem('plan', plan.value)
+        
+        return { success: true }
+      } else {
+        return { success: false, error: response.message || 'Registration failed' }
+      }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Registration failed' }
+    }
+  }
   
   const initAuth = () => {
     initAuthState()
@@ -87,6 +109,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin,
     canScan,
     login,
+    register,
     logout,
     initAuth,
     incrementScans,

@@ -186,9 +186,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 import { authService } from '../services/api'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const form = ref({
   name: '',
@@ -213,13 +215,17 @@ const handleSignup = async () => {
       return
     }
     
-    await authService.register({
+    const result = await authStore.register({
       name: form.value.name,
       email: form.value.email,
       password: form.value.password,
     })
     
-    router.push('/dashboard')
+    if (result.success) {
+      router.push('/dashboard')
+    } else {
+      error.value = result.error || 'Registration failed'
+    }
   } catch (err: any) {
     error.value = err.message || 'Registration failed. Please try again.'
   } finally {
@@ -227,13 +233,25 @@ const handleSignup = async () => {
   }
 }
 
-const handleGitHubSignup = () => {
-  // TODO: Implement GitHub OAuth
-  console.log('GitHub signup')
+const handleGitHubSignup = async () => {
+  try {
+    loading.value = true
+    error.value = ''
+    
+    const response = await authService.getGitHubAuthUrl()
+    
+    if (response.success && response.data?.url) {
+      window.location.href = response.data.url
+    } else {
+      throw new Error(response.message || 'Failed to get GitHub auth URL')
+    }
+  } catch (err: any) {
+    error.value = err.message || 'GitHub signup failed'
+    loading.value = false
+  }
 }
 
 const handleGoogleSignup = () => {
-  // TODO: Implement Google OAuth
-  console.log('Google signup')
+  error.value = 'Google OAuth will be available soon. Please sign up with email or GitHub.'
 }
 </script>
