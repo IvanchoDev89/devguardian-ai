@@ -407,19 +407,7 @@ const saveSettings = async () => {
   } catch (error) {
     notificationStore.error('Error', 'Failed to save settings')
   }
-  
-  saving.value = false
-}
-</script>
-      githubConnected.value = true
-      message.value = 'GitHub connected successfully!'
-    } else {
-      message.value = response.message || 'Failed to connect GitHub'
-    }
-  } catch (error) {
-    message.value = 'Failed to connect GitHub'
-  }
-  
+   
   saving.value = false
 }
 </script>
