@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automation & Workflows - DevGuardian AI | n8n Integration</title>
+    <meta name="description" content="DevGuardian AI automation with n8n integration. Automated security workflows, CI/CD integration, reporting, and compliance checking. Streamline your security operations with intelligent automation.">
+    <meta name="keywords" content="n8n automation, security workflows, CI/CD integration, automated security, DevSecOps automation, security orchestration, workflow automation">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://devguardian-ai.com/automation">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Automation & Workflows - DevGuardian AI">
+    <meta property="og:description" content="Advanced automation with n8n integration for streamlined security operations">
+    <meta property="og:url" content="https://devguardian-ai.com/automation">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .workflow-card {
+            transition: all 0.3s ease;
+        }
+        .workflow-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+        .feature-icon {
+            transition: all 0.3s ease;
+        }
+        .feature-icon:hover {
+            transform: scale(1.1);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .automation-flow {
+            animation: flow 3s ease-in-out infinite;
+        }
+        @keyframes flow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-shield-alt text-2xl text-indigo-600 mr-3"></i>
+                    <span class="font-bold text-xl">DevGuardian AI</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-indigo-600 transition">Home</a>
+                    <a href="pricing.html" class="text-gray-700 hover:text-indigo-600 transition">Pricing</a>
+                    <a href="developers.html" class="text-gray-700 hover:text-indigo-600 transition">Developers</a>
+                    <a href="automation.html" class="text-indigo-600 font-semibold">Automation</a>
+                    <a href="about.html" class="text-gray-700 hover:text-indigo-600 transition">About</a>
+                </div>
+                <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+                    Start Free Trial
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6">
+                Intelligent Automation<br>
+                <span class="text-yellow-300">with n8n Integration</span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 text-gray-200">
+                Streamline your security operations with automated workflows, CI/CD integration, and intelligent orchestration
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <button class="bg-white text-indigo-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition">
+                    <i class="fas fa-robot mr-2"></i>
+                    Setup Automation
+                </button>
+                <button class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition">
+                    <i class="fas fa-play-circle mr-2"></i>
+                    Watch Demo
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div>
+                    <div class="text-4xl font-bold mb-2">50+</div>
+                    <div class="text-gray-200">Workflow Templates</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold mb-2">100%</div>
+                    <div class="text-gray-200">n8n Compatible</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold mb-2">< 5min</div>
+                    <div class="text-gray-200">Setup Time</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Automation Features -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-center mb-16">Powerful Automation Features</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Security Scanning Automation -->
+                <div class="bg-gray-50 p-8 rounded-2xl workflow-card">
+                    <div class="text-indigo-600 text-4xl mb-4 feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Automated Security Scanning</h3>
+                    <p class="text-gray-600 mb-4">Continuous security scanning with intelligent scheduling and real-time vulnerability detection.</p>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Scheduled scans</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Real-time monitoring</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Multi-repository support</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- CI/CD Integration -->
+                <div class="bg-gray-50 p-8 rounded-2xl workflow-card">
+                    <div class="text-indigo-600 text-4xl mb-4 feature-icon">
+                        <i class="fas fa-code-branch"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">CI/CD Pipeline Integration</h3>
+                    <p class="text-gray-600 mb-4">Seamless integration with your development pipeline for automated security checks.</p>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>GitHub Actions</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>GitLab CI</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Jenkins integration</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Intelligent Fix Generation -->
+                <div class="bg-gray-50 p-8 rounded-2xl workflow-card">
+                    <div class="text-indigo-600 text-4xl mb-4 feature-icon">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Intelligent Fix Generation</h3>
+                    <p class="text-gray-600 mb-4">AI-powered fix generation with automatic deployment and validation.</p>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Automated fixes</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Code validation</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Rollback support</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Reporting & Analytics -->
+                <div class="bg-gray-50 p-8 rounded-2xl workflow-card">
+                    <div class="text-indigo-600 text-4xl mb-4 feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Automated Reporting</h3>
+                    <p class="text-gray-600 mb-4">Comprehensive security reports with automated scheduling and distribution.</p>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Daily/weekly reports</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Custom dashboards</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Executive summaries</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Compliance Automation -->
+                <div class="bg-gray-50 p-8 rounded-2xl workflow-card">
+                    <div class="text-indigo-600 text-4xl mb-4 feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Compliance Automation</h3>
+                    <p class="text-gray-600 mb-4">Automated compliance checking with OWASP, NIST, and industry standards.</p>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>OWASP Top 10</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>NIST framework</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Custom standards</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Notification System -->
+                <div class="bg-gray-50 p-8 rounded-2xl workflow-card">
+                    <div class="text-indigo-600 text-4xl mb-4 feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Smart Notifications</h3>
+                    <p class="text-gray-600 mb-4">Intelligent notification system with multi-channel alerting and escalation.</p>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Slack integration</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Email alerts</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>PagerDuty support</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Workflow Examples -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-center mb-16">Ready-to-Use Workflows</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- GitHub Security Workflow -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <div class="flex items-center mb-6">
+                        <i class="fab fa-github text-4xl text-gray-800 mr-4"></i>
+                        <h3 class="text-2xl font-semibold">GitHub Security Workflow</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">Automated security scanning for GitHub repositories with pull request checks and status updates.</p>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex items-center">
+                            <div class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">1</div>
+                            <span>Push triggers security scan</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">2</div>
+                            <span>Vulnerabilities detected and analyzed</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">3</div>
+                            <span>AI fixes generated automatically</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">4</div>
+                            <span>PR status updated with results</span>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
+                        <i class="fas fa-download mr-2"></i>
+                        Import Workflow
+                    </button>
+                </div>
+
+                <!-- Slack Notification Workflow -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <div class="flex items-center mb-6">
+                        <i class="fab fa-slack text-4xl text-purple-600 mr-4"></i>
+                        <h3 class="text-2xl font-semibold">Slack Notification Workflow</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">Real-time security alerts in Slack with detailed vulnerability information and quick actions.</p>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">1</div>
+                            <span>Security scan completed</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">2</div>
+                            <span>Vulnerabilities analyzed and prioritized</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">3</div>
+                            <span>Slack message formatted and sent</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">4</div>
+                            <span>Interactive buttons for quick actions</span>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition">
+                        <i class="fas fa-download mr-2"></i>
+                        Import Workflow
+                    </button>
+                </div>
+
+                <!-- Daily Reporting Workflow -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-chart-bar text-4xl text-green-600 mr-4"></i>
+                        <h3 class="text-2xl font-semibold">Daily Reporting Workflow</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">Automated daily security reports with comprehensive analytics and executive summaries.</p>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 text-green-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">1</div>
+                            <span>Daily trigger at 9 AM</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-green-100 text-green-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">2</div>
+                            <span>Security data collected</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-green-100 text-green-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">3</div>
+                            <span>Report generated and formatted</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-green-100 text-green-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">4</div>
+                            <span>Email sent to stakeholders</span>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition">
+                        <i class="fas fa-download mr-2"></i>
+                        Import Workflow
+                    </button>
+                </div>
+
+                <!-- Compliance Checking Workflow -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-clipboard-check text-4xl text-orange-600 mr-4"></i>
+                        <h3 class="text-2xl font-semibold">Compliance Checking Workflow</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">Weekly compliance checks against OWASP Top 10 and industry security standards.</p>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex items-center">
+                            <div class="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">1</div>
+                            <span>Weekly scan trigger</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">2</div>
+                            <span>Compliance rules applied</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">3</div>
+                            <span>Score calculated</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold mr-3">4</div>
+                            <span>Report sent to compliance team</span>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700 transition">
+                        <i class="fas fa-download mr-2"></i>
+                        Import Workflow
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integration Benefits -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-center mb-16">Why Choose n8n Integration?</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6">Unlimited Possibilities</h3>
+                    <p class="text-gray-600 mb-6">
+                        n8n provides a powerful workflow automation platform that integrates seamlessly with DevGuardian AI, 
+                        enabling you to create sophisticated security automation without writing code.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-semibold">Visual Workflow Builder</h4>
+                                <p class="text-gray-600">Drag-and-drop interface for creating complex workflows</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-semibold">400+ Integrations</h4>
+                                <p class="text-gray-600">Connect with your favorite tools and services</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-semibold">Self-Hosted Option</h4>
+                                <p class="text-gray-600">Keep your workflows and data secure on-premise</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-8 rounded-2xl">
+                    <h3 class="text-2xl font-semibold mb-6">Technical Benefits</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-center">
+                            <div class="bg-white p-3 rounded-lg mr-4">
+                                <i class="fas fa-rocket text-indigo-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">10x Faster Setup</h4>
+                                <p class="text-gray-600">Get workflows running in minutes</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-white p-3 rounded-lg mr-4">
+                                <i class="fas fa-shield-alt text-indigo-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">Enterprise Security</h4>
+                                <p class="text-gray-600">End-to-end encryption and authentication</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-white p-3 rounded-lg mr-4">
+                                <i class="fas fa-chart-line text-indigo-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">Advanced Analytics</h4>
+                                <p class="text-gray-600">Monitor workflow performance and ROI</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="gradient-bg text-white py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold mb-4">Ready to Automate Your Security?</h2>
+            <p class="text-xl mb-8">Join thousands of teams using DevGuardian AI + n8n for intelligent security automation</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="bg-white text-indigo-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition">
+                    <i class="fas fa-robot mr-2"></i>
+                    Start Automation Setup
+                </button>
+                <button class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition">
+                    <i class="fas fa-book mr-2"></i>
+                    View Documentation
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p>&copy; 2024 DevGuardian AI. All rights reserved.</p>
+                <div class="flex justify-center space-x-6 mt-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition">Privacy</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">Terms</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add animation to workflow cards on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.workflow-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+
+        // Track automation page views
+        console.log('Automation page viewed - track analytics here');
+    </script>
+</body>
+</html>

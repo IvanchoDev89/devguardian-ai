@@ -34,11 +34,11 @@ class OAuthController extends Controller
             'state' => $state,
         ]);
 
+        // Return the URL so frontend can redirect
         return response()->json([
             'success' => true,
             'data' => [
-                'url' => $url,
-                'state' => $state,
+                'url' => $url
             ]
         ]);
     }

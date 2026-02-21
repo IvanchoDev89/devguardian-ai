@@ -249,18 +249,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { aiService } from '../services/api'
 import { useNotificationStore } from '../stores/notifications'
+import { useAuthStore } from '../stores/auth'
 import ScanProgress from '../components/ScanProgress.vue'
 import VulnerabilityCard from '../components/VulnerabilityCard.vue'
+
+const router = useRouter()
+const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
 
 const loading = ref(false)
 const error = ref<string | null>(null)
 const repositoryUrl = ref('')
 const scanType = ref('quick')
 const scanResult = ref<any>(null)
-const notificationStore = useNotificationStore()
+
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const canScan = computed(() => authStore.canScan)
+const plan = computed(() => authStore.plan)
 
 const options = ref({
   checkBlindSQL: true,
@@ -273,6 +282,18 @@ const options = ref({
 })
 
 const runSampleScan = async () => {
+  if (!isAuthenticated.value) {
+    notificationStore.error('Authentication Required', 'Please sign in to use the scanner')
+    router.push('/login')
+    return
+  }
+  
+  if (!canScan.value) {
+    notificationStore.warning('Scan Limit Reached', 'You have used your free scan. Upgrade to Pro for unlimited scans.')
+    router.push('/pricing')
+    return
+  }
+  
   loading.value = true
   error.value = null
   
@@ -305,6 +326,18 @@ const runSampleScan = async () => {
 }
 
 const runScan = async () => {
+  if (!isAuthenticated.value) {
+    notificationStore.error('Authentication Required', 'Please sign in to use the scanner')
+    router.push('/login')
+    return
+  }
+  
+  if (!canScan.value) {
+    notificationStore.warning('Scan Limit Reached', 'You have used your free scan. Upgrade to Pro for unlimited scans.')
+    router.push('/pricing')
+    return
+  }
+  
   loading.value = true
   error.value = null
   
@@ -315,6 +348,9 @@ const runScan = async () => {
     }
     
     notificationStore.info('Repository Scan', `Starting scan of ${repositoryUrl.value}`)
+    
+    // Increment scan count for free users
+    authStore.incrementScans()
     
     // Mock repository scan - in real implementation, this would:
     // 1. Clone the repository

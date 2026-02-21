@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developers - DevGuardian AI | API Documentation & SDKs</title>
+    <meta name="description" content="DevGuardian AI developer resources. REST API documentation, SDKs for Python, JavaScript, PHP, Java. Integrate AI-powered security vulnerability detection into your workflow.">
+    <meta name="keywords" content="AI security API, vulnerability detection API, security SDK, DevSecOps API, automated security testing API, Python security SDK, JavaScript security library">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://devguardian-ai.com/developers">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Developers - DevGuardian AI">
+    <meta property="og:description" content="REST API, SDKs, and developer tools for AI-powered security vulnerability detection">
+    <meta property="og:url" content="https://devguardian-ai.com/developers">
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "DevGuardian AI Developer Portal",
+        "description": "API documentation and SDKs for AI-powered security vulnerability detection",
+        "url": "https://devguardian-ai.com/developers",
+        "mainEntity": {
+            "@type": "SoftwareApplication",
+            "name": "DevGuardian AI API",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Web, Linux, Windows, macOS",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD",
+                "description": "Free developer tier with API access"
+            }
+        }
+    }
+    </script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    
+    <style>
+        .code-block {
+            background: #2d2d2d;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background: #4f46e5;
+            color: white;
+            border-bottom: 3px solid #4f46e5;
+        }
+        .sdk-card {
+            transition: all 0.3s ease;
+        }
+        .sdk-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .endpoint-card {
+            transition: all 0.3s ease;
+        }
+        .endpoint-card:hover {
+            border-color: #4f46e5;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-shield-alt text-2xl text-indigo-600 mr-3"></i>
+                    <span class="font-bold text-xl">DevGuardian AI</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-indigo-600 transition">Home</a>
+                    <a href="pricing.html" class="text-gray-700 hover:text-indigo-600 transition">Pricing</a>
+                    <a href="developers.html" class="text-indigo-600 font-semibold">Developers</a>
+                    <a href="about.html" class="text-gray-700 hover:text-indigo-600 transition">About</a>
+                    <a href="contact.html" class="text-gray-700 hover:text-indigo-600 transition">Contact</a>
+                </div>
+                <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+                    Get API Key
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6">
+                Built for Developers
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 text-gray-200">
+                Powerful APIs and SDKs to integrate AI security into your workflow
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="bg-white text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                    <i class="fas fa-rocket mr-2"></i>
+                    Get Started Free
+                </button>
+                <button class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition">
+                    <i class="fas fa-book mr-2"></i>
+                    View API Docs
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12">Quick Start</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                <div class="text-center">
+                    <div class="bg-indigo-100 text-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-key text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">1. Get API Key</h3>
+                    <p class="text-gray-600">Sign up for free and get your API key instantly</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-indigo-100 text-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-code text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">2. Make API Calls</h3>
+                    <p class="text-gray-600">Use our REST API to scan code and generate fixes</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-indigo-100 text-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shield-alt text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">3. Secure Your Apps</h3>
+                    <p class="text-gray-600">Integrate results into your CI/CD pipeline</p>
+                </div>
+            </div>
+
+            <!-- API Key Example -->
+            <div class="bg-gray-900 text-green-400 p-6 rounded-lg">
+                <div class="text-sm mb-2">Example API Request</div>
+                <pre><code>curl -X POST https://api.devguardian-ai.com/v1/scan \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "SELECT * FROM users WHERE id = " + userInput,
+    "language": "php"
+  }'</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Documentation Section -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12">REST API Documentation</h2>
+            
+            <!-- API Tabs -->
+            <div class="flex justify-center mb-8">
+                <button class="tab-button active px-6 py-3 font-semibold" onclick="switchTab('endpoints')">
+                    Endpoints
+                </button>
+                <button class="tab-button px-6 py-3 font-semibold" onclick="switchTab('authentication')">
+                    Authentication
+                </button>
+                <button class="tab-button px-6 py-3 font-semibold" onclick="switchTab('examples')">
+                    Examples
+                </button>
+                <button class="tab-button px-6 py-3 font-semibold" onclick="switchTab('webhooks')">
+                    Webhooks
+                </button>
+            </div>
+
+            <!-- Endpoints Tab -->
+            <div id="endpoints" class="tab-content">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Scan Endpoint -->
+                    <div class="bg-white rounded-lg shadow-md p-6 endpoint-card border-2 border-gray-200">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold">Scan Code</h3>
+                                <span class="text-sm text-gray-500">POST /v1/scan</span>
+                            </div>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Core</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Scan code for security vulnerabilities using AI</p>
+                        <div class="code-block">
+                            <pre><code class="language-json">{
+  "code": "string",
+  "language": "php|python|javascript|java",
+  "options": {
+    "include_fixes": true,
+    "severity_threshold": "medium"
+  }
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Generate Fixes Endpoint -->
+                    <div class="bg-white rounded-lg shadow-md p-6 endpoint-card border-2 border-gray-200">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold">Generate Fixes</h3>
+                                <span class="text-sm text-gray-500">POST /v1/fixes/generate</span>
+                            </div>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">AI</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Generate intelligent fixes for detected vulnerabilities</p>
+                        <div class="code-block">
+                            <pre><code class="language-json">{
+  "vulnerabilities": [
+    {
+      "type": "sql_injection",
+      "severity": "critical",
+      "line": 15,
+      "code": "vulnerable code here"
+    }
+  ]
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Get Results Endpoint -->
+                    <div class="bg-white rounded-lg shadow-md p-6 endpoint-card border-2 border-gray-200">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold">Get Results</h3>
+                                <span class="text-sm text-gray-500">GET /v1/scans/{id}</span>
+                            </div>
+                            <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Results</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Retrieve scan results and generated fixes</p>
+                        <div class="code-block">
+                            <pre><code class="language-json">{
+  "scan_id": "uuid",
+  "status": "completed",
+  "vulnerabilities": [...],
+  "fixes": [...]
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Webhook Config -->
+                    <div class="bg-white rounded-lg shadow-md p-6 endpoint-card border-2 border-gray-200">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold">Configure Webhooks</h3>
+                                <span class="text-sm text-gray-500">POST /v1/webhooks</span>
+                            </div>
+                            <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">Integration</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">Set up webhooks for real-time scan notifications</p>
+                        <div class="code-block">
+                            <pre><code class="language-json">{
+  "url": "https://your-app.com/webhook",
+  "events": ["scan.completed", "fix.generated"],
+  "secret": "webhook_secret"
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authentication Tab (Hidden by default) -->
+            <div id="authentication" class="tab-content hidden">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-white rounded-lg shadow-md p-8">
+                        <h3 class="text-2xl font-semibold mb-6">API Authentication</h3>
+                        
+                        <div class="mb-8">
+                            <h4 class="text-lg font-semibold mb-4">Bearer Token Authentication</h4>
+                            <p class="text-gray-600 mb-4">Include your API key in the Authorization header:</p>
+                            <div class="code-block">
+                                <pre><code>Authorization: Bearer your_api_key_here</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="mb-8">
+                            <h4 class="text-lg font-semibold mb-4">Rate Limits</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="bg-gray-50 p-4 rounded">
+                                    <div class="font-semibold text-indigo-600">Free Tier</div>
+                                    <div class="text-sm text-gray-600">100 requests/hour</div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded">
+                                    <div class="font-semibold text-indigo-600">Professional</div>
+                                    <div class="text-sm text-gray-600">1,000 requests/hour</div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded">
+                                    <div class="font-semibold text-indigo-600">Enterprise</div>
+                                    <div class="text-sm text-gray-600">Unlimited</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-lg font-semibold mb-4">Error Codes</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border p-3 text-left">Code</th>
+                                            <th class="border p-3 text-left">Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="border p-3">200</td>
+                                            <td class="border p-3">Success</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border p-3">401</td>
+                                            <td class="border p-3">Invalid API key</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border p-3">429</td>
+                                            <td class="border p-3">Rate limit exceeded</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border p-3">500</td>
+                                            <td class="border p-3">Internal server error</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Examples Tab (Hidden by default) -->
+            <div id="examples" class="tab-content hidden">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-white rounded-lg shadow-md p-8">
+                        <h3 class="text-2xl font-semibold mb-6">Code Examples</h3>
+                        
+                        <div class="space-y-8">
+                            <!-- Python Example -->
+                            <div>
+                                <h4 class="text-lg font-semibold mb-4">Python SDK</h4>
+                                <div class="code-block">
+                                    <pre><code class="language-python">import devguardian_ai
+
+# Initialize client
+client = devguardian_ai.Client(api_key="your_api_key")
+
+# Scan code
+result = client.scan_code(
+    code="SELECT * FROM users WHERE id = " + user_input,
+    language="php"
+)
+
+# Get vulnerabilities
+for vuln in result.vulnerabilities:
+    print(f"Found {vuln.type} at line {vuln.line}")
+
+# Generate fixes
+if result.vulnerabilities:
+    fixes = client.generate_fixes(result.vulnerabilities)
+    for fix in fixes:
+        print(f"Fix: {fix.description}")
+        print(f"Code: {fix.fixed_code}")</code></pre>
+                                </div>
+                            </div>
+
+                            <!-- JavaScript Example -->
+                            <div>
+                                <h4 class="text-lg font-semibold mb-4">JavaScript SDK</h4>
+                                <div class="code-block">
+                                    <pre><code class="language-javascript">const DevGuardianAI = require('devguardian-ai');
+
+// Initialize client
+const client = new DevGuardianAI({
+    apiKey: 'your_api_key'
+});
+
+// Scan code
+const result = await client.scanCode({
+    code: 'SELECT * FROM users WHERE id = ' + userInput,
+    language: 'php'
+});
+
+// Process results
+result.vulnerabilities.forEach(vuln => {
+    console.log(`Found ${vuln.type} at line ${vuln.line}`);
+});
+
+// Generate fixes
+if (result.vulnerabilities.length > 0) {
+    const fixes = await client.generateFixes(result.vulnerabilities);
+    fixes.forEach(fix => {
+        console.log(`Fix: ${fix.description}`);
+        console.log(`Code: ${fix.fixedCode}`);
+    });
+}</code></pre>
+                                </div>
+                            </div>
+
+                            <!-- cURL Example -->
+                            <div>
+                                <h4 class="text-lg font-semibold mb-4">cURL</h4>
+                                <div class="code-block">
+                                    <pre><code># Scan code
+curl -X POST https://api.devguardian-ai.com/v1/scan \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "SELECT * FROM users WHERE id = " + userInput,
+    "language": "php"
+  }'
+
+# Get results
+curl -X GET https://api.devguardian-ai.com/v1/scans/scan_id \
+  -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SDKs Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center mb-12">Official SDKs</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Python SDK -->
+                <div class="bg-white rounded-lg shadow-md p-6 sdk-card border-2 border-gray-200 hover:border-indigo-500">
+                    <div class="text-center mb-4">
+                        <i class="fab fa-python text-4xl text-blue-600 mb-2"></i>
+                        <h3 class="text-lg font-semibold">Python</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">Official Python SDK with async support</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Version:</span>
+                            <span class="font-semibold">1.2.0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Downloads:</span>
+                            <span class="font-semibold">50K+</span>
+                        </div>
+                    </div>
+                    <button class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition">
+                        <i class="fas fa-download mr-2"></i>
+                        Download
+                    </button>
+                </div>
+
+                <!-- JavaScript SDK -->
+                <div class="bg-white rounded-lg shadow-md p-6 sdk-card border-2 border-gray-200 hover:border-indigo-500">
+                    <div class="text-center mb-4">
+                        <i class="fab fa-js text-4xl text-yellow-500 mb-2"></i>
+                        <h3 class="text-lg font-semibold">JavaScript</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">Node.js and browser compatible</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Version:</span>
+                            <span class="font-semibold">1.1.5</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Downloads:</span>
+                            <span class="font-semibold">75K+</span>
+                        </div>
+                    </div>
+                    <button class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition">
+                        <i class="fas fa-download mr-2"></i>
+                        Download
+                    </button>
+                </div>
+
+                <!-- PHP SDK -->
+                <div class="bg-white rounded-lg shadow-md p-6 sdk-card border-2 border-gray-200 hover:border-indigo-500">
+                    <div class="text-center mb-4">
+                        <i class="fab fa-php text-4xl text-purple-600 mb-2"></i>
+                        <h3 class="text-lg font-semibold">PHP</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">Composer package for PHP projects</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Version:</span>
+                            <span class="font-semibold">1.0.8</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Downloads:</span>
+                            <span class="font-semibold">30K+</span>
+                        </div>
+                    </div>
+                    <button class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition">
+                        <i class="fas fa-download mr-2"></i>
+                        Download
+                    </button>
+                </div>
+
+                <!-- Java SDK -->
+                <div class="bg-white rounded-lg shadow-md p-6 sdk-card border-2 border-gray-200 hover:border-indigo-500">
+                    <div class="text-center mb-4">
+                        <i class="fab fa-java text-4xl text-red-600 mb-2"></i>
+                        <h3 class="text-lg font-semibold">Java</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">Maven dependency for Java apps</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Version:</span>
+                            <span class="font-semibold">1.0.3</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Downloads:</span>
+                            <span class="font-semibold">25K+</span>
+                        </div>
+                    </div>
+                    <button class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition">
+                        <i class="fas fa-download mr-2"></i>
+                        Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold mb-4">Ready to integrate AI security?</h2>
+            <p class="text-xl mb-8">Join thousands of developers using DevGuardian AI</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="bg-white text-indigo-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition">
+                    Get Free API Key
+                </button>
+                <button class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition">
+                    View Full Documentation
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p>&copy; 2024 DevGuardian AI. All rights reserved.</p>
+                <div class="flex justify-center space-x-6 mt-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition">Privacy</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">Terms</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.remove('hidden');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        // Track developer page views
+        console.log('Developer page viewed - track analytics here');
+    </script>
+</body>
+</html>

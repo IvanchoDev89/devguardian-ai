@@ -92,7 +92,7 @@ class ApiClient {
 }
 
 // API Services
-const apiClient = new ApiClient(API_BASE_URL)
+export const apiClient = new ApiClient(API_BASE_URL)
 const aiServiceClient = new ApiClient(AI_SERVICE_URL)
 
 // Auth Service
@@ -146,6 +146,22 @@ export const authService = {
 
   async getProfile() {
     return apiClient.get<ApiResponse>('/auth/me')
+  },
+
+  async getGitHubAuthUrl() {
+    const response = await apiClient.get<ApiResponse<{ url: string }>>('/auth/github')
+    return response
+  },
+
+  async handleGitHubCallback(code: string, state: string) {
+    const response = await apiClient.get<ApiResponse<{ token: string; user: any }>>(`/auth/github/callback?code=${code}&state=${state}`)
+    
+    if (response.success && response.data) {
+      localStorage.setItem('auth_token', response.data.token)
+      localStorage.setItem('user', JSON.stringify(response.data.user))
+      return { success: true, user: response.data.user }
+    }
+    throw new ApiError(response.message || 'GitHub login failed')
   }
 }
 

@@ -1,63 +1,87 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { apiClient } from '../services/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<any>(null)
   const token = ref(localStorage.getItem('auth_token'))
+  const plan = ref<string>('free')
+  const scansUsed = ref(0)
   
   const isAuthenticated = computed(() => !!token.value)
+  const isAdmin = computed(() => user.value?.role === 'admin' || user.value?.role === 'super_admin')
+  const canScan = computed(() => {
+    if (plan.value === 'free') {
+      return scansUsed.value < 1
+    }
+    return true // Pro/Enterprise have unlimited scans
+  })
   
   const login = async (credentials: { email: string; password: string }) => {
     try {
-      // Mock API call
-      if (credentials.email === 'demo@devguardian.ai' && credentials.password === 'demo123') {
-        const mockUser = {
-          id: 1,
-          name: 'Demo User',
-          email: credentials.email,
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'
-        }
+      const response = await apiClient.post<any>('/auth/login', credentials)
+      
+      if (response.success && response.data) {
+        user.value = response.data.user
+        token.value = response.data.token
+        plan.value = response.data.user.plan || 'free'
+        scansUsed.value = response.data.user.scans_used || 0
         
-        const mockToken = 'mock_token_12345'
-        
-        user.value = mockUser
-        token.value = mockToken
-        
-        localStorage.setItem('auth_token', mockToken)
-        localStorage.setItem('user', JSON.stringify(mockUser))
+        localStorage.setItem('auth_token', response.data.token)
+        localStorage.setItem('user', JSON.stringify(response.data.user))
+        localStorage.setItem('plan', plan.value)
         
         return { success: true }
       } else {
-        return { success: false, error: 'Invalid credentials' }
+        return { success: false, error: response.message || 'Invalid credentials' }
       }
-    } catch (error) {
-      return { success: false, error: 'Login failed' }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Login failed' }
     }
   }
   
   const logout = () => {
     user.value = null
     token.value = null
+    plan.value = 'free'
+    scansUsed.value = 0
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
+    localStorage.removeItem('plan')
   }
   
   const initAuth = () => {
     const storedToken = localStorage.getItem('auth_token')
     const storedUser = localStorage.getItem('user')
+    const storedPlan = localStorage.getItem('plan')
     
     if (storedToken && storedUser) {
       token.value = storedToken
       user.value = JSON.parse(storedUser)
+      plan.value = storedPlan || 'free'
     }
+  }
+  
+  const incrementScans = () => {
+    scansUsed.value++
+  }
+  
+  const resetScans = () => {
+    scansUsed.value = 0
   }
   
   return {
     user,
     token,
+    plan,
+    scansUsed,
     isAuthenticated,
+    isAdmin,
+    canScan,
     login,
     logout,
-    initAuth
+    initAuth,
+    incrementScans,
+    resetScans
   }
 })

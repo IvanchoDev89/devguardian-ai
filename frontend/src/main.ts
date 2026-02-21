@@ -31,7 +31,8 @@ const routes = [
   {
     path: '/sql-injection-scanner',
     name: 'SQLInjectionScanner',
-    component: () => import('./pages/SQLInjectionScanner.vue')
+    component: () => import('./pages/SQLInjectionScanner.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/repositories',

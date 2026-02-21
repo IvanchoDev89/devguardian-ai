@@ -141,8 +141,10 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '../services/api'
+import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const form = ref({
   email: '',
@@ -171,13 +173,27 @@ const handleLogin = async () => {
   }
 }
 
-const handleGitHubLogin = () => {
-  // TODO: Implement GitHub OAuth
-  console.log('GitHub login')
+const handleGitHubLogin = async () => {
+  try {
+    loading.value = true
+    error.value = ''
+    
+    const response = await authService.getGitHubAuthUrl()
+    
+    if (response.success && response.data?.url) {
+      // Redirect to GitHub OAuth
+      window.location.href = response.data.url
+    } else {
+      throw new Error(response.message || 'Failed to get GitHub auth URL')
+    }
+  } catch (err: any) {
+    error.value = err.message || 'GitHub login failed'
+    loading.value = false
+  }
 }
 
 const handleGoogleLogin = () => {
-  // TODO: Implement Google OAuth
-  console.log('Google login')
+  // For now, show message that Google OAuth is not configured
+  error.value = 'Google OAuth will be available soon. Please sign in with email or GitHub.'
 }
 </script>
