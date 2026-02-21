@@ -63,8 +63,9 @@ Route::prefix('api-keys')->group(function () {
 });
 
 Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
-    // Dashboard - requires user authentication
+    // Protected routes - require user authentication
     Route::middleware(['auth.user'])->group(function () {
+        // Dashboard
         Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
         Route::get('/dashboard/recent-scans', [DashboardController::class, 'recentScans']);
         Route::get('/dashboard/vulnerabilities', [DashboardController::class, 'vulnerabilities']);
@@ -74,20 +75,37 @@ Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
         Route::put('/settings', [SettingsController::class, 'update']);
         Route::post('/settings/password', [SettingsController::class, 'updatePassword']);
         Route::delete('/settings', [SettingsController::class, 'delete']);
+        
+        // Vulnerabilities
+        Route::get('/vulnerabilities', [VulnerabilityController::class, 'index']);
+        Route::get('/vulnerabilities/{id}', [VulnerabilityController::class, 'show']);
+        Route::put('/vulnerabilities/{id}', [VulnerabilityController::class, 'update']);
+        Route::delete('/vulnerabilities/{id}', [VulnerabilityController::class, 'destroy']);
+        
+        // Repositories
+        Route::apiResource('repositories', RepositoryController::class);
+        Route::post('repositories/{repository}/scan', [RepositoryController::class, 'scan']);
+        Route::post('repositories/{repository}/refresh', [RepositoryController::class, 'refresh']);
+        Route::get('repositories/{repository}/vulnerabilities', [RepositoryController::class, 'vulnerabilities']);
     });
     
-    // Organizations
-    Route::apiResource('organizations', OrganizationController::class);
+    // Scanner routes - require user authentication
+    Route::middleware(['auth.user'])->group(function () {
+        Route::post('/vulnerabilities/scan-repository', [VulnerabilityScannerController::class, 'scanRepository']);
+        Route::post('/vulnerabilities/scan-files', [VulnerabilityScannerController::class, 'scanFiles']);
+        Route::get('/vulnerabilities/statistics', [VulnerabilityScannerController::class, 'statistics']);
+    });
     
-    // Repositories
-    Route::apiResource('repositories', RepositoryController::class);
-    Route::post('repositories/{repository}/scan', [RepositoryController::class, 'scan']);
-    Route::post('repositories/{repository}/refresh', [RepositoryController::class, 'refresh']);
-    Route::get('repositories/{repository}/vulnerabilities', [RepositoryController::class, 'vulnerabilities']);
+    // Organizations - require user authentication  
+    Route::middleware(['auth.user'])->group(function () {
+        Route::apiResource('organizations', OrganizationController::class);
+    });
     
-    // GitHub Integration
-    Route::post('github/connect', [RepositoryController::class, 'connect']);
-    Route::get('github/repositories', [RepositoryController::class, 'listGitHub']);
+    // GitHub Integration - require user authentication
+    Route::middleware(['auth.user'])->group(function () {
+        Route::post('github/connect', [RepositoryController::class, 'connect']);
+        Route::get('github/repositories', [RepositoryController::class, 'listGitHub']);
+    });
     
     // Vulnerabilities - Enhanced scanner routes
     Route::prefix('vulnerabilities')->name('vulnerabilities.')->group(function () {

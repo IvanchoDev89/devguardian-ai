@@ -268,19 +268,19 @@ export const repositoryService = {
 // Vulnerability Service
 export const vulnerabilityService = {
   async getVulnerabilities(params?: { page?: number; severity?: string; status?: string }) {
-    return apiClient.get<ApiResponse>('/vulnerabilities', params)
+    return apiClient.get<ApiResponse>('/v1/vulnerabilities', params)
   },
 
   async getVulnerability(id: string) {
-    return apiClient.get<ApiResponse>(`/vulnerabilities/${id}`)
+    return apiClient.get<ApiResponse>(`/v1/vulnerabilities/${id}`)
   },
 
   async updateVulnerability(id: string, data: { status?: string; notes?: string }) {
-    return apiClient.put<ApiResponse>(`/vulnerabilities/${id}`, data)
+    return apiClient.put<ApiResponse>(`/v1/vulnerabilities/${id}`, data)
   },
 
   async createFix(vulnerabilityId: string, fixData: { code: string; description: string }) {
-    return apiClient.post<ApiResponse>(`/vulnerabilities/${vulnerabilityId}/fixes`, fixData)
+    return apiClient.post<ApiResponse>(`/v1/vulnerabilities/${vulnerabilityId}/fixes`, fixData)
   }
 }
 
