@@ -89,6 +89,16 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        // Get the token and delete it
+        $token = $request->bearerToken();
+        
+        if ($token) {
+            $hashedToken = hash('sha256', $token);
+            DB::table('personal_access_tokens')
+                ->where('token', $hashedToken)
+                ->delete();
+        }
+        
         return response()->json([
             'success' => true,
             'message' => 'Logged out successfully'
@@ -97,8 +107,10 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
+        $userId = $this->getAuthenticatedUserId($request);
+        
         $user = DB::table('users')
-            ->where('id', $request->user_id ?? 1)
+            ->where('id', $userId)
             ->first();
 
         if (!$user) {
@@ -121,6 +133,45 @@ class AuthController extends Controller
 
     private function createToken(string $email): string
     {
-        return base64_encode($email . ':' . time() . ':' . rand(1000, 9999));
+        $token = bin2hex(random_bytes(32));
+        
+        // Get user
+        $user = DB::table('users')->where('email', $email)->first();
+        
+        if ($user) {
+            // Store token in personal_access_tokens table
+            DB::table('personal_access_tokens')->insert([
+                'tokenable_type' => 'App\\Models\\User',
+                'tokenable_id' => $user->id,
+                'name' => 'API Token',
+                'token' => hash('sha256', $token),
+                'abilities' => '["*"]',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        
+        return $token;
+    }
+    
+    private function getAuthenticatedUserId(Request $request): int
+    {
+        // Check for authentication token in header
+        $token = $request->bearerToken();
+        
+        if (!$token) {
+            throw new \Illuminate\Validation\UnauthorizedException('Authentication required');
+        }
+        
+        // Validate token and get user
+        $tokenRecord = DB::table('personal_access_tokens')
+            ->where('token', hash('sha256', $token))
+            ->first();
+        
+        if (!$tokenRecord) {
+            throw new \Illuminate\Validation\UnauthorizedException('Invalid or expired token');
+        }
+        
+        return $tokenRecord->tokenable_id;
     }
 }

@@ -1,67 +1,188 @@
 <template>
-  <div class="min-h-screen pt-16">
-    <!-- Loading Overlay -->
-    <div v-if="loading" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-slate-800 p-8 rounded-xl flex flex-col items-center">
-        <div class="animate-spin w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full mb-4"></div>
-        <p class="text-white">Loading dashboard data...</p>
-      </div>
-    </div>
-
-    <!-- Error Banner -->
-    <div v-if="error" class="bg-red-500/20 border border-red-500 text-red-400 px-4 py-2 mb-4">
-      {{ error }}
-    </div>
-    
-    <div class="container mx-auto px-4 py-8">
-      <!-- Header -->
-      <div class="mb-8">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-3xl font-bold text-white flex items-center gap-3">
-              <svg class="w-10 h-10 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-              </svg>
-              Super Admin Dashboard
-            </h1>
-            <p class="text-gray-400 mt-2">Enterprise-wide security monitoring and analytics</p>
+  <div class="flex h-screen bg-slate-900">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-800/50 backdrop-blur-sm border-r border-white/10 flex flex-col">
+      <!-- Logo -->
+      <div class="flex items-center h-16 px-6 border-b border-white/10">
+        <div class="flex items-center">
+          <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center mr-3">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
           </div>
-          <div class="flex items-center gap-4">
-            <select v-model="timeRange" class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
-              <option value="24h">Last 24 Hours</option>
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="90d">Last 90 Days</option>
-            </select>
-            <button @click="refreshData" class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
-              Refresh
-            </button>
-          </div>
+          <span class="text-lg font-bold text-white">Admin Panel</span>
         </div>
       </div>
 
-      <!-- Quick Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div v-for="stat in quickStats" :key="stat.label" class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-gray-400 text-sm">{{ stat.label }}</p>
-              <p class="text-3xl font-bold text-white mt-1">{{ stat.value }}</p>
-              <p :class="stat.trend > 0 ? 'text-green-400' : 'text-red-400'" class="text-sm mt-1">
-                {{ stat.trend > 0 ? '+' : '' }}{{ stat.trend }}% {{ stat.period }}
-              </p>
+      <!-- Navigation -->
+      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <button
+          v-for="item in navItems"
+          :key="item.id"
+          @click="activeSection = item.id"
+          class="w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+          :class="[
+            activeSection === item.id 
+              ? 'bg-gradient-to-r from-red-600/20 to-orange-600/20 text-white border-l-2 border-orange-400' 
+              : 'text-gray-400 hover:text-white hover:bg-white/5'
+          ]"
+        >
+          <component :is="item.icon" class="w-5 h-5 mr-3 flex-shrink-0" />
+          {{ item.name }}
+        </button>
+      </nav>
+
+      <!-- Back to Dashboard -->
+      <div class="p-4 border-t border-white/10">
+        <router-link 
+          to="/dashboard"
+          class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200"
+        >
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Back to Dashboard
+        </router-link>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Top Bar -->
+      <header class="flex items-center h-16 px-6 bg-slate-900/50 backdrop-blur-sm border-b border-white/10">
+        <h1 class="text-lg font-semibold text-white">{{ currentSection.title }}</h1>
+        
+        <div class="flex-1"></div>
+        
+        <div class="flex items-center gap-4">
+          <select v-model="timeRange" class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white text-sm">
+            <option value="24h">Last 24 Hours</option>
+            <option value="7d">Last 7 Days</option>
+            <option value="30d">Last 30 Days</option>
+            <option value="90d">Last 90 Days</option>
+          </select>
+          <button 
+            @click="refreshData"
+            :disabled="loading"
+            class="flex items-center px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-sm font-medium text-white hover:bg-white/20 disabled:opacity-50 transition-all"
+          >
+            <svg v-if="loading" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="flex-1 overflow-y-auto p-6">
+        <!-- Loading Overlay -->
+        <div v-if="loading" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div class="bg-slate-800 p-8 rounded-xl flex flex-col items-center">
+            <div class="animate-spin w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full mb-4"></div>
+            <p class="text-white">Loading dashboard data...</p>
+          </div>
+        </div>
+
+        <!-- Error Banner -->
+        <div v-if="error" class="mb-6 bg-red-500/10 backdrop-blur-sm rounded-lg p-4 border border-red-500/30">
+          <div class="flex">
+            <svg class="w-5 h-5 text-red-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            <p class="text-red-400">{{ error }}</p>
+          </div>
+        </div>
+
+        <!-- Dashboard Overview Section -->
+        <div v-show="activeSection === 'dashboard'">
+          <!-- Header -->
+          <div class="mb-8">
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-3xl font-bold text-white flex items-center gap-3">
+                  <svg class="w-10 h-10 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                  Super Admin Dashboard
+                </h1>
+                <p class="text-gray-400 mt-2">Enterprise-wide security monitoring and analytics</p>
+              </div>
             </div>
-            <div :class="`w-14 h-14 rounded-xl flex items-center justify-center ${stat.bgColor}`">
-              <component :is="stat.icon" class="w-8 h-8" />
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div v-for="stat in quickStats" :key="stat.label" class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-gray-400 text-sm">{{ stat.label }}</p>
+                  <p class="text-3xl font-bold text-white mt-1">{{ stat.value }}</p>
+                  <p :class="stat.trend > 0 ? 'text-green-400' : 'text-red-400'" class="text-sm mt-1">
+                    {{ stat.trend > 0 ? '+' : '' }}{{ stat.trend }}% {{ stat.period }}
+                  </p>
+                </div>
+                <div :class="`w-14 h-14 rounded-xl flex items-center justify-center ${stat.bgColor}`">
+                  <component :is="stat.icon" class="w-8 h-8" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Real-time Activity -->
+            <div class="lg:col-span-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+              <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Real-time System Activity
+              </h2>
+              <div class="h-64" ref="activityChartRef">
+                <canvas id="activityChart"></canvas>
+              </div>
+            </div>
+
+            <!-- System Health -->
+            <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+              <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                System Health
+              </h2>
+              <div class="space-y-4">
+                <div v-for="service in systemServices" :key="service.name" class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                  <div class="flex items-center gap-3">
+                    <div :class="`w-3 h-3 rounded-full ${service.status === 'healthy' ? 'bg-green-500' : service.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'}`"></div>
+                    <span class="text-white">{{ service.name }}</span>
+                  </div>
+                  <span :class="`text-sm ${service.status === 'healthy' ? 'text-green-400' : service.status === 'warning' ? 'text-yellow-400' : 'text-red-400'}`">
+                    {{ service.uptime }}%
+                  </span>
+                </div>
+              </div>
+
+              <!-- Resource Usage -->
+              <div class="mt-6">
+                <h3 class="text-sm font-medium text-gray-400 mb-3">Resource Usage</h3>
+                <div v-for="resource in resources" :key="resource.name" class="mb-3">
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-400">{{ resource.name }}</span>
+                    <span class="text-white">{{ resource.value }}%</span>
+                  </div>
+                  <div class="w-full bg-slate-700 rounded-full h-2">
+                    <div class="bg-cyan-500 h-2 rounded-full" :style="{ width: resource.value + '%' }"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Main Grid -->
+        <!-- Main Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Real-time Activity -->
         <div class="lg:col-span-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
@@ -366,14 +487,85 @@
             </table>
           </div>
         </div>
-      </div>
+        </div>
+        
+        <!-- Users Section -->
+        <div v-show="activeSection === 'users'" class="space-y-6">
+          <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+            <h2 class="text-xl font-bold text-white mb-4">User Management</h2>
+            <p class="text-gray-400">Manage platform users, roles, and permissions.</p>
+            <button @click="manageUsers" class="mt-4 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg">
+              View Users
+            </button>
+          </div>
+        </div>
+        
+        <!-- Audit Logs Section -->
+        <div v-show="activeSection === 'audit'" class="space-y-6">
+          <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Audit Logs</h2>
+            <p class="text-gray-400">View system audit logs and security events.</p>
+            <button @click="fetchAuditLogs" class="mt-4 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg">
+              View Audit Logs
+            </button>
+          </div>
+        </div>
+        
+        <!-- System Scan Section -->
+        <div v-show="activeSection === 'scan'" class="space-y-6">
+          <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+            <h2 class="text-xl font-bold text-white mb-4">System Scan</h2>
+            <p class="text-gray-400">Run security scans across the entire platform.</p>
+            <button @click="runSystemScan" class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
+              Run Full System Scan
+            </button>
+          </div>
+        </div>
+        
+        <!-- Reports Section -->
+        <div v-show="activeSection === 'reports'" class="space-y-6">
+          <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Reports</h2>
+            <p class="text-gray-400">Generate and download platform reports.</p>
+            <button @click="generateReport" class="mt-4 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg">
+              Generate Report
+            </button>
+          </div>
+        </div>
+        
+      </main>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { superAdminApi } from '../services/api'
+import { 
+  LayoutDashboard, 
+  Users, 
+  FileText, 
+  Scan, 
+  BarChart3,
+  Settings,
+  Activity,
+  Shield,
+  Zap
+} from 'lucide-vue-next'
+
+const activeSection = ref('dashboard')
+
+const navItems = [
+  { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+  { id: 'users', name: 'User Management', icon: Users },
+  { id: 'audit', name: 'Audit Logs', icon: FileText },
+  { id: 'scan', name: 'System Scan', icon: Scan },
+  { id: 'reports', name: 'Reports', icon: BarChart3 },
+]
+
+const currentSection = computed(() => {
+  return navItems.find(item => item.id === activeSection.value) || navItems[0]
+})
 
 const timeRange = ref('24h')
 const activityChartRef = ref<HTMLElement | null>(null)

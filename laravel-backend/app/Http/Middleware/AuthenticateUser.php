@@ -27,29 +27,15 @@ class AuthenticateUser
             ], 401);
         }
 
-        // Decode the token (simple base64 encoded format from AuthController)
-        try {
-            $decoded = base64_decode($token);
-            if (!$decoded) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid token'
-                ], 401);
-            }
-            
-            $parts = explode(':', $decoded);
-            if (count($parts) < 2) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid token format'
-                ], 401);
-            }
+        // Try to find user by token in personal_access_tokens table
+        $hashedToken = hash('sha256', $token);
+        $tokenRecord = \Illuminate\Support\Facades\DB::table('personal_access_tokens')
+            ->where('token', $hashedToken)
+            ->first();
 
-            $email = $parts[0];
-            
-            // Find user by email
+        if ($tokenRecord) {
             $user = \Illuminate\Support\Facades\DB::table('users')
-                ->where('email', $email)
+                ->where('id', $tokenRecord->tokenable_id)
                 ->first();
 
             if (!$user) {
@@ -66,18 +52,41 @@ class AuthenticateUser
                 ], 403);
             }
 
-            // Set user on request
             $request->setUserResolver(function () use ($user) {
                 return $user;
             });
 
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid token: ' . $e->getMessage()
-            ], 401);
+            return $next($request);
         }
 
-        return $next($request);
+        // Fallback: Try to decode old format tokens (base64 encoded email:timestamp:random)
+        try {
+            $decoded = base64_decode($token);
+            if ($decoded) {
+                $parts = explode(':', $decoded);
+                if (count($parts) >= 2) {
+                    $email = $parts[0];
+                    
+                    $user = \Illuminate\Support\Facades\DB::table('users')
+                        ->where('email', $email)
+                        ->first();
+
+                    if ($user && $user->is_active) {
+                        $request->setUserResolver(function () use ($user) {
+                            return $user;
+                        });
+
+                        return $next($request);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Token decode failed
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid or expired token'
+        ], 401);
     }
 }

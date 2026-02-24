@@ -1,7 +1,15 @@
 import { useNotificationStore } from '../stores/notifications'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api'
-const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL
+
+if (!API_BASE_URL) {
+  console.warn('VITE_API_BASE_URL is not set. API calls may fail.')
+}
+
+if (!AI_SERVICE_URL) {
+  console.warn('VITE_AI_SERVICE_URL is not set. AI service calls may fail.')
+}
 
 interface ApiResponse<T = any> {
   success: boolean
@@ -86,7 +94,8 @@ class ApiClient {
     try {
       const response = await fetch(url, {
         ...options,
-        headers
+        headers,
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -584,5 +593,85 @@ export const billingService = {
 
   async addPaymentMethod(paymentMethodId: string) {
     return apiClient.post('/billing/payment-methods', { payment_method_id: paymentMethodId })
+  }
+}
+
+// Messages Service
+export const messageService = {
+  async getMessages() {
+    return apiClient.get<ApiResponse>('/v1/messages')
+  },
+
+  async sendMessage(data: { receiver_id: number; subject?: string; body: string; type?: string; priority?: string }) {
+    return apiClient.post<ApiResponse>('/v1/messages', data)
+  },
+
+  async markAsRead(id: number) {
+    return apiClient.post<ApiResponse>(`/v1/messages/${id}/read`)
+  },
+
+  async getUnreadCount() {
+    return apiClient.get<ApiResponse>('/v1/messages/unread')
+  }
+}
+
+// Asset Management Service (Enterprise)
+export const assetService = {
+  async getAssets() {
+    return apiClient.get<ApiResponse>('/v1/assets')
+  },
+
+  async createAsset(data: {
+    name: string
+    type: string
+    url: string
+    description?: string
+    ownership_proof?: string
+  }) {
+    return apiClient.post<ApiResponse>('/v1/assets', data)
+  },
+
+  async getAsset(id: number) {
+    return apiClient.get<ApiResponse>(`/v1/assets/${id}`)
+  },
+
+  async updateAsset(id: number, data: { name?: string; description?: string; status?: string }) {
+    return apiClient.put<ApiResponse>(`/v1/assets/${id}`, data)
+  },
+
+  async deleteAsset(id: number) {
+    return apiClient.delete<ApiResponse>(`/v1/assets/${id}`)
+  },
+
+  async verifyAsset(id: number, verificationMethod: string, verificationToken?: string) {
+    return apiClient.post<ApiResponse>(`/v1/assets/${id}/verify`, {
+      verification_method: verificationMethod,
+      verification_token: verificationToken
+    })
+  },
+
+  async authorizeScan(data: {
+    target_url: string
+    authorization_type: string
+    authorization_proof?: string
+    legal_contact_name?: string
+    legal_contact_email?: string
+  }) {
+    return apiClient.post<ApiResponse>('/v1/scan/authorize', data)
+  },
+
+  async getAuditLogs() {
+    return apiClient.get<ApiResponse>('/v1/audit-logs')
+  }
+}
+
+// Report Service
+export const reportService = {
+  async getReport(scanId: string, format: string = 'json') {
+    return apiClient.get<ApiResponse>(`/v1/pentest/scan/${scanId}/report?format=${format}`)
+  },
+
+  async getScanFindings(scanId: string) {
+    return apiClient.get<ApiResponse>(`/v1/pentest/scan/${scanId}/findings`)
   }
 }

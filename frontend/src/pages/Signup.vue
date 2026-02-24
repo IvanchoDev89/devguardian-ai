@@ -102,9 +102,9 @@
             />
             <label for="terms" class="ml-2 text-sm text-gray-300">
               I agree to the 
-              <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">Terms of Service</a>
+              <span class="text-gray-500 cursor-not-allowed">Terms of Service</span>
               and 
-              <a href="#" class="text-blue-400 hover:text-blue-300 transition-colors">Privacy Policy</a>
+              <span class="text-gray-500 cursor-not-allowed">Privacy Policy</span>
             </label>
           </div>
 
@@ -187,7 +187,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { authService } from '../services/api'
 
 const router = useRouter()
 const authStore = useAuthStore()

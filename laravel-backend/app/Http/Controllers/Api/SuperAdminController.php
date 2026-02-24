@@ -6,28 +6,24 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class SuperAdminController extends Controller
 {
-    public function __construct()
+    private function checkAdminAccess(Request $request): void
     {
-        $this->middleware(function ($request, $next) {
-            $user = $request->user();
-            
-            if (!$user || !in_array($user->role, ['admin', 'super_admin'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized. Admin access required.'
-                ], 403);
-            }
-            
-            return $next($request);
-        });
+        $user = $request->user();
+        
+        if (!$user || $user->role !== 'super_admin') {
+            abort(403, 'Unauthorized. Super Admin access required.');
+        }
     }
     
     public function dashboard(Request $request)
     {
+        $this->checkAdminAccess($request);
+        
         $timeRange = $request->get('range', '24h');
         
         try {
@@ -68,29 +64,13 @@ class SuperAdminController extends Controller
                 ->limit(10)
                 ->get();
         } catch (\Exception $e) {
-            $stats = [
-                'total_users' => 5,
-                'active_scans' => 2,
-                'vulnerabilities_found' => 47,
-                'api_requests' => rand(100000, 500000),
-            ];
+            \Log::error('SuperAdmin dashboard error: ' . $e->getMessage());
             
-            $topUsers = [
-                ['id' => 1, 'name' => 'Admin User', 'email' => 'admin@devguardian.ai', 'repo_count' => 10, 'vuln_count' => 15],
-                ['id' => 2, 'name' => 'John Developer', 'email' => 'john@example.com', 'repo_count' => 8, 'vuln_count' => 12],
-            ];
-            
-            $vulnDistribution = [
-                ['type' => 'Critical', 'count' => 8],
-                ['type' => 'High', 'count' => 15],
-                ['type' => 'Medium', 'count' => 18],
-                ['type' => 'Low', 'count' => 6],
-            ];
-            
-            $recentScans = [
-                ['id' => 1, 'scan_type' => 'full', 'status' => 'completed', 'repository_name' => 'example-app', 'created_at' => now()->subHours(2)],
-                ['id' => 2, 'scan_type' => 'quick', 'status' => 'running', 'repository_name' => 'test-api', 'created_at' => now()->subMinutes(30)],
-            ];
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load dashboard data',
+                'message' => 'Database connection error. Please try again later.'
+            ], 500);
         }
 
         $systemHealth = [
@@ -147,6 +127,8 @@ class SuperAdminController extends Controller
 
     public function runSystemScan(Request $request)
     {
+        $this->checkAdminAccess($request);
+        
         $validated = $request->validate([
             'scan_type' => 'required|in:full,quick,deep',
             'target' => 'required|string',
@@ -170,6 +152,8 @@ class SuperAdminController extends Controller
 
     public function stats()
     {
+        $this->checkAdminAccess(request());
+        
         try {
             $totalUsers = (int) DB::table('users')->count();
             $activeScans = (int) DB::table('scan_jobs')->where('status', 'running')->count();
@@ -198,6 +182,8 @@ class SuperAdminController extends Controller
 
     public function auditLogs(Request $request)
     {
+        $this->checkAdminAccess($request);
+        
         $limit = $request->get('limit', 100);
         $offset = $request->get('offset', 0);
 
@@ -218,6 +204,8 @@ class SuperAdminController extends Controller
 
     public function manageUsers(Request $request)
     {
+        $this->checkAdminAccess($request);
+        
         $action = $request->get('action', 'list');
         
         switch($action) {
@@ -342,6 +330,8 @@ class SuperAdminController extends Controller
 
     public function generateReport(Request $request)
     {
+        $this->checkAdminAccess($request);
+        
         $validated = $request->validate([
             'type' => 'required|in:summary,detailed,executive,compliance',
             'date_from' => 'required|date',

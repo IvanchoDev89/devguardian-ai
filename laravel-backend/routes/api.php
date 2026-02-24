@@ -16,15 +16,23 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\EmailQueueController;
+use App\Http\Controllers\Api\AssetController;
 use App\Http\Middleware\AuthenticateUser;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SanitizeInput;
 
 // Register middleware aliases
 Route::aliasMiddleware('auth.user', AuthenticateUser::class);
+Route::aliasMiddleware('security', SecurityHeaders::class);
+Route::aliasMiddleware('sanitize', SanitizeInput::class);
 
-// Auth Routes (public)
+// Apply security headers to all API routes
+Route::middleware(['security'])->group(function () {
+
+// Auth Routes (public) - with rate limiting
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1'); // 5 attempts per minute
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     
@@ -39,8 +47,8 @@ Route::prefix('plans')->group(function () {
     Route::get('/{id}', [PlanController::class, 'show']);
 });
 
-// Billing & Subscription
-Route::prefix('billing')->group(function () {
+// Billing & Subscription - protected
+Route::prefix('billing')->middleware('auth.user')->group(function () {
     Route::get('/subscription', [BillingController::class, 'getSubscription']);
     Route::post('/checkout', [BillingController::class, 'createCheckoutSession']);
     Route::post('/customer', [BillingController::class, 'createCustomer']);
@@ -51,11 +59,11 @@ Route::prefix('billing')->group(function () {
     Route::post('/payment-methods', [BillingController::class, 'addPaymentMethod']);
 });
 
-// Stripe Webhook
+// Stripe Webhook - public but rate limited
 Route::post('/webhooks/stripe', [BillingController::class, 'webhook']);
 
-// API Keys Management
-Route::prefix('api-keys')->group(function () {
+// API Keys Management - protected
+Route::prefix('api-keys')->middleware('auth.user')->group(function () {
     Route::get('/', [ApiKeyController::class, 'index']);
     Route::post('/', [ApiKeyController::class, 'store']);
     Route::get('/{id}', [ApiKeyController::class, 'show']);
@@ -107,12 +115,30 @@ Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
         Route::get('/emails', [EmailQueueController::class, 'index']);
         Route::post('/emails/send', [EmailQueueController::class, 'send']);
         Route::post('/emails/send-bulk', [EmailQueueController::class, 'sendBulk']);
+        Route::get('/emails/pending', [EmailQueueController::class, 'getPending']);
+        Route::post('/emails/{id}/mark-sent', [EmailQueueController::class, 'markSent']);
+        
+        // Asset Management (Enterprise)
+        Route::get('/assets', [AssetController::class, 'index']);
+        Route::post('/assets', [AssetController::class, 'store']);
+        Route::get('/assets/{id}', [AssetController::class, 'show']);
+        Route::put('/assets/{id}', [AssetController::class, 'update']);
+        Route::delete('/assets/{id}', [AssetController::class, 'destroy']);
+        Route::post('/assets/{id}/verify', [AssetController::class, 'verify']);
+        
+        // Scan Authorization
+        Route::post('/scan/authorize', [AssetController::class, 'authorizeScan']);
+        
+        // Audit Logs
+        Route::get('/audit-logs', [AssetController::class, 'getAuditLogs']);
     });
     
-    // Scanner routes - require user authentication
+    // Scanner routes - require user authentication with stricter rate limiting
     Route::middleware(['auth.user'])->group(function () {
-        Route::post('/vulnerabilities/scan-repository', [VulnerabilityScannerController::class, 'scanRepository']);
-        Route::post('/vulnerabilities/scan-files', [VulnerabilityScannerController::class, 'scanFiles']);
+        Route::post('/vulnerabilities/scan-repository', [VulnerabilityScannerController::class, 'scanRepository'])
+            ->middleware('throttle:10,1'); // 10 scans per minute
+        Route::post('/vulnerabilities/scan-files', [VulnerabilityScannerController::class, 'scanFiles'])
+            ->middleware('throttle:10,1');
         Route::get('/vulnerabilities/statistics', [VulnerabilityScannerController::class, 'statistics']);
     });
     
@@ -129,13 +155,6 @@ Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
     
     // Vulnerabilities - Enhanced scanner routes
     Route::prefix('vulnerabilities')->name('vulnerabilities.')->group(function () {
-        // Scanner routes
-        Route::post('/scan-repository', [VulnerabilityScannerController::class, 'scanRepository'])
-            ->name('scan.repository');
-        
-        Route::post('/scan-files', [VulnerabilityScannerController::class, 'scanFiles'])
-            ->name('scan.files');
-        
         // Management routes
         Route::get('/', [VulnerabilityController::class, 'index'])
             ->name('index');
@@ -146,46 +165,54 @@ Route::prefix('v1')->middleware(['throttle:60,1'])->group(function () {
         Route::get('/{id}', [VulnerabilityController::class, 'show'])
             ->name('show');
         
-        // Fix management routes
-        Route::post('/{id}/generate-fix', [VulnerabilityScannerController::class, 'generateFix'])
-            ->name('generate-fix');
-        
-        Route::post('/{id}/apply-fix', [VulnerabilityScannerController::class, 'applyFix'])
-            ->name('apply-fix');
-        
-        Route::get('/{id}/fixes', [VulnerabilityController::class, 'fixes'])
-            ->name('fixes');
-        
-        Route::patch('/{id}/status', [VulnerabilityController::class, 'updateStatus'])
-            ->name('update-status');
+        // Fix management routes - protected
+        Route::middleware(['auth.user'])->group(function () {
+            Route::post('/{id}/generate-fix', [VulnerabilityScannerController::class, 'generateFix'])
+                ->name('generate-fix');
+            
+            Route::post('/{id}/apply-fix', [VulnerabilityScannerController::class, 'applyFix'])
+                ->name('apply-fix');
+            
+            Route::get('/{id}/fixes', [VulnerabilityController::class, 'fixes'])
+                ->name('fixes');
+            
+            Route::patch('/{id}/status', [VulnerabilityController::class, 'updateStatus'])
+                ->name('update-status');
+        });
     });
     
-    // AI Service Integration Routes
-    Route::prefix('ai')->name('ai.')->group(function () {
+    // AI Service Integration Routes - protected
+    Route::prefix('ai')->name('ai.')->middleware(['auth.user'])->group(function () {
         Route::post('/scan-code', function () {
-            // Forward to AI service for code scanning
-            $response = \Illuminate\Support\Facades\Http::post(
-                config('services.ai_service.url') . '/api/security/scan',
-                request()->all()
-            );
-            
+            $response = \Illuminate\Support\Facades\Http::timeout(30)
+                ->post(config('services.ai_service.url') . '/api/security/scan', request()->all());
             return response()->json($response->json());
         })->name('scan-code');
         
         Route::post('/generate-fix', function () {
-            // Forward to AI service for fix generation
-            $response = \Illuminate\Support\Facades\Http::post(
-                config('services.ai_service.url') . '/api/ai-fix/generate-fix',
-                request()->all()
-            );
-            
+            $response = \Illuminate\Support\Facades\Http::timeout(30)
+                ->post(config('services.ai_service.url') . '/api/ai-fix/generate-fix', request()->all());
             return response()->json($response->json());
         })->name('generate-fix');
+        
+        // Pentest Reports
+        Route::get('/pentest/scan/{scanId}/report', function ($scanId) {
+            $format = request()->query('format', 'json');
+            $response = \Illuminate\Support\Facades\Http::timeout(30)
+                ->get(config('services.ai_service.url') . "/api/pentest/scan/{$scanId}/report", ['format' => $format]);
+            return response()->json($response->json());
+        });
+        
+        Route::get('/pentest/scan/{scanId}/findings', function ($scanId) {
+            $response = \Illuminate\Support\Facades\Http::timeout(30)
+                ->get(config('services.ai_service.url') . "/api/pentest/scan/{$scanId}/findings");
+            return response()->json($response->json());
+        });
     });
 });
 
-// Super Admin Routes - Protected by auth and admin check
-Route::prefix('v1/admin')->middleware(['auth:api'])->group(function () {
+// Super Admin Routes - Protected by auth.user and admin check
+Route::prefix('v1/admin')->middleware(['auth.user', 'throttle:30,1'])->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard']);
     Route::post('/system-scan', [SuperAdminController::class, 'runSystemScan']);
     Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs']);
@@ -193,3 +220,5 @@ Route::prefix('v1/admin')->middleware(['auth:api'])->group(function () {
     Route::post('/generate-report', [SuperAdminController::class, 'generateReport']);
     Route::get('/stats', [SuperAdminController::class, 'stats']);
 });
+
+}); // End security middleware group

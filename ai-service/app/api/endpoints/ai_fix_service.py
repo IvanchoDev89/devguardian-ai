@@ -1,14 +1,19 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, BackgroundTasks
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import tempfile
 import os
-import shutil
 from datetime import datetime
 import uuid
-import magic
 import re
 import json
+
+try:
+    import magic
+    MAGIC_AVAILABLE = True
+except ImportError:
+    MAGIC_AVAILABLE = False
 
 def generate_ai_fix(code_content: str, vulnerability_type: str, file_ext: str) -> tuple[str, float, str]:
     """
@@ -230,10 +235,11 @@ async def generate_fix(
         
         # Validate file content type
         try:
-            file_type = magic.from_file(temp_file_path, mime=True)
-            if not file_type.startswith('text/') and not file_type in ['application/x-php', 'application/x-httpd-php']:
-                os.unlink(temp_file_path)
-                raise HTTPException(status_code=400, detail="Invalid file content type")
+            if MAGIC_AVAILABLE:
+                file_type = magic.from_file(temp_file_path, mime=True)
+                if not file_type.startswith('text/') and not file_type in ['application/x-php', 'application/x-httpd-php']:
+                    os.unlink(temp_file_path)
+                    raise HTTPException(status_code=400, detail="Invalid file content type")
         except:
             # Fallback if python-magic is not available
             pass
@@ -322,3 +328,94 @@ async def health_check():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+
+
+class FrontendFixRequest(BaseModel):
+    vulnerability_id: str
+    code: str
+
+
+class FrontendAnalyzeRequest(BaseModel):
+    code: str
+
+
+@router.post("/ai/fix")
+async def fix_from_frontend(request: FrontendFixRequest):
+    """
+    Generate fix from frontend (accepts vulnerability_id and code)
+    """
+    try:
+        # Determine vulnerability type from ID or default to general
+        vuln_type = "general"
+        if "sql" in request.vulnerability_id.lower():
+            vuln_type = "sql_injection"
+        elif "xss" in request.vulnerability_id.lower():
+            vuln_type = "xss"
+        elif "cmd" in request.vulnerability_id.lower() or " injection" in request.vulnerability_id.lower():
+            vuln_type = "command_injection"
+        
+        # Detect language from code
+        language = "unknown"
+        if "<?php" in request.code or "$" in request.code:
+            language = "php"
+        elif "def " in request.code or "import " in request.code:
+            language = "python"
+        elif "function" in request.code or "const " in request.code:
+            language = "javascript"
+        
+        # Generate fix
+        fix_id = str(uuid.uuid4())
+        fixed_code, confidence, explanation = generate_ai_fix(request.code, vuln_type, f".{language}")
+        
+        return JSONResponse(content={
+            'fix_id': fix_id,
+            'vulnerability_id': request.vulnerability_id,
+            'original_code': request.code,
+            'fixed_code': fixed_code,
+            'explanation': explanation,
+            'confidence': confidence,
+            'vulnerability_type': vuln_type,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fix generation failed: {str(e)}")
+
+
+@router.post("/code/analyze")
+async def analyze_code_frontend(request: FrontendAnalyzeRequest):
+    """
+    Analyze code from frontend (accepts code)
+    """
+    try:
+        # Detect language
+        language = "unknown"
+        if "<?php" in request.code or "$" in request.code:
+            language = "php"
+        elif "def " in request.code or "import " in request.code:
+            language = "python"
+        elif "function" in request.code or "const " in request.code:
+            language = "javascript"
+        
+        # Run vulnerability analysis
+        from app.core.services.security_analyzer import SecurityVulnerabilityAnalyzer
+        analyzer = SecurityVulnerabilityAnalyzer()
+        vulnerabilities = analyzer.analyze_code(request.code)
+        
+        # Calculate risk score
+        risk_score = 0
+        if vulnerabilities:
+            severity_scores = {'critical': 10, 'high': 7, 'medium': 4, 'low': 1}
+            risk_score = sum(severity_scores.get(v.get('severity', 'low'), 1) for v in vulnerabilities)
+            risk_score = min(risk_score / 10, 10)
+        
+        return JSONResponse(content={
+            'analysis_id': str(uuid.uuid4()),
+            'language': language,
+            'vulnerabilities': vulnerabilities,
+            'risk_score': risk_score,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")

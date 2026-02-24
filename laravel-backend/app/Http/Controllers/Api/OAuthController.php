@@ -97,13 +97,15 @@ class OAuthController extends Controller
 
     private function exchangeCodeForToken(string $code): string
     {
-        $response = \Illuminate\Support\Facades\Http::post('https://github.com/login/oauth/access_token', [
+        $response = \Illuminate\Support\Facades\Http::withHeaders([
+            'Accept' => 'application/json',
+        ])->post('https://github.com/login/oauth/access_token', [
             'client_id' => $this->githubClientId,
             'client_secret' => $this->githubClientSecret,
             'code' => $code,
         ]);
 
-        parse_str($response->body(), $data);
+        $data = $response->json();
         return $data['access_token'] ?? '';
     }
 
@@ -173,6 +175,24 @@ class OAuthController extends Controller
 
     private function createToken(string $email): string
     {
-        return base64_encode($email . ':' . time() . ':' . rand(1000, 9999));
+        $token = bin2hex(random_bytes(32));
+        
+        // Get user
+        $user = DB::table('users')->where('email', $email)->first();
+        
+        if ($user) {
+            // Store token in personal_access_tokens table
+            DB::table('personal_access_tokens')->insert([
+                'tokenable_type' => 'App\\Models\\User',
+                'tokenable_id' => $user->id,
+                'name' => 'GitHub OAuth Token',
+                'token' => hash('sha256', $token),
+                'abilities' => '["*"]',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        
+        return $token;
     }
 }

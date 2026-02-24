@@ -21,7 +21,7 @@ class BillingController extends Controller
 
     public function getSubscription(Request $request): JsonResponse
     {
-        $userId = $request->user_id ?? 1;
+        $userId = $this->getAuthenticatedUserId($request);
 
         $subscription = DB::table('subscriptions')
             ->where('user_id', $userId)
@@ -87,7 +87,7 @@ class BillingController extends Controller
         $customerId = 'cus_' . Str::random(32);
 
         DB::table('subscriptions')->updateOrInsert(
-            ['user_id' => $request->user_id ?? 1],
+            ['user_id' => $this->getAuthenticatedUserId($request)],
             [
                 'stripe_customer_id' => $customerId,
                 'plan_id' => 'free',
@@ -120,7 +120,7 @@ class BillingController extends Controller
         $plan = $plans[$validated['plan_id']];
 
         DB::table('subscriptions')
-            ->where('user_id', $request->user_id ?? 1)
+            ->where('user_id', $this->getAuthenticatedUserId($request))
             ->update([
                 'plan_id' => $validated['plan_id'],
                 'status' => $validated['plan_id'] === 'free' ? 'active' : 'pending',
@@ -129,7 +129,7 @@ class BillingController extends Controller
             ]);
 
         DB::table('api_keys')
-            ->where('user_id', $request->user_id ?? 1)
+            ->where('user_id', $this->getAuthenticatedUserId($request))
             ->update([
                 'plan' => $validated['plan_id'],
                 'monthly_scans_limit' => $plan['scans'],
@@ -150,7 +150,7 @@ class BillingController extends Controller
     public function cancelSubscription(Request $request): JsonResponse
     {
         DB::table('subscriptions')
-            ->where('user_id', $request->user_id ?? 1)
+            ->where('user_id', $this->getAuthenticatedUserId($request))
             ->update([
                 'status' => 'canceled',
                 'canceled_at' => now(),
@@ -166,7 +166,7 @@ class BillingController extends Controller
     public function getInvoices(Request $request): JsonResponse
     {
         $invoices = DB::table('payments')
-            ->where('user_id', $request->user_id ?? 1)
+            ->where('user_id', $this->getAuthenticatedUserId($request))
             ->orderByDesc('created_at')
             ->limit(20)
             ->get();
@@ -268,5 +268,24 @@ class BillingController extends Controller
                 'exp_year' => 2027,
             ]
         ]);
+    }
+    
+    private function getAuthenticatedUserId(Request $request): int
+    {
+        $token = $request->bearerToken();
+        
+        if (!$token) {
+            throw new \Illuminate\Validation\UnauthorizedException('Authentication required');
+        }
+        
+        $tokenRecord = DB::table('personal_access_tokens')
+            ->where('token', hash('sha256', $token))
+            ->first();
+        
+        if (!$tokenRecord) {
+            throw new \Illuminate\Validation\UnauthorizedException('Invalid or expired token');
+        }
+        
+        return $tokenRecord->tokenable_id;
     }
 }

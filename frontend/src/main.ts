@@ -99,15 +99,27 @@ const routes = [
     component: () => import('./pages/Documentation.vue')
   },
   {
-    path: '/super-admin',
-    name: 'SuperAdmin',
-    component: () => import('./pages/SuperAdmin.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true }
-  },
-  {
     path: '/billing',
     name: 'Billing',
     component: () => import('./pages/Billing.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/messages',
+    name: 'Messages',
+    component: () => import('./pages/Messages.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/notifications',
+    name: 'Notifications',
+    component: () => import('./pages/Notifications.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/enterprise-assets',
+    name: 'EnterpriseAssets',
+    component: () => import('./pages/EnterpriseAssets.vue'),
     meta: { requiresAuth: true }
   }
 ]
@@ -134,7 +146,7 @@ router.beforeEach((to, from, next) => {
   if (requiresAdmin && userStr) {
     try {
       const user = JSON.parse(userStr)
-      if (user.role !== 'admin' && user.role !== 'super_admin') {
+      if (user.role !== 'super_admin') {
         next('/dashboard')
         return
       }

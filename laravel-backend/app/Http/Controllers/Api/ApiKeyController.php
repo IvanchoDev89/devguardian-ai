@@ -13,7 +13,7 @@ class ApiKeyController extends Controller
     public function index(Request $request): JsonResponse
     {
         $apiKeys = DB::table('api_keys')
-            ->where('user_id', $request->user_id ?? 1)
+            ->where('user_id', $this->getAuthenticatedUserId($request))
             ->orderByDesc('created_at')
             ->get();
 
@@ -86,7 +86,7 @@ class ApiKeyController extends Controller
     {
         $apiKey = DB::table('api_keys')
             ->where('key_id', $id)
-            ->where('user_id', $request->user_id ?? 1)
+            ->where('user_id', $this->getAuthenticatedUserId($request))
             ->first();
 
         if (!$apiKey) {
@@ -122,7 +122,7 @@ class ApiKeyController extends Controller
 
         $apiKey = DB::table('api_keys')
             ->where('key_id', $id)
-            ->where('user_id', $request->user_id ?? 1)
+            ->where('user_id', $this->getAuthenticatedUserId($request))
             ->first();
 
         if (!$apiKey) {
@@ -159,7 +159,7 @@ class ApiKeyController extends Controller
     {
         $deleted = DB::table('api_keys')
             ->where('key_id', $id)
-            ->where('user_id', $request->user_id ?? 1)
+            ->where('user_id', $this->getAuthenticatedUserId($request))
             ->delete();
 
         if (!$deleted) {
@@ -179,7 +179,7 @@ class ApiKeyController extends Controller
     {
         $apiKey = DB::table('api_keys')
             ->where('key_id', $id)
-            ->where('user_id', $request->user_id ?? 1)
+            ->where('user_id', $this->getAuthenticatedUserId($request))
             ->first();
 
         if (!$apiKey) {
@@ -273,5 +273,24 @@ class ApiKeyController extends Controller
             'plan' => $apiKey->plan,
             'remaining' => $apiKey->monthly_scans_limit - $apiKey->scans_used_this_month - 1,
         ];
+    }
+    
+    private function getAuthenticatedUserId(Request $request): int
+    {
+        $token = $request->bearerToken();
+        
+        if (!$token) {
+            throw new \Illuminate\Validation\UnauthorizedException('Authentication required');
+        }
+        
+        $tokenRecord = DB::table('personal_access_tokens')
+            ->where('token', hash('sha256', $token))
+            ->first();
+        
+        if (!$tokenRecord) {
+            throw new \Illuminate\Validation\UnauthorizedException('Invalid or expired token');
+        }
+        
+        return $tokenRecord->tokenable_id;
     }
 }

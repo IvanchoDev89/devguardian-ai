@@ -70,12 +70,89 @@
             class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
             :class="$route.path === '/super-admin' ? 'text-white bg-red-600' : 'text-red-400 hover:text-red-300 hover:bg-white/5'"
           >
-            Admin
+            Admin Panel
           </router-link>
         </div>
 
         <!-- Right side items -->
         <div class="flex items-center space-x-3">
+          <!-- Notifications Dropdown -->
+          <div v-if="isAuthenticated" class="relative">
+            <button 
+              @click="showNotifications = !showNotifications"
+              class="relative p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              </svg>
+              <span 
+                v-if="notificationsStore.unreadCount > 0"
+                class="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center"
+              >
+                {{ notificationsStore.unreadCount > 9 ? '9+' : notificationsStore.unreadCount }}
+              </span>
+            </button>
+            
+            <div 
+              v-if="showNotifications" 
+              class="absolute right-0 mt-3 w-80 bg-slate-800/95 backdrop-blur-md rounded-xl shadow-xl border border-white/10 py-2 max-h-96 overflow-y-auto"
+              @click.away="showNotifications = false"
+            >
+              <div class="px-4 py-2 border-b border-white/10 flex items-center justify-between">
+                <p class="text-sm font-medium text-white">Notifications</p>
+                <button 
+                  v-if="notificationsStore.unreadCount > 0"
+                  @click="notificationsStore.markAllAsRead()"
+                  class="text-xs text-blue-400 hover:text-blue-300"
+                >
+                  Mark all read
+                </button>
+              </div>
+              
+              <div v-if="notificationsStore.notifications.length === 0" class="px-4 py-6 text-center text-gray-400 text-sm">
+                No notifications
+              </div>
+              
+              <div v-else class="max-h-64 overflow-y-auto">
+                <button 
+                  v-for="notification in notificationsStore.notifications.slice(0, 5)"
+                  :key="notification.id"
+                  @click="handleNotificationClick(notification)"
+                  class="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors border-l-2"
+                  :class="notification.is_read ? 'border-transparent' : notification.type === 'error' ? 'border-red-500' : notification.type === 'warning' ? 'border-yellow-500' : notification.type === 'success' ? 'border-green-500' : 'border-blue-500'"
+                >
+                  <div class="flex items-start">
+                    <div class="flex-shrink-0 mr-3">
+                      <span 
+                        class="w-2 h-2 rounded-full"
+                        :class="notification.type === 'error' ? 'bg-red-500' : notification.type === 'warning' ? 'bg-yellow-500' : notification.type === 'success' ? 'bg-green-500' : 'bg-blue-500'"
+                      ></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-white truncate">{{ notification.title }}</p>
+                      <p class="text-xs text-gray-400 truncate">{{ notification.message }}</p>
+                      <p class="text-xs text-gray-500 mt-1">{{ new Date(notification.created_at).toLocaleDateString() }}</p>
+                    </div>
+                    <span 
+                      v-if="!notification.is_read"
+                      class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 ml-2"
+                    ></span>
+                  </div>
+                </button>
+              </div>
+              
+              <div class="border-t border-white/10 pt-2 mt-2">
+                <router-link 
+                  to="/notifications"
+                  class="flex items-center justify-center px-4 py-2 text-sm text-blue-400 hover:text-blue-300"
+                  @click="showNotifications = false"
+                >
+                  View all notifications
+                </router-link>
+              </div>
+            </div>
+          </div>
+          
           <router-link 
             to="/pricing"
             class="hidden sm:inline-flex px-3 py-1.5 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-200"
@@ -257,16 +334,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useUserNotificationsStore } from '../stores/userNotifications'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const notificationsStore = useUserNotificationsStore()
 
 const showUserMenu = ref(false)
 const showMobileMenu = ref(false)
+const showNotifications = ref(false)
 
 const user = computed(() => authStore.user as any)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
@@ -284,9 +364,22 @@ const userRole = computed(() => {
 })
 const isAdmin = computed(() => userRole.value === 'admin' || userRole.value === 'super_admin')
 
+onMounted(async () => {
+  if (isAuthenticated.value) {
+    await notificationsStore.fetchNotifications()
+  }
+})
+
 const handleLogout = () => {
   authStore.logout()
   router.push('/login')
   showUserMenu.value = false
+}
+
+const handleNotificationClick = async (notification: any) => {
+  if (!notification.is_read) {
+    await notificationsStore.markAsRead(notification.id)
+  }
+  showNotifications.value = false
 }
 </script>

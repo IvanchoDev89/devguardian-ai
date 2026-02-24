@@ -25,7 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
   initAuthState()
   
   const isAuthenticated = computed(() => !!token.value)
-  const isAdmin = computed(() => user.value?.role === 'admin' || user.value?.role === 'super_admin')
+  const isAdmin = computed(() => user.value?.role === 'super_admin')
   const canScan = computed(() => {
     if (plan.value === 'free') {
       return scansUsed.value < 1

@@ -57,9 +57,9 @@
               />
               <span class="ml-2 text-sm text-gray-400">Remember me</span>
             </label>
-            <a href="#" class="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+            <span class="text-sm text-gray-500 cursor-not-allowed">
               Forgot password?
-            </a>
+            </span>
           </div>
 
           <!-- Error Message -->
@@ -128,9 +128,9 @@
         <!-- Sign Up Link -->
         <p class="text-center text-gray-400 text-sm mt-6">
           Don't have an account?
-          <a href="#" class="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+          <router-link to="/signup" class="text-blue-400 hover:text-blue-300 font-medium transition-colors">
             Sign up for free
-          </a>
+          </router-link>
         </p>
       </div>
     </div>
@@ -140,7 +140,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { authService } from '../services/api'
 import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()

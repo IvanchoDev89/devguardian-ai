@@ -20,7 +20,7 @@ class RepositoryController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $userId = $request->user_id ?? 1;
+        $userId = $this->getAuthenticatedUserId($request);
         
         $repositories = DB::table('repositories')
             ->where('user_id', $userId)
@@ -50,7 +50,7 @@ class RepositoryController extends Controller
             ], 400);
         }
 
-        $userId = $request->user_id ?? 1;
+        $userId = $this->getAuthenticatedUserId($request);
         
         $repoId = DB::table('repositories')->insertGetId([
             'user_id' => $userId,
@@ -268,5 +268,24 @@ class RepositoryController extends Controller
             'success' => true,
             'data' => $formatted
         ]);
+    }
+    
+    private function getAuthenticatedUserId(Request $request): int
+    {
+        $token = $request->bearerToken();
+        
+        if (!$token) {
+            throw new \Illuminate\Validation\UnauthorizedException('Authentication required');
+        }
+        
+        $tokenRecord = DB::table('personal_access_tokens')
+            ->where('token', hash('sha256', $token))
+            ->first();
+        
+        if (!$tokenRecord) {
+            throw new \Illuminate\Validation\UnauthorizedException('Invalid or expired token');
+        }
+        
+        return $tokenRecord->tokenable_id;
     }
 }

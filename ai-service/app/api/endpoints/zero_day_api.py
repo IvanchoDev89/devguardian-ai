@@ -4,19 +4,19 @@ REST API for ML-powered zero-day vulnerability detection
 """
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import uuid
-import asyncio
 
 from app.core.ml.zero_day_detector import ZeroDayDetectionEngine, VulnerabilityKnowledgeBase
 
 router = APIRouter(prefix="/api/zero-day", tags=["Zero-Day Detection"])
 
 # Global model instances
-zero_day_engine: Optional[ZeroDayDetectionEngine] = None
-knowledge_base = VulnerabilityKnowledgeBase()
+zero_day_engine: Optional[Any] = None
+knowledge_base: Optional[Any] = None
 
 
 class CodeAnalysisRequest(BaseModel):
@@ -65,16 +65,18 @@ class ModelInfo(BaseModel):
     vulnerability_types: List[str]
 
 
-@router.on_event("startup")
-async def startup_event():
-    """Initialize the 0-day detection engine on startup"""
+def get_zero_day_engine():
+    """Lazy initialization of zero-day detection engine"""
     global zero_day_engine
-    try:
-        zero_day_engine = ZeroDayDetectionEngine()
-        print("0-Day Detection Engine initialized successfully")
-    except Exception as e:
-        print(f"Warning: Could not initialize 0-Day Detection Engine: {e}")
-        print("Using pattern-based detection only")
+    if zero_day_engine is None:
+        try:
+            zero_day_engine = ZeroDayDetectionEngine()
+            print("0-Day Detection Engine initialized successfully")
+        except Exception as e:
+            print(f"Warning: Could not initialize 0-Day Detection Engine: {e}")
+            print("Using pattern-based detection only")
+            zero_day_engine = None
+    return zero_day_engine
 
 
 @router.post("/analyze", response_model=AnalysisResponse)
@@ -88,9 +90,10 @@ async def analyze_code(
     analysis_id = f"ANALYSIS-{uuid.uuid4().hex[:8].upper()}"
     
     try:
-        if zero_day_engine:
+        engine = get_zero_day_engine()
+        if engine:
             # Use ML-based detection
-            result = await zero_day_engine.analyze_code(request.code)
+            result = await engine.analyze_code(request.code)
             
             # Add recommendations to each finding
             for finding in result['findings']:

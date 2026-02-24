@@ -43,6 +43,13 @@ class SecurityVulnerabilityAnalyzer:
                 (r'document\.write\s*\(', SeverityLevel.MEDIUM, "CWE-79"),
                 (r'eval\s*\(', SeverityLevel.CRITICAL, "CWE-79"),
                 (r'<script>', SeverityLevel.CRITICAL, "CWE-79"),
+                (r'echo\s+\$\w+', SeverityLevel.HIGH, "CWE-79"),
+                (r'print\s+\$\w+', SeverityLevel.HIGH, "CWE-79"),
+                (r'print_r\s*\(\s*\$\w+', SeverityLevel.MEDIUM, "CWE-79"),
+                (r'var_dump\s*\(\s*\$\w+', SeverityLevel.MEDIUM, "CWE-79"),
+                (r'\$_GET\[', SeverityLevel.HIGH, "CWE-79"),
+                (r'\$_POST\[', SeverityLevel.HIGH, "CWE-79"),
+                (r'\$_REQUEST\[', SeverityLevel.HIGH, "CWE-79"),
             ],
             'command_injection': [
                 (r'exec\s*\(', SeverityLevel.CRITICAL, "CWE-78"),

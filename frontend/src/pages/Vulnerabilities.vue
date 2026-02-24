@@ -230,7 +230,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { vulnerabilityService } from '../services/api'
+import { vulnerabilityService, aiService } from '../services/api'
 
 interface Vulnerability {
   id: string
@@ -373,21 +373,35 @@ const runScan = async () => {
   scanning.value = true
   loading.value = true
   try {
-    // Simulate scan
-    await new Promise(resolve => setTimeout(resolve, 3000))
-    // Add new vulnerabilities
-    const newVuln: Vulnerability = {
-      id: Date.now().toString(),
-      title: 'New vulnerability detected',
-      description: 'Simulated vulnerability from scan',
-      severity: 'medium',
-      status: 'open',
-      repository: 'backend-api',
-      file: 'app/Models/User.php',
-      cweId: 'CWE-20',
-      detectedAt: 'Just now'
+    // Scan sample vulnerable code using AI service
+    const sampleCode = `<?php
+// Vulnerable code sample for demonstration
+$user_input = $_GET["name"];
+$sql = "SELECT * FROM users WHERE id = " . $_GET["id"];
+echo $user_input;
+system($_GET["cmd"]);
+?>`
+
+    const response = await aiService.scanCode(sampleCode, { scanType: 'quick' })
+    
+    if (response.data && response.data.vulnerabilities) {
+      // Add detected vulnerabilities
+      for (const vuln of response.data.vulnerabilities) {
+        const newVuln: Vulnerability = {
+          id: `vuln-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          title: vuln.type || 'Unknown Vulnerability',
+          description: `Detected: ${vuln.match || 'Security issue detected'} - CWE: ${vuln.cwe_id || 'N/A'}`,
+          severity: vuln.severity || 'medium',
+          status: 'open',
+          repository: 'demo-repository',
+          file: 'sample.php',
+          cweId: vuln.cwe_id || 'CWE-000',
+          cvss_score: vuln.confidence ? vuln.confidence / 10 : 5.0,
+          detectedAt: 'Just now'
+        }
+        vulnerabilities.value.push(newVuln)
+      }
     }
-    vulnerabilities.value.push(newVuln)
   } catch (error) {
     console.error('Scan failed:', error)
   } finally {
@@ -396,14 +410,56 @@ const runScan = async () => {
   }
 }
 
-const generateFix = (id: string) => {
+const generateFix = async (id: string) => {
   const vulnerability = vulnerabilities.value.find(v => v.id === id)
   if (vulnerability) {
     vulnerability.status = 'fixing'
-    // Simulate AI fix generation
-    setTimeout(() => {
-      vulnerability.status = 'fixed'
-    }, 5000)
+    try {
+      // Map vulnerability to fix type
+      const vulnTypeMap: Record<string, string> = {
+        'SQL Injection': 'sql_injection',
+        'sql_injection': 'sql_injection',
+        'XSS': 'xss',
+        'xss': 'xss',
+        'Command Injection': 'command_injection',
+        'command_injection': 'command_injection',
+        'Path Traversal': 'path_traversal',
+        'path_traversal': 'path_traversal',
+        'Hardcoded': 'hardcoded_secrets',
+        'hardcoded': 'hardcoded_secrets'
+      }
+      
+      const vulnType = vulnTypeMap[vulnerability.title.toLowerCase()] || 'general'
+      
+      // Sample vulnerable code based on vulnerability type
+      const sampleCodeMap: Record<string, string> = {
+        sql_injection: '<?php\n$sql = "SELECT * FROM users WHERE id = " . $_GET["id"];\nmysqli_query($conn, $sql);\n?>',
+        xss: '<?php\necho $_GET["input"];\n?>',
+        command_injection: '<?php\nsystem($_GET["cmd"]);\n?>',
+        path_traversal: '<?php\n$file = file_get_contents($_GET["file"]);\n?>',
+        general: '<?php\n// Sample code\n?>'
+      }
+      
+      const sampleCode = sampleCodeMap[vulnType] || sampleCodeMap.general
+      
+      // Call AI service to generate fix
+      const response = await aiService.generateFix(id, sampleCode)
+      
+      if (response.data && response.data.success) {
+        // Show the fix in an alert
+        alert(`AI Fix Generated!\n\n${response.data.explanation}\n\nFixed Code:\n${response.data.fixed_code}`)
+        
+        // Mark as fixed in backend
+        await vulnerabilityService.updateVulnerability(id, { status: 'resolved' })
+        vulnerability.status = 'resolved'
+      } else {
+        throw new Error('Fix generation failed')
+      }
+      
+    } catch (error) {
+      console.error('Error generating fix:', error)
+      vulnerability.status = 'open'
+    }
   }
 }
 

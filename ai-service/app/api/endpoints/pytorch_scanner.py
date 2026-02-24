@@ -14,13 +14,28 @@ import asyncio
 from datetime import datetime
 import uuid
 
-from app.core.services.pytorch_vulnerability_scanner import PyTorchVulnerabilityScanner, VulnerabilityResult
-from app.core.models.scan_models import (
-    ScanRequest, 
-    ScanResponse, 
-    VulnerabilityReport,
-    ScanStatus
-)
+# Try to import PyTorch - make it optional
+try:
+    import torch
+    PYTORCH_AVAILABLE = True
+except ImportError:
+    PYTORCH_AVAILABLE = False
+    torch = None
+
+try:
+    from app.core.services.pytorch_vulnerability_scanner import PyTorchVulnerabilityScanner, VulnerabilityResult
+    from app.core.models.scan_models import (
+        ScanRequest, 
+        ScanResponse, 
+        VulnerabilityReport,
+        ScanStatus
+    )
+    SCANNER_AVAILABLE = True
+except ImportError:
+    SCANNER_AVAILABLE = False
+    PyTorchVulnerabilityScanner = None
+    VulnerabilityResult = None
+    ScanRequest = None
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
