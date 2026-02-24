@@ -42,7 +42,7 @@ jobs:
       
       - name: Install dependencies
         working-directory: ./laravel-backend
-        run: composer install --no-progress --prefer-dist --optimize-autoloader
+        run: composer install --no-progress --prefer-dist --optimize-autoloader --ignore-platform-reqs || composer install --no-progress --prefer-dist --no-dev --ignore-platform-reqs
       
       - name: Generate application key
         working-directory: ./laravel-backend
