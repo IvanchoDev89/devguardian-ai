@@ -12,7 +12,7 @@ structlog==23.2.0
 rich==13.7.0
 psutil==5.9.8
 python-magic==0.4.27
-torch==2.2.0
+torch==2.10.0
 transformers==4.36.0
 tokenizers==0.15.0
 datasets==2.15.0
