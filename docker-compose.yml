@@ -50,9 +50,9 @@ services:
     restart: unless-stopped
     environment:
       APP_NAME: "DevGuardian AI"
-      APP_ENV: local
+      APP_ENV: production
       APP_KEY: ${APP_KEY}
-      APP_DEBUG: "true"
+      APP_DEBUG: "false"
       APP_URL: http://localhost:8001
       
       DB_CONNECTION: pgsql
@@ -102,9 +102,9 @@ services:
     restart: unless-stopped
     environment:
       APP_NAME: "DevGuardian AI"
-      APP_ENV: local
+      APP_ENV: production
       APP_KEY: ${APP_KEY}
-      APP_DEBUG: "true"
+      APP_DEBUG: "false"
       
       DB_CONNECTION: pgsql
       DB_HOST: postgres
@@ -142,8 +142,8 @@ services:
     environment:
       PORT: 8000
       HOST: 0.0.0.0
-      ENVIRONMENT: development
-      DEBUG: "true"
+      ENVIRONMENT: production
+      DEBUG: "false"
       REDIS_URL: redis://redis:6379
       LOG_LEVEL: info
       STRUCTURED_LOGGING: "true"

@@ -209,7 +209,7 @@ def generate_credential_fix(code_snippet: str) -> str:
          '$password = getenv("DB_PASSWORD");'),
         
         # API key
-        ('$api_key = "sk-39284-2837-1827";',
+        ('$api_key = "sk-xxx-xxx-xxx";',
          '$api_key = getenv("API_KEY");'),
         
         # Python secret key

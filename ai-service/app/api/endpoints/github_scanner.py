@@ -122,7 +122,7 @@ return [
     'host' => 'localhost',
     'database' => 'myapp',
     'username' => 'root',
-    'password' => 'secret123',
+    'password' => env('DB_PASSWORD'),
 ];
 ''',
             'public/index.php': '''<?php
