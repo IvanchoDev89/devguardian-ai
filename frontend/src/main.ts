@@ -4,7 +4,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import './styles.css'
 
-// CodeSentinel - Precision Code Security Scanner
+// DevGuardian AI - Security Vulnerability Scanner
 
 const routes = [
   {

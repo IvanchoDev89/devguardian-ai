@@ -44,7 +44,7 @@ A precision-focused AI-powered security platform with zero-noise vulnerability d
 ### 1. Clone Repository
 ```bash
 git clone <repository-url>
-cd codesentinel
+cd devguardian-ai
 ```
 
 ### 2. Environment Setup
@@ -221,9 +221,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Documentation**: [docs.codesentinel.ai](https://docs.codesentinel.ai)
-- **Issues**: [GitHub Issues](https://github.com/your-org/codesentinel/issues)
-- **Discord**: [Join our Discord](https://discord.gg/codesentinel)
+- **Documentation**: [docs.devguardian.ai](https://docs.devguardian.ai)
+- **Issues**: [GitHub Issues](https://github.com/IvanchoDev89/devguardian-ai/issues)
+- **Discord**: [Join our Discord](https://discord.gg/devguardian)
 
 ## 🎯 Roadmap
 
@@ -237,4 +237,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Built with ❤️ by CodeSentinel team
+Built with ❤️ by DevGuardian AI Team
