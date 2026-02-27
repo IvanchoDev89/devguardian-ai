@@ -18,6 +18,7 @@ from app.api.endpoints.zero_day_api import router as zero_day_router
 from app.api.endpoints.github_scanner import router as github_router
 from app.api.endpoints.comprehensive_scanner import router as scanner_router
 from app.api.endpoints.semgrep_endpoint import router as semgrep_router
+from app.api.endpoints.vulnerability_analyzer import router as vulnerability_router
 
 
 # Security middleware for additional protections
@@ -132,6 +133,7 @@ app.include_router(zero_day_router)
 app.include_router(github_router)
 app.include_router(scanner_router)
 app.include_router(semgrep_router)
+app.include_router(vulnerability_router)
 
 
 @app.get("/health")

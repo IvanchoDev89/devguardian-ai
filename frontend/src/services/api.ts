@@ -675,3 +675,34 @@ export const reportService = {
     return apiClient.get<ApiResponse>(`/v1/pentest/scan/${scanId}/findings`)
   }
 }
+
+// Vulnerability Scanner API (MVP)
+export const vulnerabilityScannerApi = {
+  async analyzeCode(code: string, language: string = 'python') {
+    const response = await aiServiceClient.post<{
+      vulnerabilities: any[]
+      summary: string
+      score: number
+      total_vulnerabilities: number
+      language: string
+      scan_id: string
+      timestamp: string
+    }>('/api/v1/analyze-code', { code, language })
+    return response
+  },
+
+  async checkHealth() {
+    const response = await aiServiceClient.get<{
+      status: string
+      timestamp: string
+      service: string
+      version: string
+    }>('/api/v1/health')
+    return response
+  },
+
+  async getSupportedLanguages() {
+    const response = await aiServiceClient.get<{ supported_languages: string[] }>('/api/v1/languages')
+    return response
+  }
+}
