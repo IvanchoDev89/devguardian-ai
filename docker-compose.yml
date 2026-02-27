@@ -159,6 +159,11 @@ services:
       REQUEST_TIMEOUT: 300
       METRICS_ENABLED: "true"
       HEALTH_CHECK_INTERVAL: 30
+      # Semgrep Configuration
+      SEMGREP_TIMEOUT: 300
+      SEMGREP_RULES: "p/owasp-top-ten,p/secrets,p/sql-injection,p/xss"
+      # Claude API for false positive analysis
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY:-}
     volumes:
       - ./ai-service:/app
       - ai_models:/app/models
