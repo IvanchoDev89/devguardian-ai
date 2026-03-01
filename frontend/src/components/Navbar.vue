@@ -17,6 +17,14 @@
         <!-- Navigation Links - Desktop -->
         <div class="hidden lg:flex items-center space-x-1">
           <router-link 
+            to="/scan" 
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+            :class="$route.path === '/scan' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+          >
+            🔍 Escanear
+          </router-link>
+          
+          <router-link 
             to="/dashboard" 
             class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
             :class="$route.path === '/dashboard' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
@@ -25,19 +33,11 @@
           </router-link>
           
           <router-link 
-            to="/sql-injection-scanner" 
-            class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-            :class="$route.path === '/sql-injection-scanner' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
-          >
-            Scanner
-          </router-link>
-          
-          <router-link 
             to="/vulnerabilities" 
             class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
             :class="$route.path === '/vulnerabilities' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
           >
-            Vulnerabilities
+            Vulnerabilidades
           </router-link>
 
           <router-link 
