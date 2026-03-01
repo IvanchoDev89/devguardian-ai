@@ -1,43 +1,40 @@
 # DevGuardian AI
 
-A precision-focused AI-powered security platform with zero-noise vulnerability detection and automated fix generation.
+A code security scanner with pattern-based detection for common vulnerabilities.
 
-## 🎯 Philosophy
+## ⚠️ Honest Assessment
 
-**DevGuardian AI is a silent guardian.** It detects only real vulnerabilities. Precision > Coverage. No noise. No magic. No hype.
+**This is a code quality tool, NOT a security product.**
+- Uses pattern matching (regex), not security analysis
+- Will miss most real vulnerabilities (business logic, IDOR, auth bypass, etc.)
+- For educational purposes and basic hygiene only
+- Do NOT rely on this for actual security assessments
 
-## 🚀 Features
+## Features
 
-- **Zero-Noise Detection**: Only reports exploitable vulnerabilities
-- **AI-Powered Pentesting**: Advanced security testing with 0-day vulnerability detection
-- **Super Admin Dashboard**: Enterprise-wide security monitoring and analytics
-- **Precision SQL Injection Scanner**: Extreme accuracy for JavaScript/Node.js
-- **Context-Aware Analysis**: Understands your code's actual risk
-- **Real-time Dashboard**: Monitor security metrics without false positives
-- **Developer-Friendly**: Clear explanations and actionable fixes
-- **Automated Fix Generation**: AI-generated vulnerability fixes with one-click apply
+- **Pattern Detection**: Detects common issues like hardcoded passwords, obvious SQLi
+- **Quick Scanner**: Fast code scanning
+- **Multiple Languages**: Python, JavaScript, TypeScript, Java, PHP, Go, Rust, C#
+- **Rate Limiting**: Prevents abuse
+- **Audit Logging**: Tracks scan activity
 
 ## 🏗️ Architecture
 
 ### Services
-- **Laravel API Backend** (PHP 8.3 + Octane + Swoole)
-- **Python AI Service** (FastAPI + PyTorch + Transformers)
-- **PostgreSQL + TimescaleDB** (Metrics and time-series data)
-- **Redis Cluster** (Queue and caching)
-- **Vue 3 + TypeScript Frontend**
+- **Vue 3 + TypeScript Frontend** (Port 3000)
+- **Python AI Service** (FastAPI - Port 8000)
+- **Laravel API Backend** (PHP 8.3 + Octane - Port 8001) - Optional for MVP
 
 ### Key Components
-- **Domain-Driven Design**: Clean architecture with proper separation of concerns
-- **Hexagonal Architecture**: Ports and adapters pattern for testability
-- **Event-Driven Processing**: Queue-based vulnerability processing
-- **Microservices**: Scalable AI service with async processing
+- **Vulnerability Scanner**: Pattern-matching + AI analysis
+- **LLM Analyzer**: OpenAI, Claude, or Ollama integration for fix suggestions
+- **Vue 3 SPA**: Modern responsive frontend
 
 ## 📋 Prerequisites
 
-- Docker & Docker Compose
 - Node.js 18+
-- PHP 8.3+
 - Python 3.11+
+- (Optional) Docker for Laravel backend
 
 ## 🛠️ Installation
 
@@ -47,121 +44,90 @@ git clone <repository-url>
 cd devguardian-ai
 ```
 
-### 2. Environment Setup
+### 2. Start AI Service (Required)
 ```bash
-# Copy environment files
-cp laravel-backend/.env.example laravel-backend/.env
-cp ai-service/.env.example ai-service/.env
+cd ai-service
 
-# Generate application keys
-cd laravel-backend
-php artisan key:generate
-```
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-### 3. Start Services with Docker
-```bash
-docker-compose up -d
-```
-
-### 4. Install Dependencies
-```bash
-# Laravel backend
-cd laravel-backend
-composer install
-php artisan migrate
-php artisan db:seed
-
-# AI Service
-cd ../ai-service
+# Install dependencies
 pip install -r requirements.txt
 
-# Frontend
-cd ../frontend
-npm install
-npm run build
+# Start the server
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-### 5. Configure OAuth
-Add your OAuth credentials to the `.env` files:
-- GitHub OAuth App
-- GitLab OAuth App
-- Bitbucket OAuth App
+### 3. Start Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 4. Access the Application
+- **Frontend**: http://localhost:3000
+- **Scan Page**: http://localhost:3000/scan
+- **AI Service API**: http://localhost:8000
 
 ## 🚀 Quick Start
 
-1. **Access the Application**: Open `http://localhost` in your browser
-2. **Connect Repositories**: Use the UI to connect your repositories
-3. **Run Security Scans**: Trigger scans to detect vulnerabilities
-4. **Review AI Fixes**: Examine AI-generated fixes and apply them
+1. **Access the Application**: Open http://localhost:3000
+2. **Go to Scanner**: Click "Scan" in the navigation or visit /scan
+3. **Paste Code**: Enter your code to analyze
+4. **View Results**: See vulnerabilities and security score
+5. **Get AI Fixes**: Click "AI Fix" for remediation suggestions
 
 ## 📊 Usage
 
-### Scanning Repositories
+### API Usage
 ```bash
-# Manual scan
-php artisan scan:repository <repository-id>
+# Health check
+curl http://localhost:8000/api/v1/health
 
-# Batch scan
-php artisan scan:organization <organization-id>
-```
-
-### AI Service API
-```bash
-# Generate fix
-curl -X POST http://localhost:8001/api/v1/generate-fix \
+# Analyze code
+curl -X POST http://localhost:8000/api/v1/analyze-code \
   -H "Content-Type: application/json" \
-  -d @fix-request.json
+  -d '{"code": "password = \"secret123\"", "language": "python"}'
 
-# Validate fix
-curl -X POST http://localhost:8001/api/v1/validate-fix \
+# AI analysis (requires OpenAI/Claude API key)
+curl -X POST http://localhost:8000/api/llm/analyze \
   -H "Content-Type: application/json" \
-  -d '{"fix_id": "fix-uuid"}'
+  -d '{"vulnerability": {"type": "sql_injection", "severity": "critical"}, "code_snippet": "...", "language": "python"}'
 ```
 
 ## 🔧 Configuration
 
-### Laravel Backend (.env)
+### Frontend (.env)
 ```env
-# Database
-DB_CONNECTION=pgsql
-DB_HOST=postgres
-DB_DATABASE=devguardian
-DB_USERNAME=devguardian
-DB_PASSWORD=devguardian_password
-
-# AI Service
-AI_SERVICE_URL=http://ai-service:8000
-
-# OAuth
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-GITLAB_CLIENT_ID=your_gitlab_client_id
-GITLAB_CLIENT_SECRET=your_gitlab_client_secret
-
-# Queue
-QUEUE_CONNECTION=redis
+VITE_API_BASE_URL=http://localhost:8001/api
+VITE_AI_SERVICE_URL=http://localhost:8000
 ```
 
 ### AI Service (.env)
 ```env
 PORT=8000
 HOST=0.0.0.0
-REDIS_URL=redis://redis:6379
 LOG_LEVEL=info
+
+# Optional: OpenAI API
+OPENAI_API_KEY=sk-...
+
+# Optional: Claude API
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Optional: Ollama (local AI)
+OLLAMA_BASE_URL=http://localhost:11434
 ```
 
 ## 🧪 Testing
 
-### Laravel Tests
-```bash
-cd laravel-backend
-php artisan test
-```
-
 ### AI Service Tests
 ```bash
 cd ai-service
-pytest
+source venv/bin/activate
+pytest tests/ -v
 ```
 
 ### Frontend Tests
@@ -170,42 +136,28 @@ cd frontend
 npm run test
 ```
 
-## 📈 Monitoring
+## 🔒 Security - Detected Vulnerabilities
 
-### Health Checks
-- Laravel: `http://localhost:8000/health`
-- AI Service: `http://localhost:8001/health`
-- PostgreSQL: `localhost:5432`
-- Redis: `localhost:6379`
+The scanner detects:
+- **SQL Injection** - String concatenation in queries
+- **Hardcoded Passwords** - Credentials in source code
+- **Hardcoded API Keys** - Secrets and tokens
+- **XSS** - Cross-site scripting patterns
+- **Command Injection** - Unsafe system calls
+- **Weak Cryptography** - MD5, SHA1 usage
+- **Path Traversal** - Unsafe file operations
+- **Insecure Deserialization** - Pickle/YAML loading
 
-### Metrics
-- Laravel Horizon: `http://localhost/horizon`
-- Application metrics available at `/api/metrics`
+## 📈 API Endpoints
 
-## 🔒 Security
-
-- **API Authentication**: Laravel Sanctum tokens
-- **Webhook Verification**: Signature validation
-- **Data Encryption**: Sensitive data encrypted at rest
-- **Access Control**: Role-based permissions
-- **Audit Logging**: Comprehensive security event tracking
-
-## 🚀 Deployment
-
-### Production Docker
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Kubernetes
-```bash
-kubectl apply -f kubernetes/
-```
-
-## 📚 API Documentation
-
-- **Laravel API**: `http://localhost:8000/docs`
-- **AI Service**: `http://localhost:8001/docs`
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/health` | GET | Service health check |
+| `/api/v1/analyze-code` | POST | Analyze code for vulnerabilities |
+| `/api/v1/languages` | GET | Get supported languages |
+| `/api/llm/analyze` | POST | AI-powered vulnerability analysis |
+| `/api/llm/fix` | POST | Generate fix suggestions |
+| `/api/llm/health` | GET | LLM service health |
 
 ## 🤝 Contributing
 
@@ -221,19 +173,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Documentation**: [docs.devguardian.ai](https://docs.devguardian.ai)
 - **Issues**: [GitHub Issues](https://github.com/IvanchoDev89/devguardian-ai/issues)
-- **Discord**: [Join our Discord](https://discord.gg/devguardian)
 
 ## 🎯 Roadmap
 
-- [ ] Advanced ML models for fix generation
-- [ ] Support for more programming languages
-- [ ] Custom rule engine
-- [ ] Advanced compliance reporting
-- [ ] Mobile applications
-- [ ] Enterprise SSO integration
-- [ ] Advanced threat intelligence feeds
+- [x] Basic vulnerability scanner (MVP)
+- [x] Web interface with scan page
+- [ ] Database integration for scan history
+- [ ] User authentication
+- [ ] Repository scanning
+- [ ] Advanced AI models for fix generation
 
 ---
 

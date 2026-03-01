@@ -4,14 +4,12 @@ This guide covers setting up the MVP vulnerability scanner for local development
 
 ## Prerequisites
 
-- Docker & Docker Compose
 - Node.js 18+
 - Python 3.11+
-- PHP 8.3+
 
-## Quick Start (MVP Only)
+## Quick Start
 
-### 1. Start AI Service
+### 1. Start AI Service (Required)
 
 ```bash
 cd ai-service
@@ -34,22 +32,18 @@ curl http://localhost:8000/api/v1/health
 # Expected: {"status":"ok","timestamp":"...","service":"DevGuardian Vulnerability Scanner","version":"1.0.0"}
 ```
 
-### 3. Test the Vulnerability Scanner
-
-```bash
-# Analyze code for vulnerabilities
-curl -X POST http://localhost:8000/api/v1/analyze-code \
-  -H "Content-Type: application/json" \
-  -d '{"code": "password = \"mysecret123\"", "language": "python"}'
-```
-
-### 4. Start Frontend (Optional)
+### 3. Start Frontend
 
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
+### 4. Access the Application
+
+- **Frontend**: http://localhost:3000
+- **Scan Page**: http://localhost:3000/scan
 
 ## API Endpoints
 
@@ -65,7 +59,24 @@ Content-Type: application/json
 
 {
   "code": "string (max 10KB)",
-  "language": "python|javascript|typescript|java|csharp|php|ruby|go|rust|c|cpp"
+  "language": "python|javascript|typescript|java|csharp|php|go|rust"
+}
+```
+
+### AI Analysis (requires API key)
+```
+POST /api/llm/analyze
+Content-Type: application/json
+
+{
+  "vulnerability": {
+    "type": "sql_injection",
+    "severity": "critical",
+    "message": "..."
+  },
+  "code_snippet": "string",
+  "language": "python",
+  "generate_fix": true
 }
 ```
 
@@ -74,17 +85,47 @@ Content-Type: application/json
 GET /api/v1/languages
 ```
 
-## Supported Vulnerabilities
+## Environment Variables
 
-The scanner detects:
-- SQL Injection
-- Hardcoded Passwords/API Keys
-- XSS (Cross-Site Scripting)
-- Command Injection
-- Weak Cryptography (MD5, SHA1)
-- Insecure Deserialization
-- Path Traversal
-- And more...
+### AI Service (.env)
+
+Create `.env` in `ai-service/`:
+
+```env
+PORT=8000
+HOST=0.0.0.0
+LOG_LEVEL=info
+
+# Optional: OpenAI API (for AI analysis)
+OPENAI_API_KEY=sk-...
+
+# Optional: Claude API (for AI analysis)
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Optional: Ollama (local AI)
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+### Frontend (.env)
+
+The frontend already has defaults configured:
+
+```env
+VITE_API_BASE_URL=http://localhost:8001/api
+VITE_AI_SERVICE_URL=http://localhost:## Supported Vulnerabilities
+
+The8000
+```
+
+ scanner detects:
+- **SQL Injection** - String concatenation in queries
+- **Hardcoded Passwords** - Credentials in source code
+- **Hardcoded API Keys** - Secrets and tokens
+- **XSS** - Cross-site scripting patterns
+- **Command Injection** - Unsafe system calls
+- **Weak Cryptography** - MD5, SHA1 usage
+- **Path Traversal** - Unsafe file operations
+- **Insecure Deserialization** - Pickle/YAML loading
 
 ## Running Tests
 
@@ -99,75 +140,120 @@ pytest tests/ -v
 pytest tests/test_vulnerability_scanner.py -v
 ```
 
-## Environment Variables
-
-Create `.env` in `ai-service/`:
-
-```env
-PORT=8000
-HOST=0.0.0.0
-LOG_LEVEL=info
-```
-
-## Docker Deployment
-
-```bash
-# Build and run
-docker-compose up -d ai-service
-
-# Check logs
-docker-compose logs -f ai-service
-```
-
 ## Project Structure
 
 ```
 devguardian-ai/
-├── ai-service/
+├── README.md                 # Project overview
+├── SETUP.md                  # This file
+├── ai-service/               # Python FastAPI service
+│   ├── main.py               # Application entry point
+│   ├── requirements.txt      # Python dependencies
 │   ├── app/
 │   │   ├── scanners/
-│   │   │   └── vulnerability_scanner.py  # Core scanner logic
+│   │   │   └── vulnerability_scanner.py  # Core scanner
+│   │   ├── services/
+│   │   │   └── llm_analyzer.py            # AI analysis
 │   │   └── api/
 │   │       └── endpoints/
-│   │           └── vulnerability_analyzer.py  # API endpoint
-│   ├── tests/
-│   │   ├── test_vulnerability_scanner.py
-│   │   └── test_api.py
-│   ├── main.py
-│   └── requirements.txt
-├── frontend/
-│   └── src/
-│       ├── components/
-│       │   ├── CodeInput.vue
-│       │   └── ResultsDisplay.vue
-│       ├── pages/
-│       │   └── ScanPage.vue
-│       └── services/
-│           └── api.ts
-└── README.md
+│   │           ├── vulnerability_analyzer.py
+│   │           └── llm_analyzer.py
+│   └── tests/
+│       ├── test_vulnerability_scanner.py
+│       └── test_llm_analyzer.py
+├── frontend/                 # Vue 3 frontend
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── Landing.vue    # Home page
+│   │   │   └── ScanPage.vue   # Scanner page
+│   │   ├── components/
+│   │   │   └── Navbar.vue
+│   │   └── services/
+│   │       └── api.ts
+│   └── package.json
+└── laravel-backend/         # Optional Laravel API (not required for MVP)
 ```
 
 ## Troubleshooting
 
+### Port Already in Use
+```bash
+# Find process using port 8000
+lsof -ti:8000
+
+# Kill it
+lsof -ti:8000 | xargs kill -9
+```
+
 ### Import Errors
 Ensure you're running from the correct directory and virtual environment is activated.
 
-### Port Already in Use
-Kill existing process:
+### Frontend not loading
+Check the frontend is running on port 3000:
 ```bash
-lsof -ti:8000 | xargs kill -9
+curl http://localhost:3000
 ```
 
 ### Tests Failing
 Ensure all dependencies are installed:
 ```bash
-pip install pytest pytest-asyncio
+pip install pytest pytest-asyncio httpx
+```
+
+## API Examples
+
+### Basic Vulnerability Scan
+```bash
+curl -X POST http://localhost:8000/api/v1/analyze-code \
+  -H "Content-Type: application/json" \
+  -d '{"code": "password = \"mysecret123\"\nquery = f\"SELECT * FROM users WHERE id = {user_id}\"", "language": "python"}'
+```
+
+Response:
+```json
+{
+  "vulnerabilities": [
+    {
+      "line_number": 1,
+      "vulnerability_type": "Hardcoded Password",
+      "severity": "critical",
+      "description": "Hardcoded password detected. Use environment variables.",
+      "cwe_id": "CWE-259"
+    },
+    {
+      "line_number": 2,
+      "vulnerability_type": "SQL Injection",
+      "severity": "critical",
+      "description": "SQL query built using string interpolation.",
+      "cwe_id": "CWE-89"
+    }
+  ],
+  "score": 60,
+  "total_vulnerabilities": 2
+}
+```
+
+### AI Analysis (requires API key)
+```bash
+curl -X POST http://localhost:8000/api/llm/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vulnerability": {
+      "type": "sql_injection",
+      "severity": "critical",
+      "message": "SQL query built using string interpolation"
+    },
+    "code_snippet": "query = f\"SELECT * FROM users WHERE id = {user_id}\"",
+    "language": "python",
+    "generate_fix": true
+  }'
 ```
 
 ## Next Steps
 
 1. ✅ Basic vulnerability scanner (MVP) - DONE
-2. Database integration for storing scan history
-3. User authentication
-4. Repository scanning
-5. AI-powered fix suggestions
+2. ✅ Web interface with scan page - DONE
+3. [ ] Database integration for storing scan history
+4. [ ] User authentication
+5. [ ] Repository scanning
+6. [ ] Advanced AI models for fix generation
