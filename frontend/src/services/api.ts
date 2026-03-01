@@ -706,3 +706,94 @@ export const vulnerabilityScannerApi = {
     return response
   }
 }
+
+// LLM Analyzer API
+export const llmAnalyzerApi = {
+  async analyzeVulnerability(
+    vulnerability: {
+      type: string
+      severity: string
+      message: string
+      line_content?: string
+      cwe_id?: string
+    },
+    codeSnippet: string,
+    language: string = 'python',
+    generateFix: boolean = true
+  ) {
+    const response = await aiServiceClient.post<{
+      explanation: string
+      suggested_fix?: string
+      confidence: number
+      is_false_positive: boolean
+      false_positive_reason?: string
+      remediation_steps?: string[]
+    }>('/api/llm/analyze', {
+      vulnerability,
+      code_snippet: codeSnippet,
+      language,
+      generate_fix: generateFix
+    })
+    return response
+  },
+
+  async generateFix(
+    vulnerability: {
+      type: string
+      severity: string
+      message: string
+    },
+    codeSnippet: string,
+    language: string = 'python'
+  ) {
+    const response = await aiServiceClient.post<{
+      explanation: string
+      suggested_fix?: string
+      confidence: number
+      remediation_steps?: string[]
+    }>('/api/llm/fix', {
+      vulnerability,
+      code_snippet: codeSnippet,
+      language
+    })
+    return response
+  },
+
+  async batchAnalyze(
+    vulnerabilities: Array<{
+      type: string
+      severity: string
+      message: string
+      line_content?: string
+    }>,
+    codeContext: string,
+    language: string = 'python'
+  ) {
+    const response = await aiServiceClient.post<Array<{
+      explanation: string
+      suggested_fix?: string
+      confidence: number
+      is_false_positive: boolean
+    }>>('/api/llm/batch', {
+      vulnerabilities,
+      code_context: codeContext,
+      language
+    })
+    return response
+  },
+
+  async checkHealth() {
+    const response = await aiServiceClient.get<{
+      status: string
+      provider: string
+      api_configured: boolean
+      cache_size: number
+    }>('/api/llm/health')
+    return response
+  },
+
+  async clearCache() {
+    const response = await aiServiceClient.post<{ message: string; cache_size: number }>('/api/llm/cache/clear')
+    return response
+  }
+}
