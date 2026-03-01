@@ -1,8 +1,10 @@
 """
-LLM Analyzer - FREE options: Ollama (local), fallback patterns
+LLM Analyzer - SECURE: Only uses local Ollama or fallback patterns
+User code is NEVER sent to external APIs (OpenAI/Claude) for security
 """
 
 import os
+import re
 import json
 import requests
 from typing import Dict, Any, Optional, List
@@ -26,12 +28,22 @@ class AnalysisResult:
 
 class LLMAnalyzer:
     """
-    FREE vulnerability analyzer - supports:
-    - Ollama (local/FREE) - RECOMMENDED
-    - Claude API (paid)
-    - OpenAI (paid)
+    SECURE vulnerability analyzer - ONLY uses:
+    - Ollama (local/FREE) - SAFE, code stays local
     - Fallback patterns (free)
+    
+    WARNING: External APIs (OpenAI/Claude) are disabled by default
+    to prevent data leakage. Code is NOT sent to third parties.
     """
+    
+    # Patterns to strip before any processing
+    SECRET_PATTERNS = [
+        (r'["\'](api[_-]?key|secret|token|password)["\']\s*[:=]\s*["\'][^"\']{8,}["\']', 'REDACTED_SECRET'),
+        (r'ghp_[a-zA-Z0-9]{36}', 'GITHUB_TOKEN_REDACTED'),
+        (r'xox[baprs]-[0-9a-zA-Z]{10,}', 'SLACK_TOKEN_REDACTED'),
+        (r'sk-[a-zA-Z0-9]{32,}', 'OPENAI_KEY_REDACTED'),
+        (r'sk-ant-[a-zA-Z0-9_-]{48,}', 'ANTHROPIC_KEY_REDACTED'),
+    ]
     
     def __init__(
         self,
@@ -40,19 +52,34 @@ class LLMAnalyzer:
         model: str = "llama2"
     ):
         self.provider = provider
-        self.api_key = api_key or os.getenv("CLAUDE_API_KEY") or os.getenv("OPENAI_API_KEY")
+        # NOTE: API keys are accepted but NOT used by default
+        # Code never leaves the server
+        self.api_key = api_key
         self.ollama_url = os.getenv("OLLAMA_HOST", "http://localhost:11434")
         self.model = model
         self._cache: Dict[str, AnalysisResult] = {}
+        self._allow_external_apis = os.getenv("ALLOW_EXTERNAL_APIS", "false").lower() == "true"
+        
+    def _strip_secrets(self, code: str) -> str:
+        """Remove secrets from code before any processing"""
+        stripped = code
+        for pattern, replacement in self.SECRET_PATTERNS:
+            stripped = re.sub(pattern, replacement, stripped, flags=re.IGNORECASE)
+        return stripped
         
     def _detect_provider(self) -> str:
         """Auto-detect best available provider"""
+        # Priority: Ollama (local/safe) > Fallback > External
         if os.getenv("OLLAMA_HOST"):
             return "ollama"
-        if self.api_key:
+        
+        # Only use external APIs if explicitly enabled
+        if self._allow_external_apis and self.api_key:
             if os.getenv("CLAUDE_API_KEY"):
                 return "claude"
-            return "openai"
+            if os.getenv("OPENAI_API_KEY"):
+                return "openai"
+        
         return "fallback"
         
     def _get_cache_key(self, code: str, vuln_type: str) -> str:
@@ -78,7 +105,10 @@ For each vulnerability:
         code_snippet: str,
         language: str = "python"
     ) -> AnalysisResult:
-        cache_key = self._get_cache_key(code_snippet, vulnerability.get("type", ""))
+        # Always strip secrets first for security
+        safe_code = self._strip_secrets(code_snippet)
+        
+        cache_key = self._get_cache_key(safe_code, vulnerability.get("type", ""))
         if cache_key in self._cache:
             return self._cache[cache_key]
         
@@ -86,15 +116,15 @@ For each vulnerability:
         
         try:
             if provider == "ollama":
-                return self._analyze_with_ollama(vulnerability, code_snippet, language)
-            if provider == "claude" and self.api_key:
-                return self._analyze_with_claude(vulnerability, code_snippet, language)
-            if provider == "openai" and self.api_key:
-                return self._analyze_with_openai(vulnerability, code_snippet, language)
+                return self._analyze_with_ollama(vulnerability, safe_code, language)
+            if provider == "claude" and self._allow_external_apis:
+                return self._analyze_with_claude(vulnerability, safe_code, language)
+            if provider == "openai" and self._allow_external_apis:
+                return self._analyze_with_openai(vulnerability, safe_code, language)
         except Exception as e:
             print(f"Provider {provider} failed: {e}")
         
-        return self._fallback_analysis(vulnerability, code_snippet)
+        return self._fallback_analysis(vulnerability, safe_code)
     
     def _analyze_with_ollama(
         self,

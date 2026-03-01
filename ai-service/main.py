@@ -35,7 +35,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Prevent XSS attacks
         response.headers["X-Content-Type-Options"] = "nosniff"
         
-        # XSS Protection
+        # XSS Protection (legacy but still useful)
         response.headers["X-XSS-Protection"] = "1; mode=block"
         
         # Referrer Policy
@@ -47,7 +47,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Permissions Policy
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         
-        # Remove sensitive headers (use .del instead of .pop)
+        # HSTS - Force HTTPS (only if behind a secure proxy)
+        # Uncomment in production with proper HTTPS setup
+        # response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        
+        # Cross-domain policy for Adobe Flash
+        response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
+        
+        # Remove sensitive headers
         if "server" in response.headers:
             response.headers["server"] = ""
         if "x-powered-by" in response.headers:
