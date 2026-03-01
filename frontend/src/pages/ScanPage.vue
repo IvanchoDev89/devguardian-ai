@@ -1,8 +1,8 @@
 <template>
   <div class="scan-page">
     <header class="page-header">
-      <h1>🔍 Escaner de Vulnerabilidades</h1>
-      <p class="subtitle">Pega tu código y descubre problemas de seguridad</p>
+      <h1>🔍 Vulnerability Scanner</h1>
+      <p class="subtitle">Paste your code and discover security issues</p>
       
       <div class="service-status">
         <span class="status-badge" :class="serviceStatus.class">
@@ -15,7 +15,7 @@
       <!-- Input -->
       <section class="input-section">
         <div class="language-selector">
-          <label>Lenguaje:</label>
+          <label>Language:</label>
           <select v-model="selectedLanguage">
             <option value="python">Python</option>
             <option value="javascript">JavaScript</option>
@@ -32,9 +32,9 @@
           v-model="code"
           class="code-textarea"
           :disabled="isLoading"
-          placeholder="// Pega tu código aquí...
-Ejemplo:
-password = 'mi_contraseña'
+          placeholder="// Paste your code here...
+Example:
+password = 'my_password'
 query = f'SELECT * FROM users WHERE id = {user_id}'"
           rows="10"
           spellcheck="false"
@@ -44,9 +44,9 @@ query = f'SELECT * FROM users WHERE id = {user_id}'"
           <button class="btn-scan" :disabled="isLoading || !code.trim()" @click="handleAnalyze">
             <span v-if="isLoading" class="spinner"></span>
             <span v-else>🔍</span>
-            {{ isLoading ? 'Analizando...' : 'Escanear' }}
+            {{ isLoading ? 'Analyzing...' : 'Scan' }}
           </button>
-          <button class="btn-clear" @click="clearCode">Limpiar</button>
+          <button class="btn-clear" @click="clearCode">Clear</button>
         </div>
 
         <div v-if="error" class="error">{{ error }}</div>
@@ -68,9 +68,9 @@ query = f'SELECT * FROM users WHERE id = {user_id}'"
         <!-- Vulns -->
         <div v-if="analysisResult?.vulnerabilities?.length" class="vulns-section">
           <div class="vulns-header">
-            <h3>📋 {{ analysisResult.vulnerabilities.length }} Vulnerabilidades</h3>
+            <h3>📋 {{ analysisResult.vulnerabilities.length }} Vulnerabilities Found</h3>
             <button class="btn-ai" :disabled="isAnalyzing" @click="analyzeWithLLM">
-              {{ isAnalyzing ? '...' : '🤖 IA Fix' }}
+              {{ isAnalyzing ? '...' : '🤖 AI Fix' }}
             </button>
           </div>
           
@@ -88,7 +88,7 @@ query = f'SELECT * FROM users WHERE id = {user_id}'"
 
         <!-- AI Results -->
         <div v-if="llmResults.length" class="ai-section">
-          <h3>🤖 Análisis IA</h3>
+          <h3>🤖 AI Analysis</h3>
           <div v-for="(r, i) in llmResults" :key="i" class="ai-card">
             <p>{{ r.explanation }}</p>
           </div>
@@ -97,7 +97,7 @@ query = f'SELECT * FROM users WHERE id = {user_id}'"
         <!-- No vulns -->
         <div v-if="analysisResult && !analysisResult.vulnerabilities.length" class="no-vulns">
           <div class="check">✅</div>
-          <h3>¡Código Seguro!</h3>
+          <h3>Code is Secure!</h3>
         </div>
 
         <!-- Loading -->
@@ -139,7 +139,7 @@ const scoreClass = computed(() => {
 async function handleAnalyze() {
   error.value = ''
   llmResults.value = []
-  if (!code.value.trim()) { error.value = 'Ingresa código'; return }
+  if (!code.value.trim()) { error.value = 'Please enter code'; return }
   isLoading.value = true
   try {
     analysisResult.value = await vulnerabilityScannerApi.analyzeCode(code.value, selectedLanguage.value)

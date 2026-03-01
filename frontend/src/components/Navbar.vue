@@ -21,7 +21,7 @@
             class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
             :class="$route.path === '/scan' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
           >
-            🔍 Escanear
+            🔍 Scan
           </router-link>
           
           <router-link 
@@ -37,7 +37,7 @@
             class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
             :class="$route.path === '/vulnerabilities' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
           >
-            Vulnerabilidades
+            Vulnerabilities
           </router-link>
 
           <router-link 

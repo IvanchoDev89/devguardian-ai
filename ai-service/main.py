@@ -4,8 +4,10 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 import os
-from datetime import datetime
-from typing import Callable
+from datetime import datetime, timedelta
+from typing import Callable, Dict
+from collections import defaultdict
+import time
 
 # Import API endpoints
 from app.api.endpoints.security import router as security_router
@@ -98,6 +100,81 @@ class InputSanitizationMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    """Simple in-memory rate limiter to prevent abuse"""
+    
+    def __init__(self, app, requests_per_minute: int = 30, burst_limit: int = 10):
+        super().__init__(app)
+        self.requests_per_minute = requests_per_minute
+        self.burst_limit = burst_limit
+        self.requests: Dict[str, list] = defaultdict(list)
+        self.burst_tracker: Dict[str, list] = defaultdict(list)
+    
+    def _get_client_id(self, request: Request) -> str:
+        """Get client identifier from request"""
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+        return request.client.host if request.client else "unknown"
+    
+    def _clean_old_requests(self, tracker: Dict[str, list], window: timedelta):
+        """Remove old requests from tracker"""
+        now = datetime.now()
+        for client_id in list(tracker.keys()):
+            tracker[client_id] = [
+                ts for ts in tracker[client_id]
+                if now - ts < window
+            ]
+            if not tracker[client_id]:
+                del tracker[client_id]
+    
+    async def dispatch(self, request: Request, call_next: Callable):
+        client_id = self._get_client_id(request)
+        now = datetime.now()
+        
+        # Clean old requests
+        self._clean_old_requests(self.requests, timedelta(minutes=1))
+        self._clean_old_requests(self.burst_tracker, timedelta(seconds=10))
+        
+        # Check burst limit (10 requests per 10 seconds)
+        recent_burst = [ts for ts in self.burst_tracker[client_id] if now - ts < timedelta(seconds=10)]
+        if len(recent_burst) >= self.burst_limit:
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "Too Many Requests",
+                    "message": "Rate limit exceeded. Please slow down.",
+                    "retry_after": 10
+                }
+            )
+        
+        # Check per-minute limit
+        recent = self.requests[client_id]
+        if len(recent) >= self.requests_per_minute:
+            oldest = min(recent)
+            retry_after = int((oldest + timedelta(minutes=1) - now).total_seconds())
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "Too Many Requests",
+                    "message": f"Rate limit exceeded. Maximum {self.requests_per_minute} requests per minute.",
+                    "retry_after": max(1, retry_after)
+                }
+            )
+        
+        # Record this request
+        self.requests[client_id].append(now)
+        self.burst_tracker[client_id].append(now)
+        
+        response = await call_next(request)
+        
+        # Add rate limit headers
+        response.headers["X-RateLimit-Limit"] = str(self.requests_per_minute)
+        response.headers["X-RateLimit-Remaining"] = str(self.requests_per_minute - len(self.requests[client_id]))
+        
+        return response
+
+
 # Create FastAPI app
 app = FastAPI(
     title="DevGuardian AI Service",
@@ -121,6 +198,9 @@ app.add_middleware(
 
 # Add security headers
 app.add_middleware(SecurityHeadersMiddleware)
+
+# Add rate limiting (30 requests per minute, 10 per 10 seconds burst)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=30, burst_limit=10)
 
 
 # Include routers
