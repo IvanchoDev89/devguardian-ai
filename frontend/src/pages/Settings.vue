@@ -186,68 +186,34 @@
 
         <!-- Sidebar -->
         <div class="space-y-6">
-          <!-- API Keys -->
+          <!-- API Access Info -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">API Keys</h3>
-            <div class="space-y-3">
-              <div class="p-3 bg-gray-50 rounded-lg">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-gray-700">Production Key</span>
-                  <button class="text-blue-600 hover:text-blue-800 text-sm">Regenerate</button>
-                </div>
-                <code class="text-xs text-gray-600 break-all">sk-•••••••••••••••••••••••••••••••••••</code>
-              </div>
-              
-              <div class="p-3 bg-gray-50 rounded-lg">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-gray-700">Development Key</span>
-                  <button class="text-blue-600 hover:text-blue-800 text-sm">Regenerate</button>
-                </div>
-                <code class="text-xs text-gray-600 break-all">sk-•••••••••••••••••••••••••••••••••••••••</code>
-              </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">API Access</h3>
+            <p class="text-sm text-gray-600 mb-4">
+              API access requires a Pro subscription. Contact your administrator to enable API access.
+            </p>
+            <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p class="text-sm text-yellow-800">
+                Current plan: <strong>Free</strong>
+              </p>
             </div>
-            
-            <button class="w-full mt-4 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-              Generate New API Key
-            </button>
           </div>
 
           <!-- Quick Actions -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div class="space-y-3">
-              <button class="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+              <button 
+                @click="clearSettings"
+                class="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
                 <div class="flex items-center">
                   <svg class="h-5 w-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4 4l-4-4m5 0v1m5-1l-4 4m4-4v1m5-1l-4 4"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                   </svg>
                   <div>
-                    <p class="text-sm font-medium text-gray-900">Export Data</p>
-                    <p class="text-xs text-gray-500">Download all your data</p>
-                  </div>
-                </div>
-              </button>
-              
-              <button class="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                <div class="flex items-center">
-                  <svg class="h-5 w-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                  </svg>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">Security Audit</p>
-                    <p class="text-xs text-gray-500">Run comprehensive security audit</p>
-                  </div>
-                </div>
-              </button>
-              
-              <button class="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                <div class="flex items-center">
-                  <svg class="h-5 w-5 mr-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">View Logs</p>
-                    <p class="text-xs text-gray-500">Access system logs</p>
+                    <p class="text-sm font-medium text-gray-900">Reset Settings</p>
+                    <p class="text-xs text-gray-500">Reset all settings to defaults</p>
                   </div>
                 </div>
               </button>
@@ -257,7 +223,13 @@
       </div>
 
       <!-- Save Button -->
-      <div class="mt-8 flex justify-end">
+      <div class="mt-8 flex justify-end gap-3">
+        <button 
+          @click="clearSettings"
+          class="px-6 py-3 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+        >
+          Reset
+        </button>
         <button 
           @click="saveSettings"
           :disabled="saving"
@@ -276,7 +248,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { authService, settingsService } from '../services/api'
 import { useNotificationStore } from '../stores/notifications'
 
 interface Profile {
@@ -299,9 +270,6 @@ interface Security {
 }
 
 const saving = ref(false)
-const loading = ref(false)
-const githubConnected = ref(false)
-const githubToken = ref('')
 const notificationStore = useNotificationStore()
 
 const profile = ref<Profile>({
@@ -319,95 +287,70 @@ const notifications = ref<Notifications>({
 
 const security = ref<Security>({
   sessionTimeout: 30,
-  mfa: 'Authenticator App',
-  apiAccess: true
+  mfa: 'Disabled',
+  apiAccess: false
 })
 
-onMounted(async () => {
-  loading.value = true
+const STORAGE_KEY = 'devguardian_settings'
+
+onMounted(() => {
   try {
-    const response = await settingsService.getSettings()
-    if (response.success && response.data) {
-      profile.value.name = response.data.name || ''
-      profile.value.email = response.data.email || ''
-      profile.value.role = response.data.role || 'member'
-      
-      if (response.data.notifications) {
-        notifications.value.email = response.data.notifications.email_vulnerabilities ?? true
-      }
-      
-      if (response.data.security) {
-        security.value.sessionTimeout = response.data.security.session_timeout ?? 30
-      }
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const data = JSON.parse(saved)
+      profile.value = { ...profile.value, ...data.profile }
+      notifications.value = { ...notifications.value, ...data.notifications }
+      security.value = { ...security.value, ...data.security }
     }
-  } catch (error) {
-    console.error('Failed to load settings:', error)
-  }
-  loading.value = false
-})
-
-const connectGitHub = async () => {
-  if (!githubToken.value) {
-    notificationStore.error('Error', 'Please enter your GitHub token')
-    return
-  }
-  
-  saving.value = true
-  
-  try {
-    const response = await fetch('http://localhost:8001/api/v1/github/connect', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-      },
-      body: JSON.stringify({ github_token: githubToken.value })
-    }).then(r => r.json())
     
-    if (response.success) {
-      githubConnected.value = true
-      notificationStore.success('Connected', 'GitHub account connected successfully')
-    } else {
-      notificationStore.error('Error', response.message || 'Failed to connect GitHub')
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      const user = JSON.parse(userStr)
+      profile.value.name = user.name || profile.value.name
+      profile.value.email = user.email || profile.value.email
     }
-  } catch (error) {
-    notificationStore.error('Error', 'Failed to connect GitHub account')
+  } catch (e) {
+    console.error('Failed to load settings:', e)
   }
-  
-  saving.value = false
-}
+})
 
 const saveSettings = async () => {
   saving.value = true
   
   try {
-    const response = await settingsService.updateSettings({
-      name: profile.value.name,
-      notifications: {
-        email_vulnerabilities: notifications.value.email,
-        email_scans: notifications.value.email,
-        email_marketing: false
-      },
-      security: {
-        session_timeout: security.value.sessionTimeout,
-        require_2fa: security.value.mfa === 'Required'
-      }
-    })
-    
-    if (response.success) {
-      notificationStore.success('Saved', 'Settings saved successfully')
-      
-      // Update localStorage with new user data
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      user.name = profile.value.name
-      localStorage.setItem('user', JSON.stringify(user))
-    } else {
-      notificationStore.error('Error', response.message || 'Failed to save settings')
+    const settings = {
+      profile: profile.value,
+      notifications: notifications.value,
+      security: security.value,
+      savedAt: new Date().toISOString()
     }
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+    
+    try {
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        const user = JSON.parse(userStr)
+        user.name = profile.value.name
+        localStorage.setItem('user', JSON.stringify(user))
+      }
+    } catch (e) {
+      // Ignore user update errors
+    }
+    
+    notificationStore.success('Saved', 'Settings saved successfully')
   } catch (error) {
     notificationStore.error('Error', 'Failed to save settings')
   }
    
   saving.value = false
+}
+
+const clearSettings = () => {
+  localStorage.removeItem(STORAGE_KEY)
+  profile.value = { name: '', email: '', role: 'member', timezone: 'UTC' }
+  notifications.value = { email: true, slack: false, webhook: true }
+  security.value = { sessionTimeout: 30, mfa: 'Disabled', apiAccess: false }
+  notificationStore.info('Cleared', 'Settings reset to defaults')
 }
 </script>
