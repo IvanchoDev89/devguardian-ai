@@ -33,10 +33,67 @@
           </router-link>
         </div>
 
-        <!-- Right side items -->
+        <!-- Right side - User Menu -->
         <div class="flex items-center space-x-3">
-          <!-- Auth Buttons -->
-          <div v-if="!isAuthenticated" class="flex items-center space-x-2">
+          <!-- Authenticated User Menu -->
+          <div v-if="isAuthenticated" class="relative">
+            <button 
+              @click="showUserMenu = !showUserMenu"
+              class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-sm font-medium">
+                {{ userInitials }}
+              </div>
+              <span class="text-sm text-gray-300 hidden md:block">{{ userName }}</span>
+              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div 
+              v-if="showUserMenu" 
+              class="absolute right-0 mt-2 w-56 bg-slate-800/95 backdrop-blur-md rounded-xl shadow-xl border border-white/10 py-2"
+            >
+              <div class="px-4 py-3 border-b border-white/10">
+                <p class="text-sm font-medium text-white">{{ userName }}</p>
+                <p class="text-xs text-gray-400">{{ userEmail }}</p>
+                <span 
+                  class="inline-block mt-1 text-xs px-2 py-0.5 rounded-full"
+                  :class="roleBadgeClass"
+                >
+                  {{ userRole }}
+                </span>
+              </div>
+              <div class="py-1">
+                <router-link 
+                  to="/settings" 
+                  class="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
+                  @click="showUserMenu = false"
+                >
+                  <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  Settings
+                </router-link>
+              </div>
+              <div class="border-t border-white/10 py-1">
+                <button 
+                  @click="handleLogout"
+                  class="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors"
+                >
+                  <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                  </svg>
+                  Sign out
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Guest Buttons -->
+          <div v-else class="flex items-center space-x-2">
             <router-link 
               to="/login"
               class="px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white transition-colors"
@@ -69,27 +126,62 @@
         <div class="space-y-1">
           <router-link 
             to="/scan" 
-            class="block px-4 py-2 rounded-lg text-base font-medium"
+            class="flex items-center px-4 py-2 rounded-lg text-base font-medium"
             :class="$route.path === '/scan' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
             @click="showMobileMenu = false"
           >
-            🔍 Scan
+            <span class="mr-3">🔍</span> Scan
           </router-link>
+          
           <router-link 
             to="/docs" 
-            class="block px-4 py-2 rounded-lg text-base font-medium"
+            class="flex items-center px-4 py-2 rounded-lg text-base font-medium"
             :class="$route.path === '/docs' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
             @click="showMobileMenu = false"
           >
-            Documentation
+            <span class="mr-3">📚</span> Documentation
           </router-link>
-          <router-link 
-            to="/login" 
-            class="block px-4 py-2 rounded-lg text-base font-medium text-gray-400 hover:text-white hover:bg-white/5"
-            @click="showMobileMenu = false"
-          >
-            Sign In
-          </router-link>
+          
+          <template v-if="isAuthenticated">
+            <div class="border-t border-white/10 my-2 pt-2">
+              <div class="px-4 py-2">
+                <p class="text-sm font-medium text-white">{{ userName }}</p>
+                <p class="text-xs text-gray-400">{{ userEmail }}</p>
+              </div>
+            </div>
+            <router-link 
+              to="/settings" 
+              class="flex items-center px-4 py-2 rounded-lg text-base font-medium text-gray-400 hover:text-white hover:bg-white/5"
+              @click="showMobileMenu = false"
+            >
+              <span class="mr-3">⚙️</span> Settings
+            </router-link>
+            <button 
+              @click="handleLogout"
+              class="flex items-center w-full px-4 py-2 rounded-lg text-base font-medium text-red-400 hover:bg-white/5"
+            >
+              <span class="mr-3">🚪</span> Sign out
+            </button>
+          </template>
+          
+          <template v-else>
+            <div class="border-t border-white/10 my-2 pt-2">
+              <router-link 
+                to="/login" 
+                class="flex items-center px-4 py-2 rounded-lg text-base font-medium text-gray-400 hover:text-white hover:bg-white/5"
+                @click="showMobileMenu = false"
+              >
+                Sign In
+              </router-link>
+              <router-link 
+                to="/signup" 
+                class="flex items-center px-4 py-2 rounded-lg text-base font-medium text-blue-400 hover:text-blue-300"
+                @click="showMobileMenu = false"
+              >
+                Get Started
+              </router-link>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -105,12 +197,57 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const showMobileMenu = ref(false)
+const showUserMenu = ref(false)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 
+const userData = computed(() => {
+  const stored = localStorage.getItem('user')
+  if (stored) {
+    try {
+      return JSON.parse(stored)
+    } catch {
+      return null
+    }
+  }
+  return authStore.user
+})
+
+const userName = computed(() => {
+  return userData.value?.name || 'User'
+})
+
+const userEmail = computed(() => {
+  return userData.value?.email || 'user@example.com'
+})
+
+const userRole = computed(() => {
+  return userData.value?.role || 'free'
+})
+
+const userInitials = computed(() => {
+  const name = userName.value
+  if (name && name.length > 0) {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  }
+  return 'U'
+})
+
+const roleBadgeClass = computed(() => {
+  const role = userRole.value
+  if (role === 'super_admin' || role === 'admin') {
+    return 'bg-red-500/20 text-red-400'
+  }
+  if (role === 'pro') {
+    return 'bg-blue-500/20 text-blue-400'
+  }
+  return 'bg-gray-500/20 text-gray-400'
+})
+
 const handleLogout = () => {
   authStore.logout()
-  router.push('/login')
+  showUserMenu.value = false
   showMobileMenu.value = false
+  router.push('/login')
 }
 </script>
