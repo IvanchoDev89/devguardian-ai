@@ -218,20 +218,120 @@ Explain and show safe code."""
     
     def _fallback_analysis(self, vulnerability: Dict, code_snippet: str) -> AnalysisResult:
         vuln_type = vulnerability.get("type", "Unknown")
+        language = "python"  # Default
         
-        explanations = {
-            "sql-injection": "SQL Injection: User input directly in SQL. Use parameterized queries: cursor.execute('SELECT * FROM users WHERE id = ?', [user_id])",
-            "hardcoded-password": "Hardcoded credentials detected. Use: os.environ.get('PASSWORD') or secrets manager.",
-            "xss": "XSS vulnerability. Use: textContent instead of innerHTML, or sanitize with DOMPurify.",
-            "eval": "eval() is dangerous. Use ast.literal_eval() or sandboxed execution.",
-            "weak-crypto": "Weak crypto. Use: hashlib.sha256() or bcrypt.hashpw()",
-            "command-injection": "Command injection risk. Use subprocess.run(['ping', hostname]) with shell=False.",
+        # Comprehensive fix suggestions for each vulnerability type
+        fix_suggestions = {
+            "sql-injection": {
+                "explanation": "SQL Injection: User input is directly concatenated into SQL queries. This allows attackers to manipulate the query structure.",
+                "suggested_fix": "# Use parameterized queries\n# Bad:\nquery = f\"SELECT * FROM users WHERE id = {user_id}\"\n\n# Good:\nquery = \"SELECT * FROM users WHERE id = ?\"\ncursor.execute(query, (user_id,))",
+                "remediation_steps": [
+                    "Use parameterized queries (placeholders)",
+                    "Use ORM frameworks like SQLAlchemy",
+                    "Validate and sanitize all user inputs",
+                    "Apply principle of least privilege to database accounts"
+                ]
+            },
+            "hardcoded-password": {
+                "explanation": "Hardcoded credentials detected. Passwords, API keys, or tokens should never be stored in source code.",
+                "suggested_fix": "# Use environment variables\n# Bad:\npassword = \"my_secret_password\"\n\n# Good:\nimport os\npassword = os.environ.get('DB_PASSWORD')\n# Or use a secrets manager:\n# from keyring import get_password\n# password = get_password('myapp', 'database')",
+                "remediation_steps": [
+                    "Move credentials to environment variables",
+                    "Use secrets management services (AWS Secrets Manager, HashiCorp Vault)",
+                    "Never commit secrets to version control",
+                    "Rotate exposed credentials immediately"
+                ]
+            },
+            "hardcoded-api-key": {
+                "explanation": "Hardcoded API keys detected. API keys should never be stored in source code.",
+                "suggested_fix": "# Use environment variables\n# Bad:\napi_key = \"sk-abc123xyz789\"\n\n# Good:\nimport os\napi_key = os.environ.get('API_KEY')",
+                "remediation_steps": [
+                    "Use environment variables or secret manager",
+                    "Never commit API keys to version control",
+                    "Rotate exposed keys immediately"
+                ]
+            },
+            "xss": {
+                "explanation": "Cross-Site Scripting (XSS) vulnerability. User input is rendered without proper sanitization.",
+                "suggested_fix": "# Use output encoding\n# Bad:\ndocument.innerHTML = userInput\n\n# Good - for React:\n<div>{userInput}</div>  # React auto-escapes\n\n# Good - for vanilla JS:\nconst element = document.createTextNode(userInput)\nparent.appendChild(element)\n\n# Or use DOMPurify:\n# import DOMPurify\n# element.innerHTML = DOMPurify.sanitize(userInput)",
+                "remediation_steps": [
+                    "Use context-aware output encoding",
+                    "Use Content Security Policy (CSP) headers",
+                    "Validate input against allowlists",
+                    "Use modern frameworks that auto-escape"
+                ]
+            },
+            "eval": {
+                "explanation": "eval() is dangerous as it executes arbitrary code. Avoid using it with untrusted input.",
+                "suggested_fix": "# Avoid eval(), use safer alternatives\n# Bad:\nresult = eval(user_input)\n\n# Good - for safe evaluation:\nimport ast\ntry:\n    result = ast.literal_eval(user_input)\nexcept:\n    result = None  # Invalid input\n\n# Or use a parser:\n# from pyparsing import infixNotation\n# result = parser.parseString(userInput)",
+                "remediation_steps": [
+                    "Never use eval() with user input",
+                    "Use ast.literal_eval() for safe parsing",
+                    "Consider using a sandboxed interpreter",
+                    "Use structured data formats (JSON) instead"
+                ]
+            },
+            "weak-crypto": {
+                "explanation": "Weak cryptographic algorithm detected. MD5 and SHA1 are cryptographically broken.",
+                "suggested_fix": "# Use strong hashing algorithms\n# Bad:\nimport hashlib\nhash = hashlib.md5(data).hexdigest()\n\n# Good - for passwords:\nimport bcrypt\nhash = bcrypt.hashpw(password.encode(), bcrypt.gensalt())\n\n# Good - for checksums:\nimport hashlib\nhash = hashlib.sha256(data).hexdigest()",
+                "remediation_steps": [
+                    "Use bcrypt or Argon2 for password hashing",
+                    "Use SHA-256 or SHA-3 for checksums",
+                    "Use TLS 1.2+ for network encryption",
+                    "Use strong, unique salts for passwords"
+                ]
+            },
+            "command-injection": {
+                "explanation": "Command injection risk. User input is passed to system shell without sanitization.",
+                "suggested_fix": "# Use subprocess with argument list\n# Bad:\nos.system(f\"ping {hostname}\")\n\n# Good:\nimport subprocess\nresult = subprocess.run(['ping', '-c', '1', hostname], \n                       capture_output=True, text=True, shell=False)",
+                "remediation_steps": [
+                    "Avoid shell=True in subprocess",
+                    "Use argument lists instead of string commands",
+                    "Validate input against allowlists",
+                    "Use sandboxed execution environments"
+                ]
+            },
+            "path-traversal": {
+                "explanation": "Path traversal vulnerability. User input controls file paths without validation.",
+                "suggested_fix": "# Validate and sanitize file paths\n# Bad:\nfilepath = f\"uploads/{filename}\"\n\n# Good:\nimport os\nfrom pathlib import Path\n\nbase_dir = Path('/safedirectory')\nfilepath = (base_dir / filename).resolve()\nif not filepath.is_relative_to(base_dir):\n    raise ValueError(\"Invalid path\")",
+                "remediation_steps": [
+                    "Validate paths against allowlist",
+                    "Use os.path.realpath() to resolve symlinks",
+                    "Restrict file access to specific directories",
+                    "Use sandboxed file systems"
+                ]
+            },
+            "insecure-deserialization": {
+                "explanation": "Insecure deserialization can lead to remote code execution. Never unpickle untrusted data.",
+                "suggested_fix": "# Avoid pickle with untrusted data\n# Bad:\nobj = pickle.load(file)\n\n# Good - use JSON:\nimport json\nobj = json.load(file)\n\n# Or for complex objects:\n# import marshmallow\n# obj = schema.load(data)",
+                "remediation_steps": [
+                    "Never unpickle untrusted data",
+                    "Use JSON or MessagePack for serialization",
+                    "Use type-checking on deserialized data",
+                    "Run deserialization in isolated processes"
+                ]
+            }
         }
         
-        explanation = explanations.get(vuln_type.lower(), 
-            f"Security issue: {vuln_type}. Review and fix according to security best practices.")
+        # Get fix for this vulnerability type
+        fix_data = fix_suggestions.get(vuln_type.lower(), {
+            "explanation": f"Security issue detected: {vuln_type}. Review and fix according to security best practices.",
+            "suggested_fix": "# Review this code for security issues\n# Consult OWASP Top 10 for guidance\n# Consider using security libraries",
+            "remediation_steps": [
+                "Review the code for security issues",
+                "Consult OWASP Top 10 guidelines",
+                "Use security scanning tools",
+                "Follow secure coding practices"
+            ]
+        })
         
-        return AnalysisResult(explanation=explanation, confidence=0.5, is_false_positive=False)
+        return AnalysisResult(
+            explanation=fix_data["explanation"],
+            suggested_fix=fix_data["suggested_fix"],
+            confidence=0.7,
+            is_false_positive=False,
+            remediation_steps=fix_data["remediation_steps"]
+        )
     
     def batch_analyze(self, vulnerabilities: List[Dict], code_context: str) -> List[AnalysisResult]:
         return [self.analyze_vulnerability(v, v.get("line_content", code_context)) for v in vulnerabilities]

@@ -268,15 +268,30 @@ async function analyzeWithLLM() {
   if (!analysisResult.value?.vulnerabilities?.length) return
   
   isAnalyzing.value = true
+  error.value = ''
+  llmResults.value = []
+  
   try {
-    const results = await Promise.all(
-      analysisResult.value.vulnerabilities.map((vuln: any) => 
-        llmAnalyzerApi.analyze(vuln, code.value, selectedLanguage.value)
+    for (const vuln of analysisResult.value.vulnerabilities) {
+      const result = await llmAnalyzerApi.analyzeVulnerability(
+        {
+          type: vuln.vulnerability_type || vuln.type || 'unknown',
+          severity: vuln.severity || 'medium',
+          message: vuln.description || vuln.message || '',
+          line_content: vuln.line_content
+        },
+        code.value,
+        selectedLanguage.value,
+        true
       )
-    )
-    llmResults.value = results
+      
+      if (result) {
+        llmResults.value.push(result)
+      }
+    }
   } catch (e) { 
-    error.value = 'AI analysis failed' 
+    console.error('AI analysis error:', e)
+    error.value = 'AI analysis failed. Try again.'
   }
   finally { 
     isAnalyzing.value = false 
