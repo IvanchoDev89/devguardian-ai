@@ -4,7 +4,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import './styles.css'
 
-// DevGuardian AI - Security Vulnerability Scanner
+// DevGuardian AI - Security Vulnerability Scanner (MVP)
 
 const routes = [
   {
@@ -28,134 +28,20 @@ const routes = [
     component: () => import('./pages/Signup.vue')
   },
   {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: () => import('./pages/Dashboard.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/sql-injection-scanner',
-    name: 'SQLInjectionScanner',
-    component: () => import('./pages/SQLInjectionScanner.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/repositories',
-    name: 'Repositories',
-    component: () => import('./pages/Repositories.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/vulnerabilities',
-    name: 'Vulnerabilities',
-    component: () => import('./pages/Vulnerabilities.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/ai-fixes',
-    name: 'AiFixes',
-    component: () => import('./pages/AiFixes.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/advanced-ml',
-    name: 'AdvancedML',
-    component: () => import('./pages/AdvancedML.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/security-audit',
-    name: 'SecurityAudit',
-    component: () => import('./pages/SecurityAudit.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
     path: '/settings',
     name: 'Settings',
-    component: () => import('./pages/Settings.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/super-admin',
-    name: 'SuperAdmin',
-    component: () => import('./pages/SuperAdmin.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true }
-  },
-  {
-    path: '/pentesting',
-    name: 'Pentesting',
-    component: () => import('./pages/Pentesting.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/pricing',
-    name: 'Pricing',
-    component: () => import('./pages/Pricing.vue')
+    component: () => import('./pages/Settings.vue')
   },
   {
     path: '/docs',
     name: 'Docs',
     component: () => import('./pages/Documentation.vue')
-  },
-  {
-    path: '/billing',
-    name: 'Billing',
-    component: () => import('./pages/Billing.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/messages',
-    name: 'Messages',
-    component: () => import('./pages/Messages.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/notifications',
-    name: 'Notifications',
-    component: () => import('./pages/Notifications.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/enterprise-assets',
-    name: 'EnterpriseAssets',
-    component: () => import('./pages/EnterpriseAssets.vue'),
-    meta: { requiresAuth: true }
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
-})
-
-// Navigation guard for protected routes
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('auth_token')
-  const userStr = localStorage.getItem('user')
-  const requiresAuth = to.meta.requiresAuth
-  const requiresAdmin = to.meta.requiresAdmin
-  
-  // Check if route requires authentication
-  if (requiresAuth && !token) {
-    next('/login')
-    return
-  }
-  
-  // Check if route requires admin role
-  if (requiresAdmin && userStr) {
-    try {
-      const user = JSON.parse(userStr)
-      if (user.role !== 'super_admin') {
-        next('/dashboard')
-        return
-      }
-    } catch (e) {
-      next('/dashboard')
-      return
-    }
-  }
-  
-  next()
 })
 
 const app = createApp(App)
@@ -165,14 +51,9 @@ app.use(pinia)
 app.use(router)
 
 // Initialize stores
-import { useAuthStore } from './stores/auth'
 import { useThemeStore } from './stores/theme'
 
-const authStore = useAuthStore()
 const themeStore = useThemeStore()
-
-// Initialize theme and auth
 themeStore.initTheme()
-authStore.initAuth()
 
 app.mount('#app')
