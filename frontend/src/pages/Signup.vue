@@ -195,7 +195,7 @@ onMounted(() => {
   // Redirect if already logged in
   const token = localStorage.getItem('auth_token')
   if (token) {
-    router.push('/dashboard')
+    router.push('/scan')
   }
 })
 
@@ -229,7 +229,7 @@ const handleSignup = async () => {
     })
     
     if (result.success) {
-      router.push('/dashboard')
+      router.push('/scan')
     } else {
       error.value = result.error || 'Registration failed'
     }
