@@ -28,6 +28,11 @@ const routes = [
     component: () => import('./pages/Signup.vue')
   },
   {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('./pages/Admin.vue')
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('./pages/Settings.vue')

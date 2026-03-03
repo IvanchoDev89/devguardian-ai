@@ -25,6 +25,15 @@
           </router-link>
           
           <router-link 
+            v-if="isAdmin"
+            to="/admin" 
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+            :class="$route.path === '/admin' ? 'text-white bg-red-600' : 'text-red-400 hover:text-white hover:bg-white/5'"
+          >
+            ⚙️ Admin
+          </router-link>
+          
+          <router-link 
             to="/docs" 
             class="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
             :class="$route.path === '/docs' ? 'text-white bg-white/10' : 'text-gray-400 hover:text-white hover:bg-white/5'"
@@ -150,11 +159,19 @@
               </div>
             </div>
             <router-link 
+              v-if="isAdmin"
+              to="/admin" 
+              class="flex items-center px-4 py-2 rounded-lg text-base font-medium text-red-400 hover:bg-white/5"
+              @click="showMobileMenu = false"
+            >
+              <span class="mr-3">⚙️</span> Admin
+            </router-link>
+            <router-link 
               to="/settings" 
               class="flex items-center px-4 py-2 rounded-lg text-base font-medium text-gray-400 hover:text-white hover:bg-white/5"
               @click="showMobileMenu = false"
             >
-              <span class="mr-3">⚙️</span> Settings
+              <span class="mr-3">🔧</span> Settings
             </router-link>
             <button 
               @click="handleLogout"
