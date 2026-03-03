@@ -64,12 +64,6 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/automation',
-    name: 'Automation',
-    component: () => import('./pages/Automation.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
     path: '/security-audit',
     name: 'SecurityAudit',
     component: () => import('./pages/SecurityAudit.vue'),
