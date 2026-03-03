@@ -39,7 +39,7 @@
         "@typescript-eslint/parser": "^8.56.1",
         "@typescript-eslint/utils": "^8.56.1",
         "@vitejs/plugin-vue": "^6.0.4",
-        "@vue/eslint-config-prettier": "^8.0.0",
+        "@vue/eslint-config-prettier": "^10.2.0",
         "@vue/eslint-config-typescript": "^14.7.0",
         "@vue/tsconfig": "^0.4.0",
         "autoprefixer": "^10.4.27",
