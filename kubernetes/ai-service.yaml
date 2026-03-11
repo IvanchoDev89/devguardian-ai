@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devguardian
+  labels:
+    name: devguardian
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: devguardian-secrets
+  namespace: devguardian
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: changeme
+  REDIS_PASSWORD: changeme
+  AI_SERVICE_SECRET_KEY: changeme
+  OPENAI_API_KEY: changeme
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devguardian-config
+  namespace: devguardian
+data:
+  DATABASE_URL: "postgresql://devguardian:changeme@postgres:5432/devguardian"
+  REDIS_URL: "redis://redis:6379"
+  LOG_LEVEL: "info"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-service
+  namespace: devguardian
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-service
+  template:
+    metadata:
+      labels:
+        app: ai-service
+    spec:
+      containers:
+      - name: ai-service
+        image: ghcr.io/devguardian/ai-service:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: PORT
+          value: "8000"
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: devguardian-config
+              key: DATABASE_URL
+        - name: REDIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: devguardian-config
+              key: REDIS_URL
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: devguardian-config
+              key: LOG_LEVEL
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: devguardian-secrets
+              key: POSTGRES_PASSWORD
+        - name: AI_SERVICE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: devguardian-secrets
+              key: AI_SERVICE_SECRET_KEY
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: devguardian-secrets
+              key: OPENAI_API_KEY
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health/live
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-service
+  namespace: devguardian
+spec:
+  selector:
+    app: ai-service
+  ports:
+  - port: 80
+    targetPort: 8000
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-service-hpa
+  namespace: devguardian
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

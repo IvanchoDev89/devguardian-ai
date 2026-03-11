@@ -17,11 +17,18 @@ from app.api.endpoints.pytorch_scanner import router as pytorch_router
 from app.api.endpoints.advanced_ml import router as advanced_ml_router
 from app.api.endpoints.pentesting import router as pentest_router
 from app.api.endpoints.zero_day_api import router as zero_day_router
-from app.api.endpoints.github_scanner import router as github_router
+from app.api.endpoints.github_scanner import router as github_scanner_router
 from app.api.endpoints.comprehensive_scanner import router as scanner_router
 from app.api.endpoints.semgrep_endpoint import router as semgrep_router
 from app.api.endpoints.vulnerability_analyzer import router as vulnerability_router
 from app.api.endpoints.llm_analyzer import router as llm_router
+from app.api.endpoints.auth_db import router as auth_router
+from app.api.endpoints.api_keys_db import router as api_keys_router
+from app.api.endpoints.reports import router as reports_router
+from app.api.endpoints.webhooks_db import router as webhooks_router
+from app.api.endpoints.teams_db import router as teams_router
+from app.api.endpoints.github_integration import router as github_integration_router
+from app.api.endpoints.health import router as health_router
 
 
 # Security middleware for additional protections
@@ -191,16 +198,23 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Initialize database
+from app.database import init_db
+@app.on_event("startup")
+async def startup_event():
+    init_db()
+    print("Database initialized!")
+
 # Get allowed hosts from environment
 allowed_hosts = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 # Add security middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if origin.strip()],
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"],
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
 
 # Add security headers
@@ -211,6 +225,13 @@ app.add_middleware(RateLimitMiddleware, requests_per_minute=30, burst_limit=10)
 
 
 # Include routers
+app.include_router(auth_router)
+app.include_router(api_keys_router)
+app.include_router(reports_router)
+app.include_router(webhooks_router)
+app.include_router(teams_router)
+app.include_router(github_scanner_router)
+app.include_router(github_integration_router)
 app.include_router(security_router)
 app.include_router(ai_fix_router)
 app.include_router(ai_fixes_router, prefix="/api")
@@ -218,11 +239,11 @@ app.include_router(pytorch_router, prefix="/api")
 app.include_router(advanced_ml_router, prefix="/api")
 app.include_router(pentest_router, prefix="/api")
 app.include_router(zero_day_router)
-app.include_router(github_router)
 app.include_router(scanner_router)
 app.include_router(semgrep_router)
 app.include_router(vulnerability_router)
 app.include_router(llm_router)
+app.include_router(health_router)
 
 
 @app.get("/health")
