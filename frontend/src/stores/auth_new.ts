@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { authApi, apiKeysApi, scannerApi, auditApi, githubApi } from '../services/api_new'
+import { authApi, apiKeysApi, scannerApi } from '../services/api_new'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<any>(null)
@@ -10,8 +10,6 @@ export const useAuthStore = defineStore('auth', () => {
   const scansUsed = ref(0)
   const scansQuota = ref(50)
   const isLoading = ref(false)
-  const auditLogs = ref<any[]>([])
-  const githubIntegrations = ref<any[]>([])
   
   const initAuthState = () => {
     const storedToken = localStorage.getItem('access_token')
@@ -65,20 +63,6 @@ export const useAuthStore = defineStore('auth', () => {
       
       return { success: true }
     } catch (error: any) {
-      console.error('Login error:', error)
-      // Fallback for demo - try mock login
-      if (email === 'admin@devguardian.ai' && password === 'admin123') {
-        const mockToken = `demo_${Date.now()}`
-        token.value = mockToken
-        user.value = { user_id: 'admin_1', email, name: 'Admin', role: 'admin' }
-        plan.value = 'enterprise'
-        scansUsed.value = 0
-        scansQuota.value = 999999
-        localStorage.setItem('access_token', mockToken)
-        localStorage.setItem('user', JSON.stringify(user.value))
-        localStorage.setItem('plan', 'enterprise')
-        return { success: true }
-      }
       return { success: false, error: error.message || 'Login failed' }
     } finally {
       isLoading.value = false
@@ -125,24 +109,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const loadAuditLogs = async () => {
-    if (!isAdmin.value) return
-    try {
-      const response = await auditApi.getLogs()
-      auditLogs.value = response.logs || []
-    } catch (e) {
-      console.error('Failed to load audit logs:', e)
-    }
-  }
-
-  const loadGithubIntegrations = async () => {
-    try {
-      githubIntegrations.value = await githubApi.list()
-    } catch (e) {
-      console.error('Failed to load GitHub integrations:', e)
-    }
-  }
-
   return {
     user,
     token,
@@ -151,16 +117,12 @@ export const useAuthStore = defineStore('auth', () => {
     scansUsed,
     scansQuota,
     isLoading,
-    auditLogs,
-    githubIntegrations,
     isAuthenticated,
     isAdmin,
     login,
     logout,
     register,
     refreshUsage,
-    initAuthState,
-    loadAuditLogs,
-    loadGithubIntegrations
+    initAuthState
   }
 })

@@ -29,6 +29,7 @@ from app.api.endpoints.webhooks_db import router as webhooks_router
 from app.api.endpoints.teams_db import router as teams_router
 from app.api.endpoints.github_integration import router as github_integration_router
 from app.api.endpoints.health import router as health_router
+from app.api.endpoints.repo_scanner import router as repo_scanner_router
 
 
 # Security middleware for additional protections
@@ -244,6 +245,7 @@ app.include_router(semgrep_router)
 app.include_router(vulnerability_router)
 app.include_router(llm_router)
 app.include_router(health_router)
+app.include_router(repo_scanner_router)
 
 
 @app.get("/health")

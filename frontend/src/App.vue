@@ -48,7 +48,7 @@ const handleNotificationAction = (notification: any) => {
 
 onMounted(() => {
   // Initialize auth state
-  authStore.initAuth()
+  authStore.initAuthState()
 })
 </script>
 

@@ -32,6 +32,12 @@ class User(Base):
     role = Column(String, default="user")
     plan = Column(String, default="free")
     is_active = Column(Boolean, default=True)
+    
+    # Free trial system
+    free_trial_remaining = Column(Integer, default=3)
+    free_trial_used = Column(Integer, default=0)
+    has_used_free_trial = Column(Boolean, default=False)
+    
     last_login = Column(DateTime, nullable=True)
     login_count = Column(Integer, default=0)
     failed_login_attempts = Column(Integer, default=0)

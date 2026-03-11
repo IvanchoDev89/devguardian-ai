@@ -219,14 +219,6 @@ const showUserMenu = ref(false)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 const userData = computed(() => {
-  const stored = localStorage.getItem('user')
-  if (stored) {
-    try {
-      return JSON.parse(stored)
-    } catch {
-      return null
-    }
-  }
   return authStore.user
 })
 
@@ -240,6 +232,11 @@ const userEmail = computed(() => {
 
 const userRole = computed(() => {
   return userData.value?.role || 'free'
+})
+
+const isAdmin = computed(() => {
+  const role = userRole.value
+  return role === 'super_admin' || role === 'admin'
 })
 
 const userInitials = computed(() => {

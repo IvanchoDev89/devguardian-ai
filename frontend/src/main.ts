@@ -18,6 +18,11 @@ const routes = [
     component: () => import('./pages/ScanPage.vue')
   },
   {
+    path: '/repositories',
+    name: 'Repositories',
+    component: () => import('./pages/Repositories.vue')
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('./pages/Login.vue')

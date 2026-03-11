@@ -1,284 +1,248 @@
 <template>
-  <div class="landing-page">
-    <!-- Hero Section -->
-    <div class="hero">
-      <div class="hero-content">
-        <div class="logo">
-          <span class="logo-icon">🛡️</span>
-          <span class="logo-text">DevGuardian</span>
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <!-- Header -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center">
+            <router-link to="/" class="flex items-center">
+              <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+              </div>
+              <span class="text-xl font-bold text-white">DevGuardian<span class="text-cyan-400">AI</span></span>
+            </router-link>
+          </div>
+          
+          <div class="flex items-center gap-4">
+            <router-link to="/login" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+              Sign In
+            </router-link>
+            <router-link to="/scan" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all">
+              Start Scanning
+            </router-link>
+          </div>
         </div>
-        
-        <h1>Code Security Scanner<br/><span>Pattern-Based Analysis</span></h1>
-        
-        <p class="subtitle">
-          Detect common security issues in your code with pattern-based analysis.
-          For educational purposes and basic security hygiene.
-        </p>
-        
-        <div class="cta-buttons">
-          <router-link to="/scan" class="btn-primary">
-            <span>🔍</span> Scan Code
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 px-4">
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center">
+          <div class="inline-flex items-center px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full mb-6">
+            <span class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+            <span class="text-blue-400 text-sm font-medium">AI-Powered Security Scanner</span>
+          </div>
+          
+          <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+            Find & Fix Security
+            <span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"> Vulnerabilities</span>
+            in Your Code
+          </h1>
+          
+          <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+            AI-powered security scanner with automatic fix suggestions. 
+            Protect your applications with API Keys, Webhooks, and Team collaboration.
+          </p>
+          
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <router-link to="/scan" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all transform hover:scale-105 shadow-lg shadow-blue-500/25">
+              <span class="flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                Start Free Scan
+              </span>
+            </router-link>
+            <router-link to="/login" class="px-8 py-4 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all">
+              Sign In
+            </router-link>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-3xl mx-auto">
+            <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4">
+              <p class="text-3xl font-bold text-white">50+</p>
+              <p class="text-gray-400 text-sm">Vulnerability Types</p>
+            </div>
+            <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4">
+              <p class="text-3xl font-bold text-white">&lt;1s</p>
+              <p class="text-gray-400 text-sm">Scan Time</p>
+            </div>
+            <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4">
+              <p class="text-3xl font-bold text-white">AI</p>
+              <p class="text-gray-400 text-sm">Fix Suggestions</p>
+            </div>
+            <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4">
+              <p class="text-3xl font-bold text-white">$0</p>
+              <p class="text-gray-400 text-sm">Free Plan</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="py-20 px-4 bg-white/5">
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl font-bold text-white mb-4">Everything You Need to Secure Your Code</h2>
+          <p class="text-gray-400">From individual developers to enterprise teams</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Feature 1: Code Scanner -->
+          <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:border-blue-500/30 transition-all group">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-2">Code Scanner</h3>
+            <p class="text-gray-400">Scan your code for 50+ vulnerability types including SQL injection, XSS, hardcoded secrets, and more.</p>
+          </div>
+
+          <!-- Feature 2: AI Fix Suggestions -->
+          <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:border-purple-500/30 transition-all group">
+            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-2">AI Fix Suggestions</h3>
+            <p class="text-gray-400">Get AI-powered recommendations to fix vulnerabilities with secure code examples.</p>
+          </div>
+
+          <!-- Feature 3: API Keys -->
+          <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:border-green-500/30 transition-all group">
+            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-2">API Keys</h3>
+            <p class="text-gray-400">Integrate security scanning into your CI/CD with API keys. Free 50 scans/month.</p>
+          </div>
+
+          <!-- Feature 4: Webhooks -->
+          <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:border-yellow-500/30 transition-all group">
+            <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-2">Webhooks</h3>
+            <p class="text-gray-400">Receive notifications when scans complete. Integrate with Slack, Teams, and more.</p>
+          </div>
+
+          <!-- Feature 5: Team Management -->
+          <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:border-indigo-500/30 transition-all group">
+            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-2">Team Management</h3>
+            <p class="text-gray-400">Invite team members, manage permissions, and track team security posture.</p>
+          </div>
+
+          <!-- Feature 6: PDF Reports -->
+          <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:border-red-500/30 transition-all group">
+            <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-2">PDF Reports</h3>
+            <p class="text-gray-400">Generate professional security reports in PDF or HTML format for compliance.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="py-20 px-4">
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl font-bold text-white mb-4">Simple, Transparent Pricing</h2>
+          <p class="text-gray-400">Start free, scale as you grow</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <!-- Free -->
+          <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
+            <h3 class="text-xl font-semibold text-white mb-2">Free</h3>
+            <p class="text-4xl font-bold text-white mb-4">$0<span class="text-lg text-gray-400 font-normal">/mo</span></p>
+            <ul class="space-y-3 text-gray-400 mb-6">
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>50 scans/month</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Basic vulnerability detection</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>AI fix suggestions</li>
+            </ul>
+            <router-link to="/signup" class="block w-full py-3 bg-white/10 text-white text-center rounded-lg hover:bg-white/20 transition-colors">
+              Get Started
+            </router-link>
+          </div>
+
+          <!-- Pro -->
+          <div class="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-sm rounded-xl border border-blue-500/30 p-6 transform scale-105">
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-sm font-medium rounded-full">Popular</div>
+            <h3 class="text-xl font-semibold text-white mb-2">Pro</h3>
+            <p class="text-4xl font-bold text-white mb-4">$29<span class="text-lg text-gray-400 font-normal">/mo</span></p>
+            <ul class="space-y-3 text-gray-300 mb-6">
+              <li class="flex items-center"><svg class="w-5 h-5 text-cyan-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>500 scans/month</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-cyan-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>API Keys</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-cyan-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Webhooks</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-cyan-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>PDF Reports</li>
+            </ul>
+            <router-link to="/signup" class="block w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-center rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all">
+              Start Pro Trial
+            </router-link>
+          </div>
+
+          <!-- Enterprise -->
+          <div class="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
+            <h3 class="text-xl font-semibold text-white mb-2">Enterprise</h3>
+            <p class="text-4xl font-bold text-white mb-4">$99<span class="text-lg text-gray-400 font-normal">/mo</span></p>
+            <ul class="space-y-3 text-gray-400 mb-6">
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Unlimited scans</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Team Management</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>GitHub Integration</li>
+              <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Priority Support</li>
+            </ul>
+            <router-link to="/signup" class="block w-full py-3 bg-white/10 text-white text-center rounded-lg hover:bg-white/20 transition-colors">
+              Contact Sales
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-20 px-4 bg-gradient-to-r from-blue-600/20 to-cyan-600/20">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-3xl font-bold text-white mb-4">Ready to Secure Your Code?</h2>
+        <p class="text-gray-400 mb-8">Start scanning in seconds. No credit card required.</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <router-link to="/scan" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all">
+            Start Free Scan
           </router-link>
-          <router-link to="/login" class="btn-secondary">
+          <router-link to="/login" class="px-8 py-4 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all">
             Sign In
           </router-link>
         </div>
-        
-        <!-- Quick Stats -->
-        <div class="stats">
-          <div class="stat">
-            <span class="stat-value">18+</span>
-            <span class="stat-label">Vuln Types</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value">$0</span>
-            <span class="stat-label">Free</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value">&lt;1s</span>
-            <span class="stat-label">Scan Time</span>
-          </div>
-        </div>
       </div>
-      
-      <!-- Demo Preview -->
-      <div class="demo-card">
-        <div class="demo-header">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-          <span class="demo-title">Live Demo</span>
-        </div>
-        <div class="demo-content">
-          <div class="code-example">
-            <pre><code><span class="keyword">password</span> = <span class="string">"secret123"</span></code></pre>
-          </div>
-          <div class="demo-result">
-            <div class="vuln-found">
-              <span class="severity critical">CRITICAL</span>
-              <span>Hardcoded Password</span>
-            </div>
-            <div class="score">
-              Security Score: <strong>75</strong>
-            </div>
-          </div>
-        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 px-4 border-t border-white/10">
+      <div class="max-w-7xl mx-auto text-center text-gray-500 text-sm">
+        <p>© 2026 DevGuardian AI. All rights reserved.</p>
       </div>
-    </div>
-    
-    <!-- Features -->
-    <div class="features">
-      <h2>What We Detect</h2>
-      <div class="features-grid">
-        <div class="feature">
-          <div class="feature-icon">🔑</div>
-          <h3>Hardcoded Secrets</h3>
-          <p>Detects passwords, API keys, and tokens in source code.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">💉</div>
-          <h3>SQL Injection</h3>
-          <p>Identifies string concatenation in SQL queries.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">⚡</div>
-          <h3>Command Injection</h3>
-          <p>Finds unsafe system command execution patterns.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">🔓</div>
-          <h3>Weak Cryptography</h3>
-          <p>Detects usage of deprecated algorithms like MD5.</p>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Disclaimer -->
-    <div class="disclaimer">
-      <div class="disclaimer-content">
-        <h3>⚠️ Important Disclaimer</h3>
-        <p>
-          This tool uses <strong>pattern-based detection</strong> and cannot find all security vulnerabilities. 
-          It will not detect business logic flaws, authentication bypasses, or complex attack vectors. 
-          For comprehensive security testing, use professional penetration testing services.
-        </p>
-        <p class="disclaimer-note">
-          This is a code quality tool, not a replacement for security audits.
-        </p>
-      </div>
-    </div>
-    
-    <!-- Supported Languages -->
-    <div class="languages">
-      <h2>Supported Languages</h2>
-      <div class="lang-grid">
-        <span class="lang">Python</span>
-        <span class="lang">JavaScript</span>
-        <span class="lang">TypeScript</span>
-        <span class="lang">Java</span>
-        <span class="lang">PHP</span>
-        <span class="lang">Go</span>
-        <span class="lang">Rust</span>
-        <span class="lang">C#</span>
-        <span class="lang">C/C++</span>
-        <span class="lang">Ruby</span>
-      </div>
-    </div>
-    
-    <!-- How It Works -->
-    <div class="how-it-works">
-      <h2>How It Works</h2>
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <h3>Paste Your Code</h3>
-          <p>Copy and paste the code you want to analyze</p>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <h3>Automatic Scan</h3>
-          <p>We detect vulnerabilities in seconds</p>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <h3>Get Results</h3>
-          <p>View vulnerabilities with severity and AI fixes</p>
-        </div>
-      </div>
-    </div>
-    
-    <!-- CTA -->
-    <div class="cta-section">
-      <h2>Get Started</h2>
-      <p>No registration. Completely free.</p>
-      <router-link to="/scan" class="btn-primary btn-large">
-        🚀 Scan Now
-      </router-link>
-    </div>
+    </footer>
   </div>
 </template>
 
 <script setup lang="ts">
 </script>
-
-<style scoped>
-.landing-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: white;
-  font-family: 'Inter', system-ui, sans-serif;
-}
-
-.hero {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 4rem 2rem;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
-  align-items: center;
-}
-
-@media (max-width: 768px) {
-  .hero {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-}
-
-.logo-icon { font-size: 2rem; }
-.logo-text { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #3b82f6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-.hero h1 { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 1rem; }
-.hero h1 span { background: linear-gradient(135deg, #3b82f6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.subtitle { color: #94a3b8; font-size: 1.125rem; margin-bottom: 2rem; line-height: 1.6; }
-
-.cta-buttons { display: flex; gap: 1rem; margin-bottom: 3rem; }
-@media (max-width: 768px) { .cta-buttons { justify-content: center; } }
-
-.btn-primary, .btn-secondary {
-  padding: 0.875rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.btn-primary { background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(59, 130, 246, 0.3); }
-
-.btn-secondary { background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); }
-.btn-secondary:hover { background: rgba(255, 255, 255, 0.2); }
-
-.stats { display: flex; gap: 2rem; }
-@media (max-width: 768px) { .stats { justify-content: center; } }
-.stat { display: flex; flex-direction: column; }
-.stat-value { font-size: 1.5rem; font-weight: 700; color: #06b6d4; }
-.stat-label { font-size: 0.875rem; color: #64748b; }
-
-/* Demo Card */
-.demo-card { background: #1e293b; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3); }
-.demo-header { background: #0f172a; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.5rem; }
-.dot { width: 12px; height: 12px; border-radius: 50%; }
-.dot.red { background: #ef4444; }
-.dot.yellow { background: #eab308; }
-.dot.green { background: #22c55e; }
-.demo-title { margin-left: auto; font-size: 0.75rem; color: #64748b; }
-.demo-content { padding: 1.5rem; }
-.code-example { background: #0f172a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-family: 'Fira Code', monospace; font-size: 0.875rem; }
-.keyword { color: #c084fc; }
-.string { color: #4ade80; }
-
-.vuln-found { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 0.5rem; margin-bottom: 0.75rem; }
-.severity.critical { background: #dc2626; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700; }
-.score { font-size: 0.875rem; color: #94a3b8; }
-.score strong { color: #f59e0b; }
-
-/* Features */
-.features { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; }
-.features h2, .how-it-works h2, .cta-section h2, .languages h2 { text-align: center; font-size: 2rem; margin-bottom: 3rem; }
-
-.features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
-@media (max-width: 1024px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 640px) { .features-grid { grid-template-columns: 1fr; } }
-
-.feature { background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 1rem; text-align: center; border: 1px solid rgba(255, 255, 255, 0.1); }
-.feature-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-.feature h3 { font-size: 1.125rem; margin-bottom: 0.5rem; }
-.feature p { font-size: 0.875rem; color: #94a3b8; line-height: 1.5; }
-
-/* Languages */
-.languages { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-.lang-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
-.lang { background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; }
-
-/* How It Works */
-.how-it-works { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; }
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
-@media (max-width: 768px) { .steps { grid-template-columns: 1fr; } }
-.step { text-align: center; }
-.step-num { width: 3rem; height: 3rem; background: linear-gradient(135deg, #3b82f6, #06b6d4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 700; margin: 0 auto 1rem; }
-
-/* CTA */
-.cta-section { text-align: center; padding: 4rem 2rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(6, 182, 212, 0.1)); }
-.cta-section p { color: #94a3b8; margin-bottom: 2rem; }
-.btn-large { font-size: 1.125rem; padding: 1rem 2rem; }
-
-/* Disclaimer */
-.disclaimer { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-.disclaimer-content { background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 1rem; padding: 1.5rem; }
-.disclaimer-content h3 { color: #facc15; margin-bottom: 1rem; font-size: 1.125rem; }
-.disclaimer-content p { color: #d1d5db; font-size: 0.875rem; line-height: 1.6; margin-bottom: 0.75rem; }
-.disclaimer-content strong { color: #fef08a; }
-.disclaimer-note { color: #9ca3af !important; font-size: 0.8rem !important; font-style: italic; }
-</style>

@@ -140,7 +140,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../stores/auth_new'
 
 const router = useRouter()
 const route = useRoute()
@@ -156,14 +156,11 @@ const loading = ref(false)
 const error = ref('')
 
 onMounted(() => {
-  // Check if redirected due to unauthorized access
   if (route.query.reason === 'unauthorized') {
     error.value = 'Your session has expired. Please log in again.'
   }
   
-  // Redirect if already logged in
-  const token = localStorage.getItem('auth_token')
-  if (token) {
+  if (authStore.isAuthenticated) {
     router.push('/scan')
   }
 })
@@ -173,10 +170,7 @@ const handleLogin = async () => {
   error.value = ''
   
   try {
-    const result = await authStore.login({
-      email: form.value.email,
-      password: form.value.password
-    })
+    const result = await authStore.login(form.value.email, form.value.password)
     
     if (result.success) {
       router.push('/scan')
@@ -191,26 +185,10 @@ const handleLogin = async () => {
 }
 
 const handleGitHubLogin = async () => {
-  try {
-    loading.value = true
-    error.value = ''
-    
-    const response = await authService.getGitHubAuthUrl()
-    
-    if (response.success && response.data?.url) {
-      // Redirect to GitHub OAuth
-      window.location.href = response.data.url
-    } else {
-      throw new Error(response.message || 'Failed to get GitHub auth URL')
-    }
-  } catch (err: any) {
-    error.value = err.message || 'GitHub login failed'
-    loading.value = false
-  }
+  error.value = 'GitHub OAuth will be available soon. Please sign in with email.'
 }
 
 const handleGoogleLogin = () => {
-  // For now, show message that Google OAuth is not configured
-  error.value = 'Google OAuth will be available soon. Please sign in with email or GitHub.'
+  error.value = 'Google OAuth will be available soon. Please sign in with email.'
 }
 </script>

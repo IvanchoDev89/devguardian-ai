@@ -159,7 +159,19 @@ export const scannerApi = {
   
   getScanDetails: (scanId: string) => api.get<any>(`/api/v1/scans/${scanId}`),
   
-  getAdminStats: () => api.get<any>('/api/v1/admin/stats')
+  getAdminStats: () => api.get<any>('/api/v1/admin/stats'),
+  
+  // Repository Scanner
+  scanRepo: (repoUrl: string, provider?: string, branch?: string) =>
+    api.post<any>('/api/v1/repos/scan', { 
+      repo_url: repoUrl, 
+      provider, 
+      branch: branch || 'main' 
+    }),
+  
+  getRepoProviders: () => api.get<any>('/api/v1/repos/providers'),
+  
+  getRepoScanResults: (scanId: string) => api.get<any>(`/api/v1/repos/scan/${scanId}`)
 }
 
 // LLM Analyzer API  

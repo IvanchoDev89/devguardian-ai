@@ -3,16 +3,21 @@ LLM Analysis API Endpoints
 POST /api/llm/analyze - Analyze a vulnerability with LLM
 POST /api/llm/fix - Generate fix for vulnerability
 POST /api/llm/batch - Batch analyze multiple vulnerabilities
+
+Security: JWT authentication required
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import os
 
 from app.services.llm_analyzer import LLMAnalyzer, create_analyzer, AnalysisResult
+from app.core.auth import get_current_user_optional, TokenData
 
 router = APIRouter(prefix="/api/llm", tags=["llm-analyzer"])
+
+REQUIRE_AUTH = os.getenv("REQUIRE_AUTH", "false").lower() == "true"
 
 # Initialize analyzer (lazy loading)
 _analyzer = None
@@ -70,7 +75,10 @@ class AnalysisResponse(BaseModel):
 
 
 @router.post("/analyze", response_model=AnalysisResponse)
-async def analyze_vulnerability(request: AnalyzeRequest) -> AnalysisResponse:
+async def analyze_vulnerability(
+    request: AnalyzeRequest,
+    current_user: Optional[TokenData] = Depends(get_current_user_optional)
+) -> AnalysisResponse:
     """
     Analyze a single vulnerability with LLM
     
@@ -79,7 +87,12 @@ async def analyze_vulnerability(request: AnalyzeRequest) -> AnalysisResponse:
     - Suggested fix code
     - Confidence score
     - Remediation steps
+    
+    Authentication: JWT Bearer token (optional if REQUIRE_AUTH=false)
     """
+    if REQUIRE_AUTH and not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
     analyzer = get_analyzer()
     
     # Check if API key is configured

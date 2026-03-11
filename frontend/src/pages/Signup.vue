@@ -192,9 +192,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 onMounted(() => {
-  // Redirect if already logged in
-  const token = localStorage.getItem('auth_token')
-  if (token) {
+  if (authStore.isAuthenticated) {
     router.push('/scan')
   }
 })
@@ -222,11 +220,17 @@ const handleSignup = async () => {
       return
     }
     
-    const result = await authStore.register({
-      name: form.value.name,
-      email: form.value.email,
-      password: form.value.password,
-    })
+    if (form.value.password.length < 8) {
+      error.value = 'Password must be at least 8 characters'
+      loading.value = false
+      return
+    }
+    
+    const result = await authStore.register(
+      form.value.name,
+      form.value.email,
+      form.value.password
+    )
     
     if (result.success) {
       router.push('/scan')
@@ -241,24 +245,10 @@ const handleSignup = async () => {
 }
 
 const handleGitHubSignup = async () => {
-  try {
-    loading.value = true
-    error.value = ''
-    
-    const response = await authService.getGitHubAuthUrl()
-    
-    if (response.success && response.data?.url) {
-      window.location.href = response.data.url
-    } else {
-      throw new Error(response.message || 'Failed to get GitHub auth URL')
-    }
-  } catch (err: any) {
-    error.value = err.message || 'GitHub signup failed'
-    loading.value = false
-  }
+  error.value = 'GitHub OAuth will be available soon.'
 }
 
 const handleGoogleSignup = () => {
-  error.value = 'Google OAuth will be available soon. Please sign up with email or GitHub.'
+  error.value = 'Google OAuth will be available soon.'
 }
 </script>
