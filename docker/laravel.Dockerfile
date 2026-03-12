@@ -66,5 +66,8 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Expose port
 EXPOSE 8000
 
+# Switch to non-root user for security
+USER www-data
+
 # Start supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

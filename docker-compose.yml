@@ -17,6 +17,9 @@ services:
       - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - devguardian-network
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U devguardian -d devguardian_ai"]
       interval: 10s
@@ -35,6 +38,9 @@ services:
       - redis_data:/data
     networks:
       - devguardian-network
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -218,6 +224,12 @@ services:
       - frontend
     networks:
       - devguardian-network
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run
 
 volumes:
   postgres_data:

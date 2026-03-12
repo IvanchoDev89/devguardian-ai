@@ -20,11 +20,22 @@ spec:
       labels:
         app: laravel-backend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
       - name: laravel
         image: ghcr.io/your-org/devguardian-ai/laravel:latest
         ports:
         - containerPort: 8000
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
         env:
         - name: APP_ENV
           value: "production"
@@ -71,11 +82,22 @@ spec:
       labels:
         app: ai-service
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
       - name: ai-service
         image: ghcr.io/your-org/devguardian-ai/ai-service:latest
         ports:
         - containerPort: 8000
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
         env:
         - name: ENVIRONMENT
           value: "production"
