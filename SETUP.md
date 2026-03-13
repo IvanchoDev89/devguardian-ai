@@ -1,11 +1,12 @@
 # DevGuardian AI - Local Development Setup
 
-This guide covers setting up the MVP vulnerability scanner for local development.
+This guide covers setting up the DevGuardian AI vulnerability scanner for local development.
 
 ## Prerequisites
 
 - Node.js 18+
 - Python 3.11+
+- SQLite (included)
 
 ## Quick Start
 
@@ -21,15 +22,18 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Install security tools (optional but recommended)
+pip install semgrep bandit
+
 # Start the server
-uvicorn main:app --host 0.0.0.0 --port 8000
+uvicorn main:app --host 0.0.0.0 --port 8003
 ```
 
 ### 2. Verify API is Running
 
 ```bash
-curl http://localhost:8000/api/v1/health
-# Expected: {"status":"ok","timestamp":"...","service":"DevGuardian Vulnerability Scanner","version":"1.0.0"}
+curl http://localhost:8003/api/v1/health
+# Expected: {"status":"healthy","timestamp":"...","service":"DevGuardian AI Service","version":"1.0.0"}
 ```
 
 ### 3. Start Frontend
@@ -42,8 +46,11 @@ npm run dev
 
 ### 4. Access the Application
 
-- **Frontend**: http://localhost:3000
-- **Scan Page**: http://localhost:3000/scan
+- **Frontend**: http://localhost:3001
+- **Scanner**: http://localhost:3001/scan
+- **Repositories**: http://localhost:3001/repositories
+- **Admin**: http://localhost:3001/admin
+- **API**: http://localhost:8003
 
 ## API Endpoints
 
@@ -52,32 +59,46 @@ npm run dev
 GET /api/v1/health
 ```
 
-### Analyze Code
+### Real Security Scanner (Semgrep + Bandit)
+```
+POST /api/v1/security/scan/code
+Content-Type: application/json
+
+{
+  "code": "import os\nos.system('ls')",
+  "language": "python"
+}
+```
+
+### Repository Scanner
+```
+POST /api/v1/security/scan/repository
+Content-Type: application/json
+
+{
+  "repo_url": "https://github.com/owner/repo",
+  "provider": "github",
+  "branch": "main"
+}
+```
+
+### Legacy Basic Scanner
 ```
 POST /api/v1/analyze-code
 Content-Type: application/json
 
 {
-  "code": "string (max 10KB)",
+  "code": "string (max 50KB)",
   "language": "python|javascript|typescript|java|csharp|php|go|rust"
 }
 ```
 
-### AI Analysis (requires API key)
+### Authentication
 ```
-POST /api/llm/analyze
-Content-Type: application/json
-
-{
-  "vulnerability": {
-    "type": "sql_injection",
-    "severity": "critical",
-    "message": "..."
-  },
-  "code_snippet": "string",
-  "language": "python",
-  "generate_fix": true
-}
+POST /api/auth/register
+POST /api/auth/login
+GET /api/auth/me
+```
 ```
 
 ### Get Supported Languages
