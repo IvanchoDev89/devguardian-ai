@@ -1,8 +1,8 @@
 <template>
-  <div class="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900/95 backdrop-blur-xl border-r border-white/10 flex flex-col">
+  <div class="flex flex-col h-full">
     
     <!-- Logo -->
-    <div class="h-18 flex items-center px-5 border-b border-white/10">
+    <div class="h-18 flex-shrink-0 flex items-center px-5 border-b border-white/10">
       <router-link to="/app/dashboard" class="flex items-center group">
         <div class="w-10 h-10 bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500 rounded-xl flex items-center justify-center mr-3 shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform">
           <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
