@@ -4,7 +4,7 @@
     
     <!-- Main Content -->
     <main class="flex-1 overflow-auto bg-slate-900">
-      <slot />
+      <router-view />
     </main>
   </div>
 </template>
