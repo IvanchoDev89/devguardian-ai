@@ -38,6 +38,7 @@ from app.api.endpoints.ticketing import router as ticketing_router
 from app.api.endpoints.security_posture import router as posture_router
 from app.api.endpoints.custom_rules import router as rules_router
 from app.api.endpoints.cloud_scanner import router as cloud_router
+from app.api.endpoints.vulnerabilities_api import router as vulnerabilities_router
 
 
 # Security middleware for additional protections
@@ -262,6 +263,7 @@ app.include_router(ticketing_router)
 app.include_router(posture_router)
 app.include_router(rules_router)
 app.include_router(cloud_router)
+app.include_router(vulnerabilities_router)
 
 
 @app.get("/health")
