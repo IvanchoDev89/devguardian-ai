@@ -1,7 +1,7 @@
 <template>
   <div id="app" class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-    <!-- Navigation -->
-    <Navbar />
+    <!-- Navigation - Only show on public routes -->
+    <Navbar v-if="!isAppRoute" />
     
     <!-- Toast Notifications -->
     <div class="fixed top-20 right-4 z-50 space-y-2">
@@ -27,13 +27,19 @@
 
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { useNotificationStore } from './stores/notifications'
 import Navbar from './components/Navbar.vue'
 import Toast from './components/Toast.vue'
 
+const route = useRoute()
 const authStore = useAuthStore()
 const notificationStore = useNotificationStore()
+
+const isAppRoute = computed(() => {
+  return route.path.startsWith('/app')
+})
 
 const notifications = computed(() => notificationStore.notifications)
 
