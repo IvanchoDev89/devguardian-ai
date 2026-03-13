@@ -28,6 +28,10 @@ const routes = [
     component: () => import('./components/AppLayout.vue'),
     children: [
       {
+        path: '',
+        redirect: '/app/dashboard'
+      },
+      {
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('./pages/Dashboard.vue')
@@ -138,6 +142,12 @@ const routes = [
     path: '/docs',
     name: 'Docs',
     component: () => import('./pages/Documentation.vue')
+  },
+  
+  // Catch-all for 404
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
   }
 ]
 
