@@ -51,6 +51,51 @@ const routes = [
     path: '/security-tools',
     name: 'SecurityTools',
     component: () => import('./pages/SecurityTools.vue')
+  },
+  {
+    path: '/vulnerabilities',
+    name: 'Vulnerabilities',
+    component: () => import('./pages/Vulnerabilities.vue')
+  },
+  {
+    path: '/pentesting',
+    name: 'Pentesting',
+    component: () => import('./pages/Pentesting.vue')
+  },
+  {
+    path: '/advanced-ml',
+    name: 'AdvancedML',
+    component: () => import('./pages/AdvancedML.vue')
+  },
+  {
+    path: '/ai-fixes',
+    name: 'AiFixes',
+    component: () => import('./pages/AiFixes.vue')
+  },
+  {
+    path: '/security-audit',
+    name: 'SecurityAudit',
+    component: () => import('./pages/SecurityAudit.vue')
+  },
+  {
+    path: '/enterprise-assets',
+    name: 'EnterpriseAssets',
+    component: () => import('./pages/EnterpriseAssets.vue')
+  },
+  {
+    path: '/billing',
+    name: 'Billing',
+    component: () => import('./pages/Billing.vue')
+  },
+  {
+    path: '/teams',
+    name: 'Teams',
+    component: () => import('./pages/Settings.vue') // Reuse Settings for now
+  },
+  {
+    path: '/super-admin',
+    name: 'SuperAdmin',
+    component: () => import('./pages/SuperAdmin.vue')
   }
 ]
 
