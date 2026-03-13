@@ -46,6 +46,11 @@ const routes = [
     path: '/docs',
     name: 'Docs',
     component: () => import('./pages/Documentation.vue')
+  },
+  {
+    path: '/security-tools',
+    name: 'SecurityTools',
+    component: () => import('./pages/SecurityTools.vue')
   }
 ]
 
