@@ -1,60 +1,7 @@
 <template>
   <div class="flex h-screen bg-slate-900">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-slate-800/50 backdrop-blur-sm border-r border-white/10 flex flex-col">
-      <!-- Logo -->
-      <div class="flex items-center h-16 px-6 border-b border-white/10">
-        <router-link to="/" class="flex items-center">
-          <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
-          </div>
-          <span class="text-lg font-bold text-white">DevGuardian</span>
-        </router-link>
-      </div>
-
-      <!-- Navigation -->
-      <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <router-link
-          v-for="item in navItems"
-          :key="item.path"
-          :to="item.path"
-          class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
-          :class="[
-            $route.path === item.path 
-              ? 'bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-white border-l-2 border-cyan-400' 
-              : 'text-gray-400 hover:text-white hover:bg-white/5'
-          ]"
-        >
-          <component :is="item.icon" class="w-5 h-5 mr-3 flex-shrink-0" />
-          {{ item.name }}
-        </router-link>
-      </nav>
-
-      <!-- User Section -->
-      <div class="p-4 border-t border-white/10">
-        <div class="flex items-center">
-          <img 
-            :src="user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'" 
-            class="w-10 h-10 rounded-full border-2 border-white/20"
-          />
-          <div class="ml-3 flex-1 min-w-0">
-            <p class="text-sm font-medium text-white truncate">{{ user?.name || 'User' }}</p>
-            <p class="text-xs text-gray-400 truncate">{{ user?.email || '' }}</p>
-          </div>
-          <button 
-            @click="handleLogout"
-            class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            title="Logout"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </aside>
+    <!-- Sidebar - Using new component -->
+    <Sidebar />
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -273,6 +220,7 @@ import { useRouter } from 'vue-router'
 import { dashboardService } from '../services/api'
 import { useNotificationStore } from '../stores/notifications'
 import { useAuthStore } from '../stores/auth'
+import Sidebar from '../components/Sidebar.vue'
 import { 
   LayoutDashboard, 
   Search, 
