@@ -35,6 +35,9 @@ from app.api.endpoints.sbom_generator import router as sbom_router
 from app.api.endpoints.auto_remediation import router as remediation_router
 from app.api.endpoints.compliance import router as compliance_router
 from app.api.endpoints.ticketing import router as ticketing_router
+from app.api.endpoints.security_posture import router as posture_router
+from app.api.endpoints.custom_rules import router as rules_router
+from app.api.endpoints.cloud_scanner import router as cloud_router
 
 
 # Security middleware for additional protections
@@ -256,6 +259,9 @@ app.include_router(sbom_router)
 app.include_router(remediation_router)
 app.include_router(compliance_router)
 app.include_router(ticketing_router)
+app.include_router(posture_router)
+app.include_router(rules_router)
+app.include_router(cloud_router)
 
 
 @app.get("/health")
