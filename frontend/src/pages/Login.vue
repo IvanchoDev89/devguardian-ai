@@ -161,7 +161,7 @@ onMounted(() => {
   }
   
   if (authStore.isAuthenticated) {
-    router.push('/dashboard')
+    router.push('/app/dashboard')
   }
 })
 
@@ -173,7 +173,7 @@ const handleLogin = async () => {
     const result = await authStore.login(form.value.email, form.value.password)
     
     if (result.success) {
-      router.push('/dashboard')
+      router.push('/app/dashboard')
     } else {
       error.value = result.error || 'Invalid credentials'
     }
