@@ -30,6 +30,9 @@ from app.api.endpoints.teams_db import router as teams_router
 from app.api.endpoints.github_integration import router as github_integration_router
 from app.api.endpoints.health import router as health_router
 from app.api.endpoints.repo_scanner import router as repo_scanner_router
+from app.api.endpoints.secret_scanner import router as secret_scanner_router
+from app.api.endpoints.sbom_generator import router as sbom_router
+from app.api.endpoints.auto_remediation import router as remediation_router
 
 
 # Security middleware for additional protections
@@ -246,6 +249,9 @@ app.include_router(vulnerability_router)
 app.include_router(llm_router)
 app.include_router(health_router)
 app.include_router(repo_scanner_router)
+app.include_router(secret_scanner_router)
+app.include_router(sbom_router)
+app.include_router(remediation_router)
 
 
 @app.get("/health")
