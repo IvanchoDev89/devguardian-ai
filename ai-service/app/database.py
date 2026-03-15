@@ -144,6 +144,7 @@ class Vulnerability(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     scan_id = Column(String, index=True)
+    file = Column(String, nullable=True)
     line_number = Column(Integer)
     line_content = Column(String)
     vulnerability_type = Column(String)

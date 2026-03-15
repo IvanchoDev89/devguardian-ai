@@ -197,3 +197,96 @@ export const githubApi = {
   create: (data: any) => api.post<any>('/api/github/integrations', data),
   delete: (id: string) => api.delete(`/api/github/integrations/${id}`)
 }
+
+// Vulnerabilities API
+export const vulnerabilitiesApi = {
+  list: () => api.get<any[]>('/api/v1/vulnerabilities'),
+  
+  get: (id: number) => api.get<any>(`/api/v1/vulnerabilities/${id}`),
+  
+  update: (id: number, data: any) => api.put<any>(`/api/v1/vulnerabilities/${id}`, data),
+  
+  getStats: () => api.get<any>('/api/v1/vulnerabilities/stats/summary')
+}
+
+// Health & Metrics API
+export const healthApi = {
+  check: () => api.get<any>('/api/v1/health'),
+  
+  ready: () => api.get<any>('/api/v1/health/ready'),
+  
+  live: () => api.get<any>('/api/v1/health/live'),
+  
+  metrics: () => api.get<any>('/api/v1/metrics')
+}
+
+// Secrets Scanner API
+export const secretsApi = {
+  scan: (code: string) => api.post<any>('/api/v1/secrets/scan', { code }),
+  
+  scanFile: (file: any) => api.post<any>('/api/v1/secrets/scan/file', file),
+  
+  getPatterns: () => api.get<any>('/api/v1/secrets/patterns')
+}
+
+// Cloud Scanner API
+export const cloudApi = {
+  scan: (config: any) => api.post<any>('/api/v1/cloud/scan', config),
+  
+  scanFile: (file: any) => api.post<any>('/api/v1/cloud/scan/file', file),
+  
+  getProviders: () => api.get<any>('/api/v1/cloud/providers'),
+  
+  getRules: (provider: string) => api.get<any>(`/api/v1/cloud/rules/${provider}`)
+}
+
+// Compliance API
+export const complianceApi = {
+  getFrameworks: () => api.get<any>('/api/v1/compliance/frameworks'),
+  
+  getControls: (framework: string) => api.get<any>(`/api/v1/compliance/frameworks/${framework}/controls`),
+  
+  generateReport: (data: any) => api.post<any>('/api/v1/compliance/report', data)
+}
+
+// Security Posture API
+export const postureApi = {
+  getStatistics: () => api.get<any>('/api/v1/posture/statistics'),
+  
+  getTrend: () => api.get<any>('/api/v1/posture/trend'),
+  
+  getRecommendations: () => api.get<any>('/api/v1/posture/recommendations'),
+  
+  record: (data: any) => api.post<any>('/api/v1/posture/record', data)
+}
+
+// Remediation API
+export const remediationApi = {
+  scan: (code: string, language: string) => api.post<any>('/api/v1/remediation/scan', { code, language }),
+  
+  getFix: (vulnerabilityType: string, code: string) => api.post<any>(`/api/v1/remediation/fix/${vulnerabilityType}`, { code }),
+  
+  getRules: () => api.get<any>('/api/v1/remediation/rules')
+}
+
+// SBOM API
+export const sbomApi = {
+  generate: (data: any) => api.post<any>('/api/v1/sbom/generate', data),
+  
+  getFormats: () => api.get<any>('/api/v1/sbom/formats'),
+  
+  getEcosystems: () => api.get<any>('/api/v1/sbom/ecosystems')
+}
+
+// Custom Rules API
+export const rulesApi = {
+  list: () => api.get<any[]>('/api/v1/rules/'),
+  
+  create: (rule: any) => api.post<any>('/api/v1/rules/', rule),
+  
+  scan: (code: string, rules: any[]) => api.post<any>('/api/v1/rules/scan', { code, rules }),
+  
+  toggle: (ruleId: string, enabled: boolean) => api.post<any>(`/api/v1/rules/${ruleId}/toggle`, { enabled }),
+  
+  delete: (ruleId: string) => api.delete<any>(`/api/v1/rules/${ruleId}`)
+}
