@@ -209,6 +209,77 @@ export const vulnerabilitiesApi = {
   getStats: () => api.get<any>('/api/v1/vulnerabilities/stats/summary')
 }
 
+// CI/CD Integration API
+export const cicdApi = {
+  scanPR: (data: {
+    repository_url: string
+    pr_number: number
+    commit_sha: string
+    branch: string
+    base_branch: string
+    files_changed: string[]
+    author: string
+    github_token?: string
+  }, policyId?: string) => 
+    api.post<any>(`/api/cicd/scan/pr?policy_id=${policyId || 'default'}`, data),
+  
+  scanPreCommit: (data: {
+    commit_sha: string
+    branch: string
+    files_changed: string[]
+    repository_url: string
+  }) => api.post<any>('/api/cicd/scan/pre-commit', data),
+  
+  getScanResult: (scanId: string) => api.get<any>(`/api/cicd/scan/${scanId}`),
+  
+  listPolicies: () => api.get<any[]>('/api/cicd/policies'),
+  
+  togglePolicy: (policyId: string, enabled: boolean) => 
+    api.post<any>(`/api/cicd/policies/${policyId}/toggle`, { enabled }),
+  
+  createPolicy: (policy: any) => api.post<any>('/api/cicd/policies', policy),
+  
+  getStatus: () => api.get<any>('/api/cicd/status')
+}
+
+// Notifications API
+export const notificationsApi = {
+  getStatus: () => api.get<any>('/api/notifications/status'),
+  
+  configureSlack: (config: { webhook_url: string; channel?: string; mention_on_critical?: boolean }) =>
+    api.post<any>('/api/notifications/slack/configure', config),
+  
+  configureDiscord: (config: { webhook_url: string }) =>
+    api.post<any>('/api/notifications/discord/configure', config),
+  
+  configureJira: (config: { 
+    jira_url: string; email: string; api_token: string; 
+    project_key: string; issue_type?: string 
+  }) => api.post<any>('/api/notifications/jira/configure', config),
+  
+  send: (notification: {
+    title: string
+    message: string
+    severity: string
+    findings?: any[]
+    scan_id?: string
+    repository?: string
+  }) => api.post<any>('/api/notifications/send', notification),
+  
+  createJiraTicket: (ticket: {
+    title: string
+    description: string
+    severity: string
+    labels?: string[]
+  }) => api.post<any>('/api/notifications/jira/ticket', ticket),
+  
+  removeSlack: () => api.delete<any>('/api/notifications/slack'),
+  
+  removeDiscord: () => api.delete<any>('/api/notifications/discord'),
+  
+  removeJira: () => api.delete<any>('/api/notifications/jira')
+}
+
 // Health & Metrics API
 export const healthApi = {
   check: () => api.get<any>('/api/v1/health'),
