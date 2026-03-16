@@ -10,7 +10,7 @@ We release patches for security vulnerabilities. The following versions are curr
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please send an email to security@devguardian.ai
+If you discover a security vulnerability, please send an email to ivanbermudez@protonmail.ch
 
 We appreciate all responsible disclosures and will work to quickly address any issues. Please include:
 
