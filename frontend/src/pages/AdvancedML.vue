@@ -260,7 +260,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { apiService } from '../services/api'
+import { scannerApi } from '../services/api_client'
 
 interface ScanForm {
   code: string

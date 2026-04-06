@@ -540,7 +540,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
-import { superAdminApi } from '../services/api'
+import { adminApi } from '../services/api_client'
 import { 
   LayoutDashboard, 
   Users, 

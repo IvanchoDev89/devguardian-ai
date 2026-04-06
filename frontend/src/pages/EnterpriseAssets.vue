@@ -180,7 +180,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { assetService } from '../services/api'
+import { assetsApi } from '../services/api_client'
 
 interface Asset {
   id: number

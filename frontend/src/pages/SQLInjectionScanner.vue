@@ -251,7 +251,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { aiService } from '../services/api'
+import { scannerApi } from '../services/api_client'
 import { useNotificationStore } from '../stores/notifications'
 import { useAuthStore } from '../stores/auth'
 import ScanProgress from '../components/ScanProgress.vue'

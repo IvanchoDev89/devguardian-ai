@@ -128,7 +128,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { messageService } from '../services/api'
+import { messagesApi } from '../services/api_client'
 
 interface Message {
   id: number

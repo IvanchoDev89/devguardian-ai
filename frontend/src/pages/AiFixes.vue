@@ -257,7 +257,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { aiFixApi } from '@/services/api'
+import { aiFixApi } from '../services/api_client'
 
 interface AiFix {
   id: string

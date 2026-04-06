@@ -204,7 +204,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { scannerApi } from '../services/api_new'
+import { scannerApi } from '../services/api_client'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()

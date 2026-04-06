@@ -96,7 +96,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { apiService } from '../services/api'
+import { billingApi } from '../services/api_client'
 
 const router = useRouter()
 

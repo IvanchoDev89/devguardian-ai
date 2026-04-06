@@ -324,7 +324,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { scannerApi } from '../services/api_new'
+import { adminApi } from '../services/api_client'
 
 const loading = ref(true)
 const todayScans = ref(0)
