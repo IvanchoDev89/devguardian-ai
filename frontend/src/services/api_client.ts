@@ -1,5 +1,9 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002'
 
+function getToken(): string | null {
+  return localStorage.getItem('access_token')
+}
+
 interface ApiResponse<T> {
   data: T | null
   success: boolean
@@ -23,8 +27,9 @@ class ApiClient {
       'Content-Type': 'application/json',
     }
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+    const authToken = token || getToken()
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`
     }
 
     const options: RequestInit = {

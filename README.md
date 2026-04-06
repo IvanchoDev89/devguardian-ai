@@ -1,34 +1,17 @@
 # DevGuardian AI 🛡️
 
-Enterprise-grade AI-powered security vulnerability scanner with real SAST tools integration.
+Enterprise-grade AI-powered security vulnerability scanner with real SAST (Static Application Security Testing) tools integration.
 
-## 🚀 Features
+## Overview
 
-### Core Security Scanning
-- **Real SAST Tools**: Semgrep + Bandit + gosec + Gitleaks + Trivy
-- **Multi-Language Support**: Python, JavaScript, Go, Docker
-- **Repository Scanning**: Clone and scan GitHub, GitLab, Bitbucket repositories
-- **Dependency Scanning**: pip-audit, npm audit
-- **Docker/K8s Security**: Scan Dockerfiles and Kubernetes configs
-- **Secrets Detection**: Hardcoded API keys, passwords, tokens
+DevGuardian AI is a comprehensive security platform that identifies vulnerabilities in code repositories using industry-standard security tools. It provides a modern Vue 3 frontend with a FastAPI backend, storing data in PostgreSQL.
 
-### User Management
-- **JWT Authentication**: Secure login/signup with access + refresh tokens
-- **Password Reset**: Secure password recovery flow
-- **Rate Limiting**: Prevent abuse
-
-### REST API Backend (FastAPI)
-- Full CRUD for vulnerabilities and scans
-- Multi-tool security scanning engine
-- PostgreSQL database
-- Comprehensive stats and analytics
-
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    Vue 3 Frontend (Port 3000)                      │
-│              (Dashboard, Scanner, Vulnerabilities)                   │
+│              (Dashboard, Scanner, Vulnerabilities)                 │
 └────────────────────────────┬──────────────────────────────────────┘
                              │ HTTP
                              ▼
@@ -36,82 +19,174 @@ Enterprise-grade AI-powered security vulnerability scanner with real SAST tools 
 │                    FastAPI Backend (Port 8002)                    │
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │ API Endpoints                                               │   │
-│  │ • /api/auth/* - Authentication (JWT + Refresh)              │   │
-│  │ • /api/vulnerabilities/* - CRUD + Stats                    │   │
-│  │ • /api/scans/* - CRUD                                     │   │
-│  │ • /api/scans/run - Multi-tool Scanner                     │   │
+│  │ • /api/auth/* - Authentication (JWT + Refresh Tokens)      │   │
+│  │ • /api/vulnerabilities/* - CRUD + Statistics                │   │
+│  │ • /api/scans/* - Scan Management                            │   │
+│  │ • /api/scans/run - Multi-tool Scanner                       │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │ Scanning Engine                                            │   │
-│  │ • Semgrep - Multi-language static analysis                 │   │
-│  │ • Bandit - Python security                                │   │
-│  │ • gosec - Go security                                     │   │
-│  │ • Gitleaks - Secrets detection                             │   │
-│  │ • pip-audit - Python dependencies                         │   │
-│  │ • npm audit - JavaScript dependencies                     │   │
-│  │ • Trivy - Docker container scanning                       │   │
+│  │ • Semgrep     - Multi-language static analysis             │   │
+│  │ • Bandit      - Python security vulnerabilities             │   │
+│  │ • gosec       - Go security vulnerabilities                  │   │
+│  │ • Gitleaks    - Secrets/credentials detection               │   │
+│  │ • pip-audit   - Python dependency vulnerabilities           │   │
+│  │ • npm audit   - JavaScript dependency vulnerabilities      │   │
+│  │ • Trivy       - Docker container image scanning             │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 └────────────────────────────┬──────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │              PostgreSQL Database (Port 5433)                       │
-│  Tables: users, vulnerabilities, scans, refresh_tokens,            │
-│           password_reset_tokens                                   │
+│  Tables: users, vulnerabilities, scans, refresh_tokens,          │
+│          password_reset_tokens                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-## 📋 Prerequisites
+## Tech Stack
 
-- Node.js 18+
-- Python 3.11+
-- PostgreSQL 16+
-- Docker (optional)
+| Component | Technology |
+|-----------|------------|
+| Frontend | Vue 3 + TypeScript + Pinia |
+| Backend | FastAPI (Python 3.11+) |
+| Database | PostgreSQL |
+| Authentication | JWT with Refresh Tokens |
+| Security Tools | Semgrep, Bandit, gosec, Gitleaks, Trivy |
 
-## 🛠️ Installation
+## Features
 
-### 1. Clone Repository
+### Core Security Scanning
+- **Multi-Language Support**: Python, JavaScript, Go, Docker
+- **Real SAST Integration**: Industry-standard security tools
+- **Repository Scanning**: Clone and scan GitHub, GitLab, Bitbucket repositories
+- **Dependency Scanning**: pip-audit, npm audit for vulnerable dependencies
+- **Docker Security**: Scan Dockerfiles and container images with Trivy
+- **Secrets Detection**: Hardcoded API keys, passwords, tokens, and credentials
+
+### User Management
+- **JWT Authentication**: Secure login/signup with access + refresh tokens
+- **Password Reset**: Secure password recovery flow
+- **Rate Limiting**: Protection against abuse on authentication endpoints
+
+### REST API Backend
+- Full CRUD operations for vulnerabilities and scans
+- Multi-tool security scanning engine
+- Comprehensive statistics and analytics
+- Pagination and filtering support
+
+## Prerequisites
+
+| Requirement | Version |
+|-------------|---------|
+| Node.js | 18+ |
+| Python | 3.11+ |
+| PostgreSQL | 16+ |
+| Docker | Optional |
+
+## Installation
+
+### 1. Clone the Repository
+
 ```bash
-git clone https://github.com/devguardian-ai/devguardian-ai.git
+git clone https://github.com/IvanchoDev89/devguardian-ai.git
 cd devguardian-ai
 ```
 
-### 2. Backend Setup
+### 2. Backend Setup (FastAPI)
+
 ```bash
 cd backend
 
 # Create virtual environment
 python3 -m venv venv
+
+# Activate virtual environment
 source venv/bin/activate  # Linux/Mac
 # venv\Scripts\activate   # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure environment
+# Configure environment variables
 cp .env.example .env
-# Edit .env with your PostgreSQL credentials
+# Edit .env with your PostgreSQL credentials:
+# DATABASE_URL=postgresql://user:password@localhost:5433/devguardian
+# SECRET_KEY=your-secret-key-here
+# ACCESS_TOKEN_EXPIRE_MINUTES=30
+# REFRESH_TOKEN_EXPIRE_DAYS=7
 
-# Start server (creates tables automatically)
+# Start the backend server
+# Database tables are created automatically on first run
 uvicorn app.main:app --host 127.0.0.1 --port 8002
 ```
 
-### 3. Frontend Setup
+The backend will be available at `http://127.0.0.1:8002`
+
+API documentation (Swagger UI): `http://127.0.0.1:8002/docs`
+
+### 3. Frontend Setup (Vue 3)
+
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
+
+# Configure environment
+# Create .env file:
+# VITE_API_BASE_URL=http://127.0.0.1:8002
+
+# Start development server
 npm run dev
 ```
 
-### 4. Docker (Optional)
+The frontend will be available at `http://localhost:3000`
+
+### 4. Docker Setup (Optional)
+
+For containerized deployment with PostgreSQL:
+
 ```bash
-# With PostgreSQL
+# Start all services
 docker-compose -f docker-compose.dev.yml up -d
+
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f backend
 ```
 
-## 📡 API Endpoints
+## Security Tools Installation
+
+For full scanning capabilities, install the security tools:
+
+```bash
+# Python security - Bandit
+pip install bandit
+
+# Multi-language analysis - Semgrep
+pip install semgrep
+semgrep install
+
+# Go security - gosec
+go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+# Secrets detection - Gitleaks
+# Download from: https://github.com/gitleaks/gitleaks/releases
+
+# Container scanning - Trivy
+# Download from: https://github.com/aquasecurity/trivy/releases
+
+# Python dependencies - pip-audit
+pip install pip-audit
+
+# JavaScript dependencies - npm audit (included with Node.js)
+npm audit
+```
+
+## API Endpoints
 
 ### Authentication
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/auth/register` | POST | Register new user |
@@ -119,10 +194,11 @@ docker-compose -f docker-compose.dev.yml up -d
 | `/api/auth/refresh` | POST | Refresh access token |
 | `/api/auth/logout` | POST | Revoke refresh token |
 | `/api/auth/me` | GET | Get current user profile |
-| `/api/auth/request-password-reset` | POST | Request password reset |
+| `/api/auth/request-password-reset` | POST | Request password reset email |
 | `/api/auth/reset-password` | POST | Reset password with token |
 
 ### Vulnerabilities
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/vulnerabilities` | GET | List vulnerabilities (paginated) |
@@ -133,27 +209,30 @@ docker-compose -f docker-compose.dev.yml up -d
 | `/api/vulnerabilities/stats/summary` | GET | Get vulnerability statistics |
 
 ### Scans
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/scans` | GET | List scans |
-| `/api/scans` | POST | Create scan |
+| `/api/scans` | GET | List scans (paginated) |
+| `/api/scans` | POST | Create new scan |
 | `/api/scans/{id}` | GET | Get scan details |
 | `/api/scans/{id}` | PUT | Update scan |
 | `/api/scans/{id}` | DELETE | Delete scan |
 | `/api/scans/stats/summary` | GET | Get scan statistics |
-| `/api/scans/run` | POST | **Execute security scan** |
+| `/api/scans/run` | POST | Execute security scan |
 
 ### Health
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/health` | GET | Health check |
 | `/` | GET | API information |
 
-## 🔍 Scanning Engine
+## Scanning Engine
 
 ### Supported Scan Types
+
 | Type | Tools Used | Description |
-|------|------------|-------------|
+|------|-------------|-------------|
 | `all` | All tools | Complete security scan |
 | `python` | Semgrep, Bandit, gosec | Python code analysis |
 | `javascript` | Semgrep, npm audit | JavaScript/TypeScript |
@@ -162,147 +241,147 @@ docker-compose -f docker-compose.dev.yml up -d
 | `dependencies` | pip-audit, npm audit | Vulnerable dependencies |
 | `docker` | Trivy | Container scanning |
 
-### Example: Execute a Scan
+### Example: Execute a Security Scan
+
 ```bash
-# Login and get token
+# Step 1: Login and get access token
 TOKEN=$(curl -s -X POST http://127.0.0.1:8002/api/auth/login \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=admin@example.com&password=Pass123456" \
+  -d "username=admin@example.com&password=YourPassword123" \
   | jq -r '.access_token')
 
-# Run a Python security scan
+# Step 2: Run a Python security scan
 curl -X POST http://127.0.0.1:8002/api/scans/run \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "scan_type": "python",
-    "target": "/path/to/your/code",
-    "options": {
-      "timeout": 120,
-      "rules": "p/owasp-top-ten"
-    }
+    "target": "/path/to/your/python/code"
   }'
+
+# Step 3: Get scan results
+curl -H "Authorization: Bearer $TOKEN" \
+  http://127.0.0.1:8002/api/scans/1
+```
+
+### Scan Response Format
+
+```json
+{
+  "id": 1,
+  "name": "Python Scan",
+  "scan_type": "python",
+  "status": "completed",
+  "target": "/path/to/code",
+  "results": {
+    "semgrep": {
+      "vulnerabilities": [...],
+      "summary": { "high": 3, "medium": 5, "low": 2 }
+    },
+    "bandit": {
+      "issues": [...],
+      "confidence": "HIGH"
+    }
+  },
+  "vulnerabilities_found": 10,
+  "created_at": "2026-04-06T12:00:00Z",
+  "completed_at": "2026-04-06T12:05:00Z"
+}
 ```
 
 ## Environment Variables
 
 ### Backend (.env)
-```env
-# Database (PostgreSQL)
-DATABASE_URL=postgresql://devguardian:devguardian_password@127.0.0.1:5433/devguardian_ai
-USE_POSTGRES=true
 
-# JWT
-SECRET_KEY=your-super-secret-key-at-least-32-characters-long
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+```bash
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5433/devguardian
 
 # Security
-EMAIL_VERIFICATION_REQUIRED=false
+SECRET_KEY=your-super-secret-key-change-in-production
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+ALGORITHM=HS256
 
-# App
-DEBUG=true
+# Server
+HOST=127.0.0.1
+PORT=8002
 ```
 
 ### Frontend (.env)
-```env
-VITE_API_BASE_URL=http://localhost:8002
-```
-
-## 🎯 Quick Start
-
-1. **Start Backend**: `cd backend && uvicorn app.main:app --host 127.0.0.1 --port 8002`
-2. **Start Frontend**: `cd frontend && npm run dev`
-3. **Access**: http://localhost:3000
-4. **Register**: Create account at /signup
-5. **Scan**: Navigate to /app/scan
-
-## 🔒 Security Features
-
-### Authentication
-- JWT access tokens (30 min expiry)
-- Refresh tokens (30 day expiry)
-- Secure password hashing (bcrypt)
-- Rate limiting (5 requests/minute)
-
-### Detected Vulnerabilities
-- **Code Injection**: SQL, Command, Code, XSS
-- **Cryptography**: Weak algorithms, hardcoded keys
-- **Authentication**: Hardcoded credentials
-- **Dependencies**: Known CVEs
-
-## 📊 Database Schema
-
-```
-users
-├── id (PK)
-├── email (unique)
-├── username (unique)
-├── hashed_password
-├── full_name
-├── is_active
-├── is_superuser
-├── verification_token
-└── timestamps
-
-vulnerabilities
-├── id (PK)
-├── title
-├── description
-├── severity (critical|high|medium|low)
-├── status (open|in_progress|resolved|false_positive)
-├── cwe_id
-├── cvss_score
-├── file_path
-├── line_number
-├── code_snippet
-├── fix_suggestion
-├── owner_id (FK)
-├── scan_id (FK, nullable)
-└── timestamps
-
-scans
-├── id (PK)
-├── name
-├── scan_type
-├── status (pending|running|completed|failed)
-├── target
-├── results (JSON)
-├── owner_id (FK)
-├── created_at
-└── completed_at
-
-refresh_tokens / password_reset_tokens
-├── id (PK)
-├── token (hashed)
-├── user_id (FK)
-├── expires_at
-└── created_at
-```
-
-## 🧪 Testing
 
 ```bash
-# Run all tests
-cd backend
-PYTHONPATH=. python3 -m pytest tests/ -v
-
-# Run specific test file
-PYTHONPATH=. python3 -m pytest tests/test_api.py -v
+VITE_API_BASE_URL=http://127.0.0.1:8002
 ```
 
-## 🤝 Contributing
+## Project Structure
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+```
+devguardian-ai/
+├── backend/                    # FastAPI backend
+│   ├── app/
+│   │   ├── api/endpoints/     # API route handlers
+│   │   │   ├── auth.py        # Authentication endpoints
+│   │   │   ├── vulnerabilities.py
+│   │   │   ├── scans.py
+│   │   │   └── scanning.py    # Security scanning engine
+│   │   ├── core/              # Core functionality
+│   │   │   ├── config.py      # Settings
+│   │   │   ├── database.py    # Database connection
+│   │   │   └── security.py    # JWT/password handling
+│   │   └── models/            # Database models & schemas
+│   ├── tests/                 # Backend tests
+│   ├── Dockerfile             # Container image
+│   ├── requirements.txt       # Python dependencies
+│   └── .env.example           # Environment template
+│
+├── frontend/                   # Vue 3 frontend
+│   ├── src/
+│   │   ├── pages/             # Vue page components
+│   │   ├── components/        # Reusable components
+│   │   ├── stores/            # Pinia state management
+│   │   ├── services/          # API client
+│   │   └── styles.css         # Global styles
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── docker-compose.dev.yml     # Docker configuration
+├── README.md                   # This file
+├── SETUP.md                   # Detailed setup guide
+└── SECURITY.md                # Security policy
+```
 
-## 📄 License
+## Testing
 
-MIT License - see [LICENSE](LICENSE) for details.
+### Backend Tests
 
----
+```bash
+cd backend
+source venv/bin/activate
+python -m pytest tests/ -v
+```
 
-Built with ❤️ by DevGuardian AI Team
+### API Health Check
+
+```bash
+curl http://127.0.0.1:8002/health
+# Expected: {"status":"ok"}
+```
+
+## Security Considerations
+
+- All ports are bound to `127.0.0.1` for local development
+- JWT tokens include expiration times
+- Passwords are hashed (bcrypt/SHA256)
+- Rate limiting on authentication endpoints
+- CORS configured for frontend origin only
+
+## License
+
+MIT License - See LICENSE file for details
+
+## Support
+
+For issues and questions:
+- GitHub Issues: https://github.com/IvanchoDev89/devguardian-ai/issues
+- Security vulnerabilities: See SECURITY.md

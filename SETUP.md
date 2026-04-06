@@ -1,280 +1,254 @@
 # DevGuardian AI - Local Development Setup
 
-This guide covers setting up the DevGuardian AI vulnerability scanner for local development.
+Complete setup guide for running DevGuardian AI locally.
+
+## Architecture Overview
+
+DevGuardian AI consists of two main components:
+
+1. **Frontend** (Vue 3 + TypeScript) - Port 3000
+2. **Backend** (FastAPI + PostgreSQL) - Port 8002
+
+The previous Laravel backend and separate AI service have been deprecated. All functionality is now in the FastAPI backend.
 
 ## Prerequisites
 
-- Node.js 18+
-- Python 3.11+
-- SQLite (included)
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| Node.js | 18+ | For frontend |
+| Python | 3.11+ | For backend |
+| PostgreSQL | 16+ | For database |
+| Git | Any | For cloning |
+
+### Optional: Security Tools
+
+For full scanning capabilities, install:
+
+```bash
+# Bandit - Python security
+pip install bandit
+
+# Semgrep - Multi-language analysis
+pip install semgrep
+
+# gosec - Go security
+go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+# Gitleaks - Secrets detection
+# Download from: https://github.com/gitleaks/gitleaks/releases
+
+# Trivy - Container scanning
+# Download from: https://github.com/aquasecurity/trivy/releases
+```
 
 ## Quick Start
 
-### 1. Start AI Service (Required)
+### Step 1: Start PostgreSQL
+
+**Option A: Docker**
+```bash
+docker run -d \
+  --name devguardian-postgres \
+  -e POSTGRES_DB=devguardian \
+  -e POSTGRES_USER=devguardian \
+  -e POSTGRES_PASSWORD=devguardian123 \
+  -p 5433:5432 \
+  postgres:16
+```
+
+**Option B: Local PostgreSQL**
+```bash
+# Create database
+createdb -U postgres devguardian
+# Or use pgAdmin/Adminer
+```
+
+### Step 2: Start Backend
 
 ```bash
-cd ai-service
+cd backend
 
 # Create virtual environment
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate    # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Install security tools (optional but recommended)
-pip install semgrep bandit
+# Configure environment
+cp .env.example .env
+# Edit .env with your database URL:
+# DATABASE_URL=postgresql://devguardian:devguardian123@localhost:5433/devguardian
 
-# Start the server
-uvicorn main:app --host 0.0.0.0 --port 8003
+# Start server
+uvicorn app.main:app --host 127.0.0.1 --port 8002
 ```
 
-### 2. Verify API is Running
+On first run, database tables are created automatically.
 
+Verify backend is running:
 ```bash
-curl http://localhost:8003/api/v1/health
-# Expected: {"status":"healthy","timestamp":"...","service":"DevGuardian AI Service","version":"1.0.0"}
+curl http://127.0.0.1:8002/health
+# {"status":"ok"}
 ```
 
-### 3. Start Frontend
+API documentation: http://127.0.0.1:8002/docs
+
+### Step 3: Start Frontend
 
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
+
+# Configure environment
+# Create .env file:
+echo "VITE_API_BASE_URL=http://127.0.0.1:8002" > .env
+
+# Start development server
 npm run dev
 ```
 
-### 4. Access the Application
+Frontend available at: http://localhost:3000
 
-- **Frontend**: http://localhost:3001
-- **Scanner**: http://localhost:3001/scan
-- **Repositories**: http://localhost:3001/repositories
-- **Admin**: http://localhost:3001/admin
-- **API**: http://localhost:8003
+## Docker Deployment
 
-## API Endpoints
-
-### Health Check
-```
-GET /api/v1/health
-```
-
-### Real Security Scanner (Semgrep + Bandit)
-```
-POST /api/v1/security/scan/code
-Content-Type: application/json
-
-{
-  "code": "import os\nos.system('ls')",
-  "language": "python"
-}
-```
-
-### Repository Scanner
-```
-POST /api/v1/security/scan/repository
-Content-Type: application/json
-
-{
-  "repo_url": "https://github.com/owner/repo",
-  "provider": "github",
-  "branch": "main"
-}
-```
-
-### Legacy Basic Scanner
-```
-POST /api/v1/analyze-code
-Content-Type: application/json
-
-{
-  "code": "string (max 50KB)",
-  "language": "python|javascript|typescript|java|csharp|php|go|rust"
-}
-```
-
-### Authentication
-```
-POST /api/auth/register
-POST /api/auth/login
-GET /api/auth/me
-```
-```
-
-### Get Supported Languages
-```
-GET /api/v1/languages
-```
-
-## Environment Variables
-
-### AI Service (.env)
-
-Create `.env` in `ai-service/`:
-
-```env
-PORT=8000
-HOST=0.0.0.0
-LOG_LEVEL=info
-
-# Optional: OpenAI API (for AI analysis)
-OPENAI_API_KEY=sk-...
-
-# Optional: Claude API (for AI analysis)
-ANTHROPIC_API_KEY=sk-ant-...
-
-# Optional: Ollama (local AI)
-OLLAMA_BASE_URL=http://localhost:11434
-```
-
-### Frontend (.env)
-
-The frontend already has defaults configured:
-
-```env
-VITE_API_BASE_URL=http://localhost:8001/api
-VITE_AI_SERVICE_URL=http://localhost:## Supported Vulnerabilities
-
-The8000
-```
-
- scanner detects:
-- **SQL Injection** - String concatenation in queries
-- **Hardcoded Passwords** - Credentials in source code
-- **Hardcoded API Keys** - Secrets and tokens
-- **XSS** - Cross-site scripting patterns
-- **Command Injection** - Unsafe system calls
-- **Weak Cryptography** - MD5, SHA1 usage
-- **Path Traversal** - Unsafe file operations
-- **Insecure Deserialization** - Pickle/YAML loading
-
-## Running Tests
+For containerized deployment:
 
 ```bash
-cd ai-service
-source venv/bin/activate
+# Start all services (backend + PostgreSQL)
+docker-compose -f docker-compose.dev.yml up -d
 
-# Run all tests
-pytest tests/ -v
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f
 
-# Run specific test file
-pytest tests/test_vulnerability_scanner.py -v
+# Stop services
+docker-compose -f docker-compose.dev.yml down
 ```
 
-## Project Structure
+## Testing the Setup
 
+### 1. Register a User
+
+```bash
+curl -X POST http://127.0.0.1:8002/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "username": "admin",
+    "password": "Password123",
+    "full_name": "Admin User"
+  }'
 ```
-devguardian-ai/
-├── README.md                 # Project overview
-├── SETUP.md                  # This file
-├── ai-service/               # Python FastAPI service
-│   ├── main.py               # Application entry point
-│   ├── requirements.txt      # Python dependencies
-│   ├── app/
-│   │   ├── scanners/
-│   │   │   └── vulnerability_scanner.py  # Core scanner
-│   │   ├── services/
-│   │   │   └── llm_analyzer.py            # AI analysis
-│   │   └── api/
-│   │       └── endpoints/
-│   │           ├── vulnerability_analyzer.py
-│   │           └── llm_analyzer.py
-│   └── tests/
-│       ├── test_vulnerability_scanner.py
-│       └── test_llm_analyzer.py
-├── frontend/                 # Vue 3 frontend
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Landing.vue    # Home page
-│   │   │   └── ScanPage.vue   # Scanner page
-│   │   ├── components/
-│   │   │   └── Navbar.vue
-│   │   └── services/
-│   │       └── api.ts
-│   └── package.json
-└── laravel-backend/         # Optional Laravel API (not required for MVP)
+
+### 2. Login
+
+```bash
+curl -X POST http://127.0.0.1:8002/api/auth/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin@example.com&password=Password123"
+```
+
+Response includes `access_token` and `refresh_token`.
+
+### 3. Create a Vulnerability
+
+```bash
+TOKEN="your-access-token"
+
+curl -X POST http://127.0.0.1:8002/api/vulnerabilities \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "SQL Injection",
+    "description": "Unparameterized SQL query",
+    "severity": "high",
+    "status": "open",
+    "file_path": "src/db/query.py",
+    "cwe_id": "CWE-89"
+  }'
+```
+
+### 4. Run a Security Scan
+
+```bash
+TOKEN="your-access-token"
+
+curl -X POST http://127.0.0.1:8002/api/scans/run \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scan_type": "python",
+    "target": "/path/to/your/code"
+  }'
 ```
 
 ## Troubleshooting
 
+### PostgreSQL Connection Error
+
+```
+sqlalchemy.exc.OperationalError: could not connect to server
+```
+
+**Solution**: Ensure PostgreSQL is running and the connection string in `.env` is correct.
+
 ### Port Already in Use
+
+```
+ERROR: bind: address already in use
+```
+
+**Solution**: Check if port 8002 is in use:
 ```bash
-# Find process using port 8000
-lsof -ti:8000
-
-# Kill it
-lsof -ti:8000 | xargs kill -9
+lsof -i :8002
+# Kill the process or change port in .env
 ```
 
-### Import Errors
-Ensure you're running from the correct directory and virtual environment is activated.
+### Module Not Found
 
-### Frontend not loading
-Check the frontend is running on port 3000:
+```
+ModuleNotFoundError: No module named 'fastapi'
+```
+
+**Solution**: Activate the virtual environment:
 ```bash
-curl http://localhost:3000
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### Tests Failing
-Ensure all dependencies are installed:
-```bash
-pip install pytest pytest-asyncio httpx
+### Frontend CORS Error
+
+```
+Access to fetch at 'http://127.0.0.1:8002' from origin 'http://localhost:3000' blocked by CORS policy
 ```
 
-## API Examples
+**Solution**: This should be handled by the backend. If persists, check CORS settings in `backend/app/core/config.py`.
 
-### Basic Vulnerability Scan
-```bash
-curl -X POST http://localhost:8000/api/v1/analyze-code \
-  -H "Content-Type: application/json" \
-  -d '{"code": "password = \"mysecret123\"\nquery = f\"SELECT * FROM users WHERE id = {user_id}\"", "language": "python"}'
-```
+## Environment Variables Reference
 
-Response:
-```json
-{
-  "vulnerabilities": [
-    {
-      "line_number": 1,
-      "vulnerability_type": "Hardcoded Password",
-      "severity": "critical",
-      "description": "Hardcoded password detected. Use environment variables.",
-      "cwe_id": "CWE-259"
-    },
-    {
-      "line_number": 2,
-      "vulnerability_type": "SQL Injection",
-      "severity": "critical",
-      "description": "SQL query built using string interpolation.",
-      "cwe_id": "CWE-89"
-    }
-  ],
-  "score": 60,
-  "total_vulnerabilities": 2
-}
-```
+### Backend (.env)
 
-### AI Analysis (requires API key)
-```bash
-curl -X POST http://localhost:8000/api/llm/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "vulnerability": {
-      "type": "sql_injection",
-      "severity": "critical",
-      "message": "SQL query built using string interpolation"
-    },
-    "code_snippet": "query = f\"SELECT * FROM users WHERE id = {user_id}\"",
-    "language": "python",
-    "generate_fix": true
-  }'
-```
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+| `SECRET_KEY` | JWT signing key | Required |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration | 30 |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token expiration | 7 |
+| `ALGORITHM` | JWT algorithm | HS256 |
+| `HOST` | Server host | 127.0.0.1 |
+| `PORT` | Server port | 8002 |
+
+### Frontend (.env)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_BASE_URL` | Backend URL | http://127.0.0.1:8002 |
 
 ## Next Steps
 
-1. ✅ Basic vulnerability scanner (MVP) - DONE
-2. ✅ Web interface with scan page - DONE
-3. [ ] Database integration for storing scan history
-4. [ ] User authentication
-5. [ ] Repository scanning
-6. [ ] Advanced AI models for fix generation
+- Review security tools installation for full scanning capabilities
+- Explore the API at http://127.0.0.1:8002/docs
+- Access the frontend dashboard at http://localhost:3000
