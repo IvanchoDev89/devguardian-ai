@@ -68,8 +68,11 @@
     <!-- Recent Vulnerabilities -->
     <div class="bg-slate-800/50 rounded-xl border border-white/10 p-5">
       <h2 class="text-lg font-semibold text-white mb-4">Recent Vulnerabilities</h2>
-      <div v-if="vulnerabilities.length === 0" class="text-gray-400 text-center py-8">
-        No vulnerabilities found
+      <div v-if="loading" class="text-gray-400 text-center py-8">
+        Loading...
+      </div>
+      <div v-else-if="vulnerabilities.length === 0" class="text-gray-400 text-center py-8">
+        No vulnerabilities found. Run a scan to get started.
       </div>
       <div v-else class="space-y-3">
         <div v-for="vuln in vulnerabilities.slice(0, 5)" :key="vuln.id" 
@@ -78,7 +81,7 @@
             <div :class="['w-2 h-2 rounded-full', severityColor(vuln.severity)]"></div>
             <div>
               <p class="text-white text-sm">{{ vuln.title }}</p>
-              <p class="text-gray-500 text-xs">{{ vuln.file }} • {{ vuln.cwe_id }}</p>
+              <p class="text-gray-500 text-xs">{{ vuln.file_path || 'N/A' }} • {{ vuln.cwe_id || 'N/A' }}</p>
             </div>
           </div>
           <span :class="['px-2 py-1 text-xs rounded-full', severityBadge(vuln.severity)]">
@@ -93,10 +96,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { api } from '../services/api_client'
 
 const authStore = useAuthStore()
-const userName = computed(() => authStore.user?.name || 'User')
+const userName = computed(() => {
+  const u = authStore.user
+  return u?.username || u?.name || 'User'
+})
+const token = computed(() => authStore.token)
 
+const loading = ref(true)
 const stats = ref({
   totalScans: 0,
   critical: 0,
@@ -126,18 +135,32 @@ const severityBadge = (severity: string) => {
   return badges[severity] || 'bg-gray-500/20 text-gray-400'
 }
 
-onMounted(async () => {
+const loadData = async () => {
+  if (!token.value) {
+    loading.value = false
+    return
+  }
+
   try {
-    const res = await fetch('http://localhost:8003/api/v1/vulnerabilities')
-    const data = await res.json()
-    vulnerabilities.value = data || []
-    
-    stats.value.totalScans = 156
-    stats.value.critical = data.filter((v: any) => v.severity === 'critical').length
-    stats.value.fixed = 23
+    const [vulns, scanStats, vulnStats] = await Promise.all([
+      api.get<any[]>('/api/vulnerabilities?limit=5', token.value as string),
+      api.get<any>('/api/scans/stats/summary', token.value as string),
+      api.get<any>('/api/vulnerabilities/stats/summary', token.value as string)
+    ])
+
+    vulnerabilities.value = vulns || []
+    stats.value.totalScans = scanStats?.total || 0
+    stats.value.critical = vulnStats?.critical || 0
+    stats.value.fixed = vulnStats?.resolved || 0
     stats.value.score = Math.max(0, 100 - (stats.value.critical * 15))
   } catch (e) {
-    console.error('Failed to load data:', e)
+    console.error('Failed to load dashboard data:', e)
+  } finally {
+    loading.value = false
   }
+}
+
+onMounted(() => {
+  loadData()
 })
 </script>

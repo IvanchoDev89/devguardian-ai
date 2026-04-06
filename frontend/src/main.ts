@@ -49,7 +49,7 @@ const routes = [
       {
         path: 'vulnerabilities',
         name: 'Vulnerabilities',
-        component: () => import('./pages/Vulnerabilities.vue')
+        component: () => import('./pages/VulnerabilitiesNew.vue')
       },
       {
         path: 'security-tools',
@@ -162,7 +162,33 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 
+// Navigation guard for protected routes
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  
+  // Protected routes
+  if (to.path.startsWith('/app')) {
+    if (!authStore.isAuthenticated) {
+      next({ path: '/login', query: { redirect: to.fullPath } })
+      return
+    }
+  }
+  
+  // Auth routes (already logged in)
+  if ((to.path === '/login' || to.path === '/signup') && authStore.isAuthenticated) {
+    next('/app/dashboard')
+    return
+  }
+  
+  next()
+})
+
+// Initialize stores
 import { useThemeStore } from './stores/theme'
+import { useAuthStore } from './stores/auth'
+
+const authStore = useAuthStore()
+authStore.initAuthState()
 
 const themeStore = useThemeStore()
 themeStore.initTheme()

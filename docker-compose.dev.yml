@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: devguardian-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: devguardian
+      POSTGRES_USER: devguardian
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devguardian123}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devguardian -d devguardian"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: devguardian-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend (Development with PostgreSQL)
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: devguardian-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://devguardian:${POSTGRES_PASSWORD:-devguardian_password}@postgres:5433/devguardian_ai
+      USE_POSTGRES: "true"
+      REDIS_URL: redis://redis:6379
+      USE_REDIS: "false"
+      SECRET_KEY: ${BACKEND_SECRET_KEY:-change-me-in-production}
+      EMAIL_VERIFICATION_REQUIRED: "false"
+    ports:
+      - "127.0.0.1:8002:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FastAPI Backend (Production with PostgreSQL)
+  backend-prod:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: devguardian-backend-prod
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://devguardian:${POSTGRES_PASSWORD:-devguardian_password}@postgres:5432/devguardian_ai
+      USE_POSTGRES: "true"
+      REDIS_URL: redis://redis:6379
+      USE_REDIS: "true"
+      SECRET_KEY: ${BACKEND_SECRET_KEY}
+      EMAIL_VERIFICATION_REQUIRED: "true"
+    ports:
+      - "127.0.0.1:8002:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: devguardian-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: http://localhost:8002
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "127.0.0.1:3000:3000"
+
+volumes:
+  postgres_data:
+  redis_data:

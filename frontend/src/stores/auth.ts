@@ -1,145 +1,169 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { authApi, apiKeysApi, scannerApi, auditApi, githubApi } from '../services/api_new'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<any>(null)
-  const token = ref<string | null>(localStorage.getItem('access_token'))
-  const refreshToken = ref<string | null>(localStorage.getItem('refresh_token'))
+  const user = ref<{ id: number; email: string; username: string; full_name?: string } | null>(null)
+  const token = ref<string | null>(localStorage.getItem('dev_token'))
+  const refreshToken = ref<string | null>(localStorage.getItem('dev_refresh_token'))
+  const isLoading = ref(false)
   const plan = ref<string>('free')
   const scansUsed = ref(0)
   const scansQuota = ref(50)
-  const isLoading = ref(false)
-  const auditLogs = ref<any[]>([])
-  const githubIntegrations = ref<any[]>([])
-  
-  const initAuthState = () => {
-    const storedToken = localStorage.getItem('access_token')
-    const storedRefresh = localStorage.getItem('refresh_token')
-    const storedUser = localStorage.getItem('user')
-    const storedPlan = localStorage.getItem('plan')
-    
-    if (storedToken && storedUser) {
-      token.value = storedToken
-      refreshToken.value = storedRefresh
-      try {
-        user.value = JSON.parse(storedUser)
-      } catch {
-        user.value = null
-      }
-      plan.value = storedPlan || 'free'
-    }
-  }
-  
-  initAuthState()
-  
+
   const isAuthenticated = computed(() => !!token.value)
-  const isAdmin = computed(() => user.value?.role === 'super_admin' || user.value?.role === 'admin')
-  
-  const login = async (email: string, password: string) => {
+  const isAdmin = computed(() => user.value?.is_superuser === true)
+
+  async function login(email: string, password: string) {
     isLoading.value = true
     try {
-      const response = await authApi.login(email, password)
-      
-      token.value = response.access_token
-      refreshToken.value = response.refresh_token
-      
-      localStorage.setItem('access_token', response.access_token)
-      localStorage.setItem('refresh_token', response.refresh_token)
-      
-      // Get user info
-      const userInfo = await authApi.me()
-      user.value = userInfo
-      localStorage.setItem('user', JSON.stringify(userInfo))
-      
-      // Get usage stats
-      try {
-        const usage = await apiKeysApi.getUsage()
-        plan.value = usage.plan
-        scansUsed.value = usage.scans_used
-        scansQuota.value = usage.monthly_quota
-        localStorage.setItem('plan', usage.plan)
-      } catch (e) {
-        console.error('Failed to get usage:', e)
+      const formData = new URLSearchParams()
+      formData.append('username', email)
+      formData.append('password', password)
+
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || 'Login failed')
       }
-      
+
+      const data = await response.json()
+      token.value = data.access_token
+      refreshToken.value = data.refresh_token
+      localStorage.setItem('dev_token', data.access_token)
+      localStorage.setItem('dev_refresh_token', data.refresh_token)
+
+      await fetchUser()
       return { success: true }
     } catch (error: any) {
-      console.error('Login error:', error)
-      // Fallback for demo - try mock login
-      if (email === 'admin@devguardian.ai' && password === 'admin123') {
-        const mockToken = `demo_${Date.now()}`
-        token.value = mockToken
-        user.value = { user_id: 'admin_1', email, name: 'Admin', role: 'admin' }
-        plan.value = 'enterprise'
-        scansUsed.value = 0
-        scansQuota.value = 999999
-        localStorage.setItem('access_token', mockToken)
-        localStorage.setItem('user', JSON.stringify(user.value))
-        localStorage.setItem('plan', 'enterprise')
-        return { success: true }
-      }
-      return { success: false, error: error.message || 'Login failed' }
+      return { success: false, message: error.message }
     } finally {
       isLoading.value = false
     }
   }
-  
-  const logout = async () => {
+
+  async function register(name: string, email: string, password: string) {
+    isLoading.value = true
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email, 
+          username: email.split('@')[0], 
+          password, 
+          full_name: name 
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || 'Registration failed')
+      }
+
+      // After registration, try to auto-login
+      // Note: User needs to verify email first in production
+      return await login(email, password)
+    } catch (error: any) {
+      return { success: false, message: error.message }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function refreshAccessToken() {
+    if (!refreshToken.value) return false
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken.value }),
+      })
+
+      if (!response.ok) {
+        logout()
+        return false
+      }
+
+      const data = await response.json()
+      token.value = data.access_token
+      refreshToken.value = data.refresh_token
+      localStorage.setItem('dev_token', data.access_token)
+      localStorage.setItem('dev_refresh_token', data.refresh_token)
+      return true
+    } catch {
+      logout()
+      return false
+    }
+  }
+
+  async function fetchUser() {
+    if (!token.value) return
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token.value}` },
+      })
+      if (response.ok) {
+        user.value = await response.json()
+        localStorage.setItem('user', JSON.stringify(user.value))
+      } else if (response.status === 401) {
+        // Try to refresh token
+        const refreshed = await refreshAccessToken()
+        if (refreshed) {
+          await fetchUser()
+        }
+      }
+    } catch {
+      // Silent fail
+    }
+  }
+
+  function logout() {
+    if (refreshToken.value) {
+      fetch(`${API_BASE}/api/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken.value }),
+      }).catch(() => {})
+    }
+    
     user.value = null
     token.value = null
     refreshToken.value = null
     plan.value = 'free'
     scansUsed.value = 0
     scansQuota.value = 50
-    
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('dev_token')
+    localStorage.removeItem('dev_refresh_token')
     localStorage.removeItem('user')
     localStorage.removeItem('plan')
   }
 
-  const register = async (name: string, email: string, password: string) => {
-    isLoading.value = true
-    try {
-      const response = await authApi.register(name, email, password)
-      
-      // Auto login after register
-      return await login(email, password)
-    } catch (error: any) {
-      return { success: false, error: error.message || 'Registration failed' }
-    } finally {
-      isLoading.value = false
-    }
-  }
-  
-  const refreshUsage = async () => {
-    try {
-      const usage = await apiKeysApi.getUsage()
-      plan.value = usage.plan
-      scansUsed.value = usage.scans_used
-      scansQuota.value = usage.monthly_quota
-      localStorage.setItem('plan', usage.plan)
-    } catch (e) {
-      console.error('Failed to refresh usage:', e)
-    }
-  }
-
-  const loadAuditLogs = async () => {
-    if (!isAdmin.value) return
-    try {
-      const response = await auditApi.getLogs()
-      auditLogs.value = response.logs || []
-    } catch (e) {
-      console.error('Failed to load audit logs:', e)
-    }
-  }
-
-  const loadGithubIntegrations = async () => {
-    try {
-      githubIntegrations.value = await githubApi.list()
-    } catch (e) {
-      console.error('Failed to load GitHub integrations:', e)
+  function initAuthState() {
+    const storedToken = localStorage.getItem('dev_token')
+    const storedRefresh = localStorage.getItem('dev_refresh_token')
+    const storedUser = localStorage.getItem('user')
+    const storedPlan = localStorage.getItem('plan')
+    
+    if (storedToken) {
+      token.value = storedToken
+      refreshToken.value = storedRefresh
+      if (storedUser) {
+        try {
+          user.value = JSON.parse(storedUser)
+        } catch {}
+      }
+      if (storedPlan) {
+        plan.value = storedPlan
+      }
+      fetchUser()
     }
   }
 
@@ -147,20 +171,17 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     token,
     refreshToken,
+    isLoading,
     plan,
     scansUsed,
     scansQuota,
-    isLoading,
-    auditLogs,
-    githubIntegrations,
     isAuthenticated,
     isAdmin,
     login,
-    logout,
     register,
-    refreshUsage,
-    initAuthState,
-    loadAuditLogs,
-    loadGithubIntegrations
+    logout,
+    fetchUser,
+    refreshAccessToken,
+    initAuthState
   }
 })

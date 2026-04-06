@@ -115,9 +115,15 @@ const authStore = useAuthStore()
 const { groupedNavigation, categoryLabels, hasAccess } = useNavigation()
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
-const userName = computed(() => authStore.user?.name || 'User')
+const userName = computed(() => {
+  const u = authStore.user
+  return u?.full_name || u?.username || 'User'
+})
 const userEmail = computed(() => authStore.user?.email || 'user@example.com')
-const userRole = computed(() => authStore.user?.role || 'user')
+const userRole = computed(() => {
+  const u = authStore.user
+  return u?.is_superuser ? 'admin' : 'user'
+})
 const plan = computed(() => authStore.plan || 'free')
 
 const userInitials = computed(() => {

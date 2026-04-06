@@ -512,7 +512,7 @@ export const pentestApi = {
     generate_poc?: boolean
   }) {
     try {
-      const data = await aiServiceClient.post('/pentest/start-scan', scanConfig)
+      const data = await aiServiceClient.post('/api/pentest/start-scan', scanConfig)
       return { success: true, data }
     } catch (err) {
       return { success: false, message: 'Failed to start scan', data: null }
@@ -521,7 +521,7 @@ export const pentestApi = {
 
   async getScanStatus(scanId: string) {
     try {
-      const data = await aiServiceClient.get(`/pentest/scan/${scanId}`)
+      const data = await aiServiceClient.get(`/api/pentest/scan/${scanId}`)
       return { success: true, data }
     } catch (err) {
       return { success: false, message: 'Failed to get scan status', data: null }
@@ -530,7 +530,7 @@ export const pentestApi = {
 
   async getScanFindings(scanId: string) {
     try {
-      const data = await aiServiceClient.get(`/pentest/scan/${scanId}/findings`)
+      const data = await aiServiceClient.get(`/api/pentest/scan/${scanId}/findings`)
       return { success: true, data }
     } catch (err) {
       return { success: false, message: 'Failed to get findings', data: null }
@@ -539,7 +539,7 @@ export const pentestApi = {
 
   async listScans() {
     try {
-      const data = await aiServiceClient.get('/pentest/scans')
+      const data = await aiServiceClient.get('/api/pentest/scans')
       return { success: true, data }
     } catch (err) {
       return { success: false, message: 'Failed to list scans', data: [] }
@@ -548,7 +548,7 @@ export const pentestApi = {
 
   async stopScan(scanId: string) {
     try {
-      const data = await aiServiceClient.post(`/pentest/scan/${scanId}/stop`, {})
+      const data = await aiServiceClient.post(`/api/pentest/scan/${scanId}/stop`, {})
       return { success: true, data }
     } catch (err) {
       return { success: false, message: 'Failed to stop scan', data: null }
@@ -557,7 +557,7 @@ export const pentestApi = {
 
   async getZeroDayThreats() {
     try {
-      const data = await aiServiceClient.get('/pentest/zero-day-threats')
+      const data = await aiServiceClient.get('/api/pentest/zero-day-threats')
       return { success: true, data }
     } catch (err) {
       return { success: false, message: 'Failed to get threats', data: null }
