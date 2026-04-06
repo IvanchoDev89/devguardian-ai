@@ -28,7 +28,7 @@ jobs:
       with:
         scan-type: 'fs'
         scan-ref: '.'
-        skip-dirs: 'laravel-backend/vendor,laravel-backend/node_modules,frontend/node_modules,ai-service/venv,.git'
+        skip-dirs: 'frontend/node_modules,backend/venv,backend/__pycache__,.git'
         format: 'sarif'
         output: 'trivy-results.sarif'
     
@@ -41,25 +41,14 @@ jobs:
     - name: Run CodeQL Analysis
       uses: github/codeql-action/analyze@v4
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.3'
-        tools: composer
-    
-    - name: Dependency Security Audit (PHP)
-      working-directory: ./laravel-backend
-      run: |
-        composer audit --no-dev
-
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
     
-    - name: Dependency Security Audit (Python)
+    - name: Dependency Security Audit (Python - Backend)
       continue-on-error: true
-      working-directory: ./ai-service
+      working-directory: ./backend
       run: |
         python -m pip install --upgrade pip
         pip install pip-audit
@@ -77,22 +66,23 @@ jobs:
         npm ci
         npm audit --audit-level moderate || true
     
-    - name: Run Bandit security linter (Python)
-      working-directory: ./ai-service
+    - name: Run Bandit security linter (Python - Backend)
+      working-directory: ./backend
       run: |
         pip install bandit
         bandit -r app/ -f json -o bandit-report.json || true
     
-    - name: Run Psalm static analysis (PHP)
-      working-directory: ./laravel-backend
-      run: |
-        if [ -f ./vendor/bin/psalm ]; then ./vendor/bin/psalm --output-format=json --report=psalm-report.json || true; else echo "psalm not installed; skipping"; fi
+    - name: Run Semgrep (Python & JavaScript)
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: "auto"
+        repo-root: ./backend
     
     - name: Security scan summary
       run: |
         echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
         echo "- Trivy: File system scan completed" >> $GITHUB_STEP_SUMMARY
         echo "- CodeQL: Static analysis completed" >> $GITHUB_STEP_SUMMARY
-        echo "- Dependencies: Audit completed for all services" >> $GITHUB_STEP_SUMMARY
+        echo "- Dependencies: Audit completed for backend and frontend" >> $GITHUB_STEP_SUMMARY
         echo "- Bandit: Python security linter completed" >> $GITHUB_STEP_SUMMARY
-        echo "- Psalm: PHP static analysis completed" >> $GITHUB_STEP_SUMMARY
+        echo "- Semgrep: Multi-language analysis completed" >> $GITHUB_STEP_SUMMARY

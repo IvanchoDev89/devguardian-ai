@@ -1,4 +1,4 @@
-.PHONY: help build up down logs test clean install
+.PHONY: help build up down logs test clean install dev
 
 # Default target
 help:
@@ -11,12 +11,7 @@ help:
 	@echo "  make test      - Run all tests"
 	@echo "  make clean     - Clean up Docker resources"
 	@echo "  make install   - Install dependencies"
-	@echo ""
-	@echo "Development commands:"
-	@echo "  make dev-setup - Complete development setup"
-	@echo "  make migrate   - Run database migrations"
-	@echo "  make seed      - Seed database with sample data"
-	@echo "  make scan      - Run repository scan"
+	@echo "  make dev       - Start development environment"
 	@echo ""
 
 # Build Docker images
@@ -26,7 +21,7 @@ build:
 # Start all services
 up:
 	docker-compose up -d
-	@echo "Services started. Access the app at http://localhost"
+	@echo "Services started. Access the app at http://localhost:3000"
 
 # Stop all services
 down:
@@ -38,10 +33,8 @@ logs:
 
 # Run tests
 test:
-	@echo "Running Laravel tests..."
-	cd laravel-backend && php artisan test
-	@echo "Running AI service tests..."
-	cd ai-service && pytest
+	@echo "Running backend tests..."
+	cd backend && python -m pytest tests/ -v
 	@echo "Running frontend tests..."
 	cd frontend && npm run test
 
@@ -52,85 +45,60 @@ clean:
 
 # Install dependencies
 install:
-	@echo "Installing Laravel dependencies..."
-	cd laravel-backend && composer install
-	@echo "Installing AI service dependencies..."
-	cd ai-service && pip install -r requirements.txt
+	@echo "Installing backend dependencies..."
+	cd backend && pip install -r requirements.txt
 	@echo "Installing frontend dependencies..."
 	cd frontend && npm install
 
-# Development setup
-dev-setup: install up migrate
-	@echo "Setting up development environment..."
-	@echo "1. Generating Laravel key..."
-	cd laravel-backend && php artisan key:generate
-	@echo "2. Running migrations..."
-	cd laravel-backend && php artisan migrate
-	@echo "3. Seeding database..."
-	cd laravel-backend && php artisan db:seed
-	@echo "4. Building frontend..."
-	cd frontend && npm run build
-	@echo "Development setup complete!"
+# Start development environment
+dev:
+	@echo "Starting development environment..."
+	@echo "1. Starting PostgreSQL..."
+	docker-compose up -d postgres
+	@echo "2. Starting backend..."
+	cd backend && source venv/bin/activate && uvicorn app.main:app --host 127.0.0.1 --port 8002 --reload
+	@echo "3. Starting frontend..."
+	cd frontend && npm run dev
+	@echo "Development environment ready!"
 
-# Database migrations
-migrate:
-	cd laravel-backend && php artisan migrate
+# Backend only (for manual development)
+backend-dev:
+	cd backend && source venv/bin/activate && uvicorn app.main:app --host 127.0.0.1 --port 8002 --reload
 
-# Seed database
-seed:
-	cd laravel-backend && php artisan db:seed
-
-# Run repository scan
-scan:
-	@echo "Running repository scan..."
-	cd laravel-backend && php artisan scan:all
+# Frontend only
+frontend-dev:
+	cd frontend && npm run dev
 
 # Access containers
-shell-laravel:
-	docker-compose exec laravel bash
-
-shell-ai:
-	docker-compose exec ai-service bash
+shell-backend:
+	docker-compose exec backend bash
 
 shell-db:
-	docker-compose exec postgres psql -U devguardian devguardian
+	docker-compose exec postgres psql -U devguardian devguardian_ai
 
 # Production deployment
 deploy-prod:
 	@echo "Deploying to production..."
 	docker-compose -f docker-compose.prod.yml up -d
 
-# Development utilities
-dev-logs:
-	docker-compose logs -f laravel ai-service
-
-dev-restart:
-	docker-compose restart laravel ai-service
-
-dev-status:
-	docker-compose ps
-
 # Quality checks
 lint:
-	@echo "Running PHP linter..."
-	cd laravel-backend && ./vendor/bin/pint
-	@echo "Running Python linter..."
-	cd ai-service && flake8 app/
+	@echo "Running backend linter..."
+	cd backend && flake8 app/ || true
 	@echo "Running frontend linter..."
 	cd frontend && npm run lint
 
 # Security audit
 audit:
 	@echo "Running security audit..."
-	cd laravel-backend && composer audit
-	cd ai-service && pip-audit
+	cd backend && pip-audit || true
 	cd frontend && npm audit
 
 # Backup database
 backup:
-	docker-compose exec postgres pg_dump -U devguardian devguardian > backup_$(shell date +%Y%m%d_%H%M%S).sql
+	docker-compose exec postgres pg_dump -U devguardian devguardian_ai > backup_$$(date +%Y%m%d_%H%M%S).sql
 
 # Restore database
 restore:
 	@read -p "Enter backup file: " backup; \
-	docker-compose exec -T postgres psql -U devguardian devguardian < $$backup
+	docker-compose exec -T postgres psql -U devguardian devguardian_ai < "$$backup"

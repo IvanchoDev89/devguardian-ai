@@ -2,26 +2,27 @@
 
 Thank you for your interest in contributing to DevGuardian AI! This document provides guidelines and information for contributors.
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Docker & Docker Compose
 - Node.js 18+
-- PHP 8.3+
 - Python 3.11+
+- PostgreSQL 16+ (or use Docker)
 
 ### Development Setup
 1. Fork the repository
 2. Clone your fork locally
-3. Run `make dev-setup` to initialize the development environment
-4. Create a feature branch for your contribution
+3. Start PostgreSQL (via Docker or local installation)
+4. Run backend: `cd backend && pip install -r requirements.txt && uvicorn app.main:app --port 8002`
+5. Run frontend: `cd frontend && npm install && npm run dev`
+6. Create a feature branch for your contribution
 
-## 📋 Development Guidelines
+## Development Guidelines
 
 ### Code Style
-- **PHP**: Follow PSR-12 standards, use Laravel Pint
-- **Python**: Follow PEP 8, use Black formatter
-- **TypeScript/Vue**: Use ESLint and Prettier
+- **Python (Backend)**: Follow PEP 8, use Black formatter
+- **TypeScript/Vue (Frontend)**: Use ESLint and Prettier
 - **YAML**: Use 2 spaces for indentation
 
 ### Commit Messages
@@ -34,34 +35,37 @@ Use conventional commit format:
 - `test:` for adding tests
 - `chore:` for maintenance tasks
 
-Example: `feat(ai-service): add vulnerability analysis endpoint`
+Example: `feat(backend): add vulnerability statistics endpoint`
 
 ### Testing
 - Write tests for new features
 - Ensure all tests pass before submitting
-- Maintain test coverage above 80%
+- Run: `cd backend && pytest tests/`
 
-## 🔄 Pull Request Process
+## Pull Request Process
 
 1. **Update Documentation**: Update README.md if needed
-2. **Test Changes**: Run `make test` to ensure all tests pass
+2. **Test Changes**: Run backend and frontend tests
 3. **Create Pull Request**: Use descriptive title and description
 4. **Code Review**: Respond to review comments promptly
 5. **Merge**: Once approved, your PR will be merged
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 devguardian-ai/
-├── laravel-backend/     # Laravel API application
-├── ai-service/         # Python FastAPI service
-├── frontend/           # Vue 3 + TypeScript app
-├── docker/             # Docker configurations
-├── kubernetes/         # K8s deployment manifests
-└── .github/workflows/  # CI/CD pipelines
+├── backend/              # FastAPI application
+│   ├── app/
+│   │   ├── api/         # API endpoints
+│   │   ├── core/        # Core functionality
+│   │   └── models/      # Database models
+│   └── tests/           # Backend tests
+├── frontend/            # Vue 3 + TypeScript app
+├── docker-compose.yml   # Docker configuration
+└── .github/workflows/   # CI/CD pipelines
 ```
 
-## 🐛 Bug Reports
+## Bug Reports
 
 When reporting bugs, please include:
 - Description of the issue
@@ -70,7 +74,7 @@ When reporting bugs, please include:
 - Environment details
 - Screenshots if applicable
 
-## 💡 Feature Requests
+## Feature Requests
 
 Feature requests are welcome! Please:
 - Check existing issues first
@@ -78,26 +82,17 @@ Feature requests are welcome! Please:
 - Explain the use case and benefits
 - Consider implementation suggestions
 
-## 📧 Getting Help
+## Security Tools
 
-- Create an issue for bugs or questions
-- Join our Discord community
-- Check the documentation
+To run security scans locally:
 
-## 📜 Code of Conduct
+```bash
+# Install security tools for full scanning
+pip install bandit semgrep
+go install github.com/securego/gosec/v2/cmd/gosec@latest
 
-Please be respectful and professional in all interactions. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for details.
-
-## 🎯 Areas for Contribution
-
-We welcome contributions in:
-- **Security Scanners**: Add new vulnerability detection tools
-- **AI Models**: Improve fix generation algorithms
-- **Frontend**: Enhance UI/UX and add features
-- **Documentation**: Improve guides and API docs
-- **Testing**: Add more test coverage
-- **DevOps**: Improve CI/CD and deployment
-
-## 🙏 Thank You
-
-Your contributions help make DevGuardian AI better for everyone! We appreciate all forms of contribution, whether code, documentation, testing, or feedback.
+# Run scans
+bandit -r backend/app/
+semgrep --config=auto backend/
+gosec ./backend/
+```
