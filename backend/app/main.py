@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import init_db
-from app.api import auth_router, vulnerabilities_router, scans_router, scanning_router
+from app.api import auth_router, vulnerabilities_router, scans_router, scanning_router, users_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -29,6 +29,7 @@ app.include_router(auth_router)
 app.include_router(vulnerabilities_router)
 app.include_router(scans_router)
 app.include_router(scanning_router)
+app.include_router(users_router)
 
 
 @app.get("/")

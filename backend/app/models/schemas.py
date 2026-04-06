@@ -113,3 +113,32 @@ class ScanResponse(ScanBase):
     
     class Config:
         from_attributes = True
+
+
+class UserProfile(BaseModel):
+    id: int
+    email: str
+    username: str
+    full_name: Optional[str]
+    role: str
+    is_active: bool
+    created_at: Optional[str]
+
+
+class UserProfileUpdate(BaseModel):
+    username: Optional[str] = None
+    full_name: Optional[str] = None
+
+
+class Settings(BaseModel):
+    theme: str = "dark"
+    language: str = "en"
+    notifications_email: bool = True
+    notifications_scan: bool = True
+
+
+class SettingsUpdate(BaseModel):
+    theme: Optional[str] = None
+    language: Optional[str] = None
+    notifications_email: Optional[bool] = None
+    notifications_scan: Optional[bool] = None
