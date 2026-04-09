@@ -34,7 +34,7 @@
         "vue-router": "^4.6.4"
     },
     "devDependencies": {
-        "@types/node": "^20.19.35",
+        "@types/node": "^25.3.3",
         "@typescript-eslint/eslint-plugin": "^8.56.1",
         "@typescript-eslint/parser": "^8.56.1",
         "@typescript-eslint/utils": "^8.56.1",
