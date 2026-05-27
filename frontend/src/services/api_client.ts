@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 function getToken(): string | null {
   return localStorage.getItem('access_token')
@@ -170,8 +170,8 @@ export const healthApi = {
 
 // Settings API (placeholder)
 export const settingsApi = {
-  get: (token: string) => api.get<any>('/api/settings', token),
-  update: (token: string, data: any) => api.put<any>('/api/settings', data, token),
+  get: (token: string) => api.get<any>('/api/users/me/settings', token),
+  update: (token: string, data: any) => api.put<any>('/api/users/me/settings', data, token),
 }
 
 // Notifications API (placeholder)

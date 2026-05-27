@@ -26,9 +26,10 @@ export const useUserNotificationsStore = defineStore('userNotifications', () => 
     loading.value = true
     error.value = null
     try {
-      const response = await apiClient.get<{ success: boolean; data: UserNotification[] }>('/v1/notifications')
-      if (response.success && response.data) {
-        notifications.value = response.data
+      const token = localStorage.getItem('access_token') || ''
+      const data = await apiClient.get<UserNotification[]>('/api/notifications', token)
+      if (Array.isArray(data)) {
+        notifications.value = data
       }
     } catch (err: any) {
       error.value = err.message || 'Failed to fetch notifications'
@@ -40,9 +41,10 @@ export const useUserNotificationsStore = defineStore('userNotifications', () => 
 
   const fetchUnreadCount = async () => {
     try {
-      const response = await apiClient.get<{ success: boolean; data: { count: number } }>('/v1/notifications/unread')
-      if (response.success && response.data) {
-        return response.data.count
+      const token = localStorage.getItem('access_token') || ''
+      const data = await apiClient.get<{ count: number }>('/api/notifications/unread', token)
+      if (typeof data.count === 'number') {
+        return data.count
       }
       return 0
     } catch {
@@ -52,14 +54,12 @@ export const useUserNotificationsStore = defineStore('userNotifications', () => 
 
   const markAsRead = async (id: number) => {
     try {
-      const token = localStorage.getItem('token') || ''
-      const response = await apiClient.post<{ success: boolean }>(`/v1/notifications/${id}/read`, {}, token)
-      if (response.success) {
-        const notification = notifications.value.find(n => n.id === id)
-        if (notification) {
-          notification.is_read = true
-          notification.read_at = new Date().toISOString()
-        }
+      const token = localStorage.getItem('access_token') || ''
+      await apiClient.post(`/api/notifications/${id}/read`, {}, token)
+      const notification = notifications.value.find(n => n.id === id)
+      if (notification) {
+        notification.is_read = true
+        notification.read_at = new Date().toISOString()
       }
     } catch (err) {
       console.error('Error marking notification as read:', err)
@@ -68,14 +68,12 @@ export const useUserNotificationsStore = defineStore('userNotifications', () => 
 
   const markAllAsRead = async () => {
     try {
-      const token = localStorage.getItem('token') || ''
-      const response = await apiClient.post<{ success: boolean }>('/v1/notifications/read-all', {}, token)
-      if (response.success) {
-        notifications.value.forEach(n => {
-          n.is_read = true
-          n.read_at = new Date().toISOString()
-        })
-      }
+      const token = localStorage.getItem('access_token') || ''
+      await apiClient.post('/api/notifications/read-all', {}, token)
+      notifications.value.forEach(n => {
+        n.is_read = true
+        n.read_at = new Date().toISOString()
+      })
     } catch (err) {
       console.error('Error marking all notifications as read:', err)
     }

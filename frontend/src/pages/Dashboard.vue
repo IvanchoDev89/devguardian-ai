@@ -116,7 +116,7 @@ const notification = useNotificationStore()
 
 const userName = computed(() => {
   const u = authStore.user
-  return u?.username || u?.name || 'User'
+  return u?.username || u?.full_name || 'User'
 })
 const token = computed(() => authStore.token)
 

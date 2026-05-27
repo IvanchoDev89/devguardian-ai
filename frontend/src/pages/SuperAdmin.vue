@@ -182,87 +182,7 @@
           </div>
         </div>
 
-        <!-- Main Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <!-- Real-time Activity -->
-        <div class="lg:col-span-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
-          <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-            Real-time System Activity
-          </h2>
-          <div class="h-64" ref="activityChartRef">
-            <canvas id="activityChart"></canvas>
-          </div>
-        </div>
-
-        <!-- System Health -->
-        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
-          <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            System Health
-          </h2>
-          <div class="space-y-4">
-            <div v-for="service in systemServices" :key="service.name" class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-              <div class="flex items-center gap-3">
-                <div :class="`w-3 h-3 rounded-full ${service.status === 'healthy' ? 'bg-green-500' : service.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'}`"></div>
-                <span class="text-white">{{ service.name }}</span>
-              </div>
-              <span :class="`text-sm ${service.status === 'healthy' ? 'text-green-400' : service.status === 'warning' ? 'text-yellow-400' : 'text-red-400'}`">
-                {{ service.uptime }}%
-              </span>
-            </div>
-          </div>
-
-          <!-- Resource Usage -->
-          <div class="mt-6">
-            <h3 class="text-white font-semibold mb-3">Resource Usage</h3>
-            <div class="space-y-3">
-              <div>
-                <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-400">CPU</span>
-                  <span class="text-cyan-400">{{ resources.cpu }}%</span>
-                </div>
-                <div class="w-full bg-slate-700 rounded-full h-2">
-                  <div class="bg-cyan-500 h-2 rounded-full" :style="{ width: resources.cpu + '%' }"></div>
-                </div>
-              </div>
-              <div>
-                <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-400">Memory</span>
-                  <span class="text-purple-400">{{ resources.memory }}%</span>
-                </div>
-                <div class="w-full bg-slate-700 rounded-full h-2">
-                  <div class="bg-purple-500 h-2 rounded-full" :style="{ width: resources.memory + '%' }"></div>
-                </div>
-              </div>
-              <div>
-                <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-400">Storage</span>
-                  <span class="text-orange-400">{{ resources.storage }}%</span>
-                </div>
-                <div class="w-full bg-slate-700 rounded-full h-2">
-                  <div class="bg-orange-500 h-2 rounded-full" :style="{ width: resources.storage + '%' }"></div>
-                </div>
-              </div>
-              <div>
-                <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-400">Network I/O</span>
-                  <span class="text-blue-400">{{ resources.network }} MB/s</span>
-                </div>
-                <div class="w-full bg-slate-700 rounded-full h-2">
-                  <div class="bg-blue-500 h-2 rounded-full" :style="{ width: (resources.network / 100) + '%' }"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Second Row -->
+        <!-- Second Row -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Top Users -->
         <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
@@ -540,7 +460,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
-import { adminApi, superAdminApi, api } from '../services/api_client'
+import { superAdminApi, api } from '../services/api_client'
 import { useAuthStore } from '../stores/auth'
 const authStore = useAuthStore()
 import { 
@@ -548,11 +468,7 @@ import {
   Users, 
   FileText, 
   Scan, 
-  BarChart3,
-  Settings,
-  Activity,
-  Shield,
-  Zap
+  BarChart3
 } from 'lucide-vue-next'
 
 const activeSection = ref('dashboard')

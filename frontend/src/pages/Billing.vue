@@ -290,7 +290,7 @@ const rotateKey = async (key: ApiKey) => {
   if (!confirm('Are you sure you want to rotate this key? The old key will stop working.')) return
   
   try {
-    const token = localStorage.getItem('token') || ''
+    const token = localStorage.getItem('access_token') || ''
     const response: any = await api.post(`/api-keys/${key.key_id}/rotate`, {}, token)
     if (response) {
       createdKey.value = response.key || ''

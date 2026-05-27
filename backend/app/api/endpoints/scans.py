@@ -1,6 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from datetime import datetime
 from typing import List, Optional
 
 from app.core.database import get_db
@@ -15,7 +14,7 @@ router = APIRouter(prefix="/api/scans", tags=["Scans"])
 def list_scans(
     skip: int = 0,
     limit: int = 100,
-    status: Optional[str] = None,
+    scan_status: Optional[str] = None,
     scan_type: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
@@ -23,8 +22,8 @@ def list_scans(
     user_id = current_user.id
     query = db.query(Scan).filter(Scan.owner_id == user_id)
     
-    if status:
-        query = query.filter(Scan.status == status)
+    if scan_status:
+        query = query.filter(Scan.status == scan_status)
     if scan_type:
         query = query.filter(Scan.scan_type == scan_type)
     

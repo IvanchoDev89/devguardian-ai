@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { useNotificationStore } from './stores/notifications'
@@ -55,10 +55,7 @@ const handleNotificationAction = (notification: any) => {
   console.log('Notification action:', notification.action, notification)
 }
 
-onMounted(() => {
-  // Initialize auth state
-  authStore.initAuthState()
-})
+
 </script>
 
 <style>

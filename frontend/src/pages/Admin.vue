@@ -324,7 +324,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { adminApi, api } from '../services/api_client'
+import { adminApi } from '../services/api_client'
 import { useAuthStore } from '../stores/auth'
 const authStore = useAuthStore()
 

@@ -112,7 +112,7 @@ import { useNavigation } from '../composables/useNavigation'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { groupedNavigation, categoryLabels, hasAccess } = useNavigation()
+const { groupedNavigation, categoryLabels } = useNavigation()
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const userName = computed(() => {
@@ -135,7 +135,7 @@ const effectiveRole = computed(() => {
   if (authStore.user?.is_superuser) return 'super_admin'
   if (authStore.plan === 'enterprise') return 'enterprise'
   if (authStore.plan === 'pro') return 'pro'
-  return authStore.user?.is_superuser ? 'admin' : 'user'
+  return authStore.user?.role || 'user'
 })
 
 const userRoleDisplay = computed(() => {

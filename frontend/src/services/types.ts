@@ -1,11 +1,13 @@
 // Type definitions for DevGuardian AI API responses
 
 export interface User {
-  id: string
-  name: string
+  id: number
   email: string
-  created_at: string
-  updated_at: string
+  username: string
+  full_name?: string
+  is_superuser?: boolean
+  is_active?: boolean
+  created_at?: string
 }
 
 export interface Repository {
@@ -31,6 +33,7 @@ export interface Vulnerability {
   file_path?: string
   line_number?: number
   code_snippet?: string
+  cvss_score?: number
   status: 'open' | 'fixed' | 'ignored'
   discovered_at: string
   created_at: string

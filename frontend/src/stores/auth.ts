@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 const logger = {
   warn: (msg: string, ...args: any[]) => console.warn(`[Auth] ${msg}`, ...args),
   error: (msg: string, ...args: any[]) => console.error(`[Auth] ${msg}`, ...args),
@@ -12,7 +12,6 @@ export interface User {
   email: string
   username: string
   full_name?: string
-  name?: string
   role?: string
   is_superuser?: boolean
   is_active?: boolean
@@ -112,6 +111,8 @@ export const useAuthStore = defineStore('auth', () => {
       const data = await response.json()
       token.value = data.access_token
       refreshToken.value = data.refresh_token
+      localStorage.setItem('access_token', data.access_token)
+      localStorage.setItem('dev_refresh_token', data.refresh_token)
       return true
     } catch {
       logout()
@@ -126,7 +127,9 @@ export const useAuthStore = defineStore('auth', () => {
         headers: { Authorization: `Bearer ${token.value}` },
       })
       if (response.ok) {
-        user.value = await response.json()
+        const userData = await response.json()
+        user.value = userData
+        localStorage.setItem('user', JSON.stringify(userData))
       } else if (response.status === 401) {
         // Try to refresh token
         const refreshed = await refreshAccessToken()
@@ -171,44 +174,31 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('dev_refresh_token')
   }
 
-  function initAuthState() {
-    const storedUser = localStorage.getItem('user')
-    const storedPlan = localStorage.getItem('plan')
+  async function initAuthState() {
     const storedRefresh = localStorage.getItem('dev_refresh_token')
     const storedToken = localStorage.getItem('access_token')
     
-    if (storedUser) {
-      try {
-        user.value = JSON.parse(storedUser)
-      } catch {}
-    }
-    if (storedPlan) {
-      plan.value = storedPlan
-    }
-    if (storedToken) {
-      token.value = storedToken
-      fetchUser()
-    }
     if (storedRefresh) {
       refreshToken.value = storedRefresh
-      refreshAccessToken().then(success => {
-        if (!success) {
-          refreshToken.value = null
-          localStorage.removeItem('dev_refresh_token')
-          localStorage.removeItem('access_token')
-          token.value = null
-        } else {
-          localStorage.setItem('access_token', token.value || '')
-        }
-      })
+      const success = await refreshAccessToken()
+      if (!success) {
+        refreshToken.value = null
+        token.value = null
+        localStorage.removeItem('dev_refresh_token')
+        localStorage.removeItem('access_token')
+        return
+      }
+    }
+    
+    if (storedToken && token.value) {
+      if (!user.value) {
+        await fetchUser()
+      }
     }
   }
 
   function incrementScans() {
     scansUsed.value++
-    if (scansUsed.value >= scansQuota.value) {
-      plan.value = 'pro'
-    }
   }
 
   return {

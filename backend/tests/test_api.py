@@ -3,6 +3,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+from datetime import datetime
+
+from app.api.endpoints.auth import check_rate_limit
 
 # Must import app AFTER setting up test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -34,6 +37,12 @@ from app.main import app
 app.dependency_overrides[get_db] = override_get_db
 
 
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    check_rate_limit.store = {}
+    check_rate_limit.last_cleanup = datetime.utcnow()
+
+
 @pytest.fixture(scope="function")
 def client():
     # Clean tables before each test
@@ -46,18 +55,20 @@ def client():
 
 @pytest.fixture(scope="function")
 def db():
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=test_engine)
     db = TestingSessionLocal()
     yield db
     db.close()
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(bind=test_engine)
 
 
 class TestHealth:
     def test_health_check(self, client):
         response = client.get("/health")
         assert response.status_code == 200
-        assert response.json() == {"status": "healthy"}
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert "version" in data
 
 
 class TestAuth:
@@ -67,7 +78,7 @@ class TestAuth:
             json={
                 "email": "test@example.com",
                 "username": "testuser",
-                "password": "testpass123",
+                "password": "Testpass123!",
                 "full_name": "Test User"
             }
         )
@@ -83,7 +94,7 @@ class TestAuth:
             json={
                 "email": "test@example.com",
                 "username": "testuser1",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         response = client.post(
@@ -91,7 +102,7 @@ class TestAuth:
             json={
                 "email": "test@example.com",
                 "username": "testuser2",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         assert response.status_code == 400
@@ -104,7 +115,7 @@ class TestAuth:
             json={
                 "email": "test@example.com",
                 "username": "testuser",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         
@@ -113,7 +124,7 @@ class TestAuth:
             "/api/auth/login",
             data={
                 "username": "test@example.com",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         assert response.status_code == 200
@@ -127,7 +138,7 @@ class TestAuth:
             "/api/auth/login",
             data={
                 "username": "wrong@example.com",
-                "password": "wrongpass"
+                "password": "Wrongpass1!"
             }
         )
         assert response.status_code == 401
@@ -139,14 +150,14 @@ class TestAuth:
             json={
                 "email": "test@example.com",
                 "username": "testuser",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         login_response = client.post(
             "/api/auth/login",
             data={
                 "username": "test@example.com",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         token = login_response.json()["access_token"]
@@ -166,14 +177,14 @@ class TestAuth:
             json={
                 "email": "test@example.com",
                 "username": "testuser",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         login_response = client.post(
             "/api/auth/login",
             data={
                 "username": "test@example.com",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         refresh_token = login_response.json()["refresh_token"]
@@ -195,14 +206,14 @@ class TestVulnerabilities:
             json={
                 "email": "test@example.com",
                 "username": "testuser",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         login_response = client.post(
             "/api/auth/login",
             data={
                 "username": "test@example.com",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         return login_response.json()["access_token"]
@@ -344,14 +355,14 @@ class TestScans:
             json={
                 "email": "test@example.com",
                 "username": "testuser",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         login_response = client.post(
             "/api/auth/login",
             data={
                 "username": "test@example.com",
-                "password": "testpass123"
+                "password": "Testpass123!"
             }
         )
         return login_response.json()["access_token"]

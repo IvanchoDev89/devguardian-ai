@@ -27,7 +27,7 @@ def get_security_audit_summary(
     low = len([v for v in vulnerabilities if v.severity and v.severity.lower() == 'low'])
     
     open_vulns = len([v for v in vulnerabilities if v.status == 'open'])
-    fixed_vulns = len([v for v in vulnerabilities if v.status == 'fixed'])
+    fixed_vulns = len([v for v in vulnerabilities if v.status == 'resolved'])
     
     total_weight = (critical * 15) + (high * 10) + (medium * 5) + (low * 2)
     security_score = max(0, min(100, 100 - total_weight))
@@ -84,8 +84,16 @@ def get_audit_vulnerabilities(
     if severity:
         query = query.filter(Vulnerability.severity == severity)
     
+    from sqlalchemy import case
+    severity_order = case(
+        (Vulnerability.severity == 'critical', 0),
+        (Vulnerability.severity == 'high', 1),
+        (Vulnerability.severity == 'medium', 2),
+        (Vulnerability.severity == 'low', 3),
+        else_=4
+    )
     vulnerabilities = query.order_by(
-        Vulnerability.severity.desc(),
+        severity_order,
         Vulnerability.created_at.desc()
     ).offset(skip).limit(limit).all()
     

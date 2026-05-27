@@ -127,9 +127,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { scansApi, vulnApi } from '../services/api_client'
 
 const authStore = useAuthStore()
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002'
 
 const activeTool = ref('')
 const results = ref<any[]>([])
@@ -143,45 +143,30 @@ const getSeverityClass = (severity?: string) => {
 }
 
 const testCloudScanner = async () => {
+  if (!authStore.token) return
   try {
-    const res = await fetch(`${API_BASE}/api/scans/run`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authStore.token}`
-      },
-      body: JSON.stringify({ scan_type: 'cloud', target: 'aws' })
-    })
-    const data = await res.json()
-    results.value = data.vulnerabilities || []
+    const data = await scansApi.run(authStore.token, { scan_type: 'cloud', target: 'aws' })
+    results.value = data?.vulnerabilities || []
   } catch (e) {
     console.error('Cloud scan failed:', e)
   }
 }
 
 const loadPosture = async () => {
+  if (!authStore.token) return
   try {
-    const res = await fetch(`${API_BASE}/api/scans`, {
-      headers: { Authorization: `Bearer ${authStore.token}` }
-    })
-    if (res.ok) {
-      const data = await res.json()
-      results.value = [{ title: 'Security Scans', severity: 'medium' }]
-    }
+    const data = await scansApi.list(authStore.token)
+    results.value = data || []
   } catch (e) {
     console.error('Failed to load posture:', e)
   }
 }
 
 const loadRules = async () => {
+  if (!authStore.token) return
   try {
-    const res = await fetch(`${API_BASE}/api/vulnerabilities`, {
-      headers: { Authorization: `Bearer ${authStore.token}` }
-    })
-    if (res.ok) {
-      const data = await res.json()
-      results.value = data.slice(0, 10).map((r: any) => ({ title: r.title, severity: r.severity }))
-    }
+    const data = await vulnApi.list(authStore.token)
+    results.value = (data || []).slice(0, 10).map((r: any) => ({ title: r.title, severity: r.severity }))
   } catch (e) {
     console.error('Failed to load rules:', e)
   }

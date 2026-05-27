@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Optional
 import json
 
 from app.core.database import get_db
@@ -26,15 +25,7 @@ def _set_settings_dict(user: User, data: dict):
     user.settings = json.dumps(data)
 
 
-@router.get("/me", response_model=UserProfile)
-def get_current_user_profile(
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    user = db.query(User).filter(User.id == current_user.id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
+def _user_to_profile(user: User) -> dict:
     return {
         "id": user.id,
         "email": user.email,
@@ -46,15 +37,21 @@ def get_current_user_profile(
     }
 
 
+@router.get("/me", response_model=UserProfile)
+def get_current_user_profile(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return _user_to_profile(current_user)
+
+
 @router.put("/me", response_model=UserProfile)
 def update_current_user_profile(
     profile_data: UserProfileUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(User.id == current_user.id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
     
     if profile_data.full_name is not None:
         user.full_name = profile_data.full_name
@@ -69,28 +66,15 @@ def update_current_user_profile(
     
     db.commit()
     db.refresh(user)
-    
-    return {
-        "id": user.id,
-        "email": user.email,
-        "username": user.username,
-        "full_name": user.full_name,
-        "role": user.role,
-        "is_active": user.is_active,
-        "created_at": user.created_at.isoformat() if user.created_at else None,
-    }
+    return _user_to_profile(user)
 
 
 @router.get("/me/settings", response_model=Settings)
 def get_user_settings(
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.id == current_user.id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    settings = _get_settings_dict(user)
+    settings = _get_settings_dict(current_user)
     return {
         "theme": settings.get("theme", "dark"),
         "language": settings.get("language", "en"),
@@ -102,12 +86,10 @@ def get_user_settings(
 @router.put("/me/settings", response_model=Settings)
 def update_user_settings(
     settings_data: SettingsUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(User.id == current_user.id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
     
     settings = _get_settings_dict(user)
     

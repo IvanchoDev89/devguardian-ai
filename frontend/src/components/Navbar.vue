@@ -226,7 +226,7 @@ const userData = computed(() => {
 })
 
 const userName = computed(() => {
-  return userData.value?.name || 'User'
+  return userData.value?.full_name || userData.value?.username || 'User'
 })
 
 const userEmail = computed(() => {
@@ -238,8 +238,7 @@ const userRole = computed(() => {
 })
 
 const isAdmin = computed(() => {
-  const role = userRole.value
-  return role === 'super_admin' || role === 'admin'
+  return authStore.user?.is_superuser === true
 })
 
 const userInitials = computed(() => {
@@ -251,11 +250,10 @@ const userInitials = computed(() => {
 })
 
 const roleBadgeClass = computed(() => {
-  const role = userRole.value
-  if (role === 'super_admin' || role === 'admin') {
+  if (authStore.user?.is_superuser) {
     return 'bg-red-500/20 text-red-400'
   }
-  if (role === 'pro') {
+  if (authStore.plan === 'pro') {
     return 'bg-blue-500/20 text-blue-400'
   }
   return 'bg-gray-500/20 text-gray-400'

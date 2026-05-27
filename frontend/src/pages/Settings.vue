@@ -68,6 +68,7 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
+import { api } from '../services/api_client'
 
 const authStore = useAuthStore()
 const notification = useNotificationStore()
@@ -99,25 +100,16 @@ const saveProfile = async () => {
     const token = authStore.token
     if (!token) throw new Error('Not authenticated')
     
-    await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002'}/api/users/me`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        full_name: form.value.name,
-        email: form.value.email
-      })
-    })
-    
-    authStore.user = {
-      ...authStore.user,
+    await api.put('/api/users/me', {
       full_name: form.value.name,
       email: form.value.email
-    } as any
+    }, token)
     
-    localStorage.setItem('user', JSON.stringify(authStore.user))
+    if (authStore.user) {
+      authStore.user.full_name = form.value.name
+      authStore.user.email = form.value.email
+      localStorage.setItem('user', JSON.stringify(authStore.user))
+    }
     
     notification.success('Profile Updated', 'Your profile has been saved successfully')
   } catch (err: any) {

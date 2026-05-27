@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from datetime import timedelta, datetime
 import secrets
 import hashlib
@@ -17,10 +17,8 @@ from app.core.security import (
 )
 from app.core.config import settings
 from app.models.models import User, RefreshToken, PasswordResetToken
-from app.models.schemas import UserCreate, UserResponse, Token, TokenResponse, RefreshTokenResponse
-
+from app.models.schemas import UserCreate, UserResponse, TokenResponse
 import logging
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +36,10 @@ def generate_csrf_token(user_id: int) -> str:
 
 
 def validate_csrf_token(token: str, user_id: int) -> bool:
-    if token not in csrf_tokens:
+    stored = csrf_tokens.get(token)
+    if stored is None:
         return False
-    stored_user_id, expires = csrf_tokens[token]
+    stored_user_id, expires = stored
     if datetime.utcnow() > expires:
         del csrf_tokens[token]
         return False
@@ -53,14 +52,16 @@ RATE_WINDOW = 60
 
 def check_rate_limit(request: Request, endpoint: str = "default"):
     """Rate limiting with Redis fallback to in-memory"""
-    client_ip = request.client.host if request.client else "unknown"
+    client_ip = request.client.host if request and request.client else "unknown"
     now = datetime.utcnow()
     key = f"rate_limit:{endpoint}:{client_ip}"
     
     if settings.USE_REDIS and settings.REDIS_URL:
         try:
             import redis
-            redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+            if not hasattr(check_rate_limit, 'redis_client') or check_rate_limit.redis_client is None:
+                check_rate_limit.redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+            redis_client = check_rate_limit.redis_client
             current_count = redis_client.get(key)
             
             if current_count and int(current_count) >= RATE_LIMIT:
@@ -119,6 +120,21 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetConfirm(BaseModel):
     token: str
     new_password: str
+
+    @field_validator('new_password')
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        if not re.search(r'[A-Z]', v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not re.search(r'[a-z]', v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not re.search(r'[0-9]', v):
+            raise ValueError('Password must contain at least one number')
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
+            raise ValueError('Password must contain at least one special character')
+        return v
 
 
 class VerificationResponse(BaseModel):
@@ -218,7 +234,8 @@ def login(
     db.commit()
     
     # Audit logging
-    logger.info(f"User {user.id} ({user.email}) logged in from IP {request.client.host if request else 'unknown'}")
+    client_host = request.client.host if request.client else 'unknown'
+    logger.info(f"User {user.id} ({user.email}) logged in from IP {client_host}")
     
     # Set httpOnly cookies for tokens (production)
     response = JSONResponse({
@@ -305,7 +322,7 @@ def logout(
 ):
     # Validate CSRF token
     csrf_from_header = fastapi_request.headers.get("X-CSRF-Token")
-    if csrf_from_header and not validate_csrf_token(csrf_from_header, current_user.id):
+    if not csrf_from_header or not validate_csrf_token(csrf_from_header, current_user.id):
         raise HTTPException(status_code=403, detail="Invalid CSRF token")
     
     token_hash = hashlib.sha256(token_data.refresh_token.encode()).hexdigest()
@@ -345,10 +362,6 @@ def request_password_reset(data: PasswordResetRequest, db: Session = Depends(get
     db.commit()
     
     logger.info(f"Password reset requested for user {user.id} ({user.email})")
-    
-    # TODO: Send email with reset link
-    # In production: send email with link containing reset_token
-    pass
     
     return {"message": "If the email exists, a reset link has been sent"}
 

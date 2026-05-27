@@ -293,7 +293,7 @@ async function startScan() {
   vulnerabilities.value = []
   
   try {
-    const result: any = await scannerApi.scanRepo(repoUrl.value, selectedProvider.value, branch.value)
+    const result: any = await scannerApi.scanRepo(authStore.token!, repoUrl.value, selectedProvider.value, branch.value)
     scanResult.value = result
     
     // Fetch detailed results

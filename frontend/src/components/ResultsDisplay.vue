@@ -51,7 +51,7 @@
               <td class="type">{{ vuln.vulnerability_type }}</td>
               <td>
                 <span class="severity-badge" :class="vuln.severity">
-                  {{ vuln.severity.toUpperCase() }}
+                  {{ (vuln.severity ?? '').toUpperCase() }}
                 </span>
               </td>
               <td class="description">{{ vuln.description }}</td>
@@ -89,7 +89,7 @@
     <div class="scan-info" v-if="result?.scan_id">
       <span>Scan ID: {{ result.scan_id }}</span>
       <span>Language: {{ result.language }}</span>
-      <span>{{ formatDate(result.timestamp) }}</span>
+      <span>{{ formatDate(result?.timestamp) }}</span>
     </div>
   </div>
 </template>
@@ -99,20 +99,16 @@ import { computed } from 'vue'
 
 interface Vulnerability {
   line_number: number
-  line_content: string
   vulnerability_type: string
   severity: string
   description: string
-  match: string
   cwe_id?: string
-  owasp_category?: string
 }
 
 interface AnalysisResult {
   vulnerabilities: Vulnerability[]
   summary: string
   score: number
-  total_vulnerabilities: number
   language: string
   scan_id: string
   timestamp: string
@@ -129,7 +125,7 @@ const severityCounts = computed(() => {
   }
   
   return props.result.vulnerabilities.reduce((acc, vuln) => {
-    const severity = vuln.severity.toLowerCase()
+    const severity = (vuln.severity ?? '').toLowerCase()
     if (severity in acc) {
       acc[severity as keyof typeof acc]++
     }
@@ -145,8 +141,8 @@ const scoreClass = computed(() => {
   return 'poor'
 })
 
-const formatDate = (timestamp: string) => {
-  return new Date(timestamp).toLocaleString()
+const formatDate = (timestamp?: string) => {
+  return timestamp ? new Date(timestamp).toLocaleString() : 'N/A'
 }
 </script>
 

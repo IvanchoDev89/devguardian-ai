@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime
 import subprocess
 import json
@@ -9,7 +9,6 @@ import tempfile
 import os
 import re
 import shutil
-import shlex
 import logging
 
 from app.core.database import get_db
@@ -39,12 +38,12 @@ def validate_target(target: str) -> bool:
 
 
 def validate_tool_path(path: str, allowed_paths: list[str]) -> str:
-    """Validate tool path is in allowed list"""
     import os.path
     normalized = os.path.normpath(path)
     for allowed in allowed_paths:
         if normalized.startswith(allowed):
             return normalized
+    logger.warning(f"Tool path '{path}' not in allowed paths {allowed_paths}, falling back to '{allowed_paths[0]}'")
     return allowed_paths[0] if allowed_paths else "/usr/bin"
 
 
@@ -70,7 +69,7 @@ def run_scan(
         )
     
     scan = Scan(
-        name=f"{scan_data.scan_type.title()} Scan - {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        name=f"{scan_data.scan_type.title()} Scan - {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
         scan_type=scan_data.scan_type,
         target=scan_data.target,
         status="running",
@@ -84,14 +83,18 @@ def run_scan(
     
     try:
         if scan_data.scan_type == "all":
-            results = {
-                "semgrep": run_semgrep_scan(scan_data.target, scan_data.options or {}),
-                "bandit": run_bandit_scan(scan_data.target, scan_data.options or {}),
-                "gosec": run_gosec_scan(scan_data.target, scan_data.options or {}),
-                "gitleaks": run_gitleaks_scan(scan_data.target, scan_data.options or {}),
-                "pip_audit": run_pip_audit(scan_data.target, scan_data.options or {}),
-                "npm_audit": run_npm_audit(scan_data.target, scan_data.options or {}),
-            }
+            target_path, target_cleanup = prepare_target(scan_data.target)
+            try:
+                results = {
+                    "semgrep": run_semgrep_scan(target_path, scan_data.options or {}),
+                    "bandit": run_bandit_scan(target_path, scan_data.options or {}),
+                    "gosec": run_gosec_scan(target_path, scan_data.options or {}),
+                    "gitleaks": run_gitleaks_scan(target_path, scan_data.options or {}),
+                    "pip_audit": run_pip_audit(target_path, scan_data.options or {}),
+                    "npm_audit": run_npm_audit(target_path, scan_data.options or {}),
+                }
+            finally:
+                target_cleanup()
         elif scan_data.scan_type == "python":
             results = {
                 "semgrep": run_semgrep_scan(scan_data.target, scan_data.options or {}),
@@ -124,8 +127,11 @@ def run_scan(
                 all_vulnerabilities.extend(tool_results["vulnerabilities"])
         
         scan.results = json.dumps(results)
-        scan.status = "completed"
-        scan.completed_at = datetime.utcnow()
+        if isinstance(results, dict) and results.get("error"):
+            scan.status = "failed"
+        else:
+            scan.status = "completed"
+            scan.completed_at = datetime.utcnow()
         
         for vuln_data in all_vulnerabilities:
             vuln = Vulnerability(
@@ -182,11 +188,6 @@ BLOCKED_IP_RANGES = [
 def is_ip_blocked(host: str) -> bool:
     """Check if host is a blocked IP or internal IP"""
     import ipaddress
-    try:
-        ip = ipaddress.ip_address(host)
-        return True
-    except ValueError:
-        pass
     for blocked in BLOCKED_IP_RANGES:
         try:
             if "/" in blocked:
@@ -248,7 +249,6 @@ def prepare_target(target: str) -> tuple:
         
         tmpdir = tempfile.mkdtemp()
         try:
-            safe_target = shlex.quote(target)
             clone_result = subprocess.run(
                 ["git", "clone", "--depth", "1", target, tmpdir],
                 capture_output=True,
@@ -264,7 +264,7 @@ def prepare_target(target: str) -> tuple:
             shutil.rmtree(tmpdir, ignore_errors=True)
             raise Exception(f"Clone failed: {str(e)}")
     elif os.path.isdir(target):
-        safe_path = os.path.abspath(target)
+        safe_path = os.path.realpath(target)
         if not safe_path.startswith("/home") and not safe_path.startswith("/tmp"):
             raise Exception("Local paths must be in /home or /tmp directories")
         return target, lambda: None
@@ -272,10 +272,23 @@ def prepare_target(target: str) -> tuple:
         raise Exception("Invalid target. Must be a git URL or local directory.")
 
 
+ALLOWED_SEMGREP_RULES = {
+    "p/owasp-top-ten", "p/sql-injection", "p/xss", "p/secrets",
+    "p/command-injection", "p/security-audit", "p/rust",
+    "p/python", "p/javascript", "p/java", "p/go",
+}
+
 def run_semgrep_scan(target: str, options: dict) -> dict:
     """Run Semgrep analysis"""
-    rules = options.get("rules", "p/owasp-top-ten,p/sql-injection,p/xss,p/secrets")
+    rules_raw = options.get("rules", "p/owasp-top-ten,p/sql-injection,p/xss,p/secrets")
+    rules_list = [r.strip() for r in rules_raw.split(",")]
+    allowed = [r for r in rules_list if r in ALLOWED_SEMGREP_RULES]
+    if not allowed:
+        allowed = ["p/owasp-top-ten"]
+        logger.warning(f"No allowed semgrep rules in '{rules_raw}', using defaults")
+    rules = ",".join(allowed)
     timeout = options.get("timeout", 120)
+    cleanup = lambda: None
     
     try:
         target_path, cleanup = prepare_target(target)
@@ -286,8 +299,6 @@ def run_semgrep_scan(target: str, options: dict) -> dict:
             text=True,
             timeout=timeout + 30
         )
-        
-        cleanup()
         
         if result.returncode not in [0, 1]:
             return {"error": f"Semgrep error: {result.stderr}", "vulnerabilities": []}
@@ -319,11 +330,14 @@ def run_semgrep_scan(target: str, options: dict) -> dict:
         return {"error": "Semgrep not installed", "vulnerabilities": []}
     except Exception as e:
         return {"error": str(e), "vulnerabilities": []}
+    finally:
+        cleanup()
 
 
 def run_bandit_scan(target: str, options: dict) -> dict:
     """Run Bandit Python security analysis"""
     timeout = options.get("timeout", 120)
+    cleanup = lambda: None
     
     try:
         target_path, cleanup = prepare_target(target)
@@ -334,8 +348,6 @@ def run_bandit_scan(target: str, options: dict) -> dict:
             text=True,
             timeout=timeout + 30
         )
-        
-        cleanup()
         
         output = json.loads(result.stdout) if result.stdout else {"results": []}
         
@@ -348,7 +360,7 @@ def run_bandit_scan(target: str, options: dict) -> dict:
                 "title": finding.get("test_id", "") + ": " + finding.get("test_name", "Unknown"),
                 "description": finding.get("issue_text", ""),
                 "severity": severity_map.get(finding.get("issue_severity", "MEDIUM"), "medium"),
-                "cwe_id": "CWE-" + str(finding.get("cwe_id", "?")),
+                "cwe_id": ("CWE-" + str(finding["cwe_id"])) if finding.get("cwe_id") else None,
                 "file_path": finding.get("filename", ""),
                 "line_number": finding.get("line_number"),
                 "code_snippet": finding.get("code", "")[:200],
@@ -364,11 +376,14 @@ def run_bandit_scan(target: str, options: dict) -> dict:
         return {"error": "Bandit not installed", "vulnerabilities": []}
     except Exception as e:
         return {"error": str(e), "vulnerabilities": []}
+    finally:
+        cleanup()
 
 
 def run_gosec_scan(target: str, options: dict) -> dict:
     """Run Gosec Go security analysis"""
     timeout = options.get("timeout", 120)
+    cleanup = lambda: None
     
     try:
         target_path, cleanup = prepare_target(target)
@@ -379,8 +394,6 @@ def run_gosec_scan(target: str, options: dict) -> dict:
             text=True,
             timeout=timeout + 30
         )
-        
-        cleanup()
         
         if not result.stdout:
             return {"vulnerabilities": [], "total": 0}
@@ -412,12 +425,15 @@ def run_gosec_scan(target: str, options: dict) -> dict:
         return {"error": "Gosec not installed", "vulnerabilities": []}
     except Exception as e:
         return {"error": str(e), "vulnerabilities": []}
+    finally:
+        cleanup()
 
 
 def run_gitleaks_scan(target: str, options: dict) -> dict:
     """Run Gitleaks secrets detection + regex fallback"""
     timeout = options.get("timeout", 120)
     gitleaks_path = options.get("gitleaks_path", "/tmp/gitleaks")
+    cleanup = lambda: None
     
     vulnerabilities = []
     
@@ -425,10 +441,14 @@ def run_gitleaks_scan(target: str, options: dict) -> dict:
     try:
         target_path, cleanup = prepare_target(target)
         
-        # Initialize git repo for gitleaks
-        subprocess.run(["git", "init"], cwd=target_path, capture_output=True)
-        subprocess.run(["git", "add", "."], cwd=target_path, capture_output=True)
-        subprocess.run(["git", "commit", "-m", "scan"], cwd=target_path, capture_output=True)
+        is_temp_dir = target_path.startswith('/tmp/')
+        if is_temp_dir:
+            git_config = {"GIT_TERMINAL_PROMPT": "0"}
+            subprocess.run(["git", "init"], cwd=target_path, capture_output=True, env={**os.environ, **git_config})
+            subprocess.run(["git", "config", "user.email", "scan@devguardian.ai"], cwd=target_path, capture_output=True)
+            subprocess.run(["git", "config", "user.name", "DevGuardian Scan"], cwd=target_path, capture_output=True)
+            subprocess.run(["git", "add", "."], cwd=target_path, capture_output=True)
+            subprocess.run(["git", "commit", "-m", "scan"], cwd=target_path, capture_output=True)
         
         result = subprocess.run(
             [gitleaks_path, "detect", "-s", target_path, "--report-format", "json", "-l", "error"],
@@ -436,8 +456,6 @@ def run_gitleaks_scan(target: str, options: dict) -> dict:
             text=True,
             timeout=timeout + 30
         )
-        
-        cleanup()
         
         if result.stdout:
             for line in result.stdout.strip().split('\n'):
@@ -462,8 +480,11 @@ def run_gitleaks_scan(target: str, options: dict) -> dict:
                     
     except Exception as e:
         logger.warning(f"Gitleaks scan failed, falling back to regex: {e}")
+    finally:
+        cleanup()
     
     # Regex fallback for secrets
+    cleanup = lambda: None
     try:
         target_path, cleanup = prepare_target(target)
         
@@ -503,10 +524,9 @@ def run_gitleaks_scan(target: str, options: dict) -> dict:
                     except Exception:
                         pass
         
-        cleanup()
-        
     except Exception as e:
         logger.warning(f"Regex fallback scan failed: {e}")
+    finally:
         cleanup()
     
     return {"vulnerabilities": vulnerabilities, "total": len(vulnerabilities)}
@@ -515,12 +535,16 @@ def run_gitleaks_scan(target: str, options: dict) -> dict:
 def run_pip_audit(target: str, options: dict) -> dict:
     """Run pip-audit for Python dependencies"""
     timeout = options.get("timeout", 120)
+    cleanup = lambda: None
     
     try:
+        target_path, cleanup = prepare_target(target)
+        
         result = subprocess.run(
-            ["pip-audit", "--format=json", "--desc=on"],
+            ["pip-audit", "--format=json", "--desc=on", "-r", f"{target_path}/requirements.txt"],
             capture_output=True,
             text=True,
+            cwd=target_path,
             timeout=timeout + 30
         )
         
@@ -552,11 +576,14 @@ def run_pip_audit(target: str, options: dict) -> dict:
         return {"error": "pip-audit not installed", "vulnerabilities": []}
     except Exception as e:
         return {"error": str(e), "vulnerabilities": []}
+    finally:
+        cleanup()
 
 
 def run_npm_audit(target: str, options: dict) -> dict:
     """Run npm audit for JavaScript dependencies"""
     timeout = options.get("timeout", 120)
+    cleanup = lambda: None
     
     try:
         target_path, cleanup = prepare_target(target)
@@ -568,8 +595,6 @@ def run_npm_audit(target: str, options: dict) -> dict:
             cwd=target_path,
             timeout=timeout + 30
         )
-        
-        cleanup()
         
         if not result.stdout:
             return {"vulnerabilities": [], "total": 0}
@@ -598,6 +623,8 @@ def run_npm_audit(target: str, options: dict) -> dict:
         return {"error": "npm not installed", "vulnerabilities": []}
     except Exception as e:
         return {"error": str(e), "vulnerabilities": []}
+    finally:
+        cleanup()
 
 
 def run_trivy_scan(target: str, options: dict) -> dict:
@@ -627,7 +654,7 @@ def run_trivy_scan(target: str, options: dict) -> dict:
                     "title": f"{vuln.get('PkgName', 'package')} {vuln.get('InstalledVersion', '')}",
                     "description": vuln.get("Description", ""),
                     "severity": vuln.get("Severity", "MEDIUM").lower(),
-                    "cwe_id": "CVE-" + vuln.get("VulnerabilityID", ""),
+                    "cwe_id": (vuln.get("CweIDs") or [None])[0] if vuln.get("CweIDs") else None,
                     "file_path": f"Image: {target}",
                     "fix_suggestion": f"Upgrade to {vuln.get('FixedVersion', 'latest version')}"
                 }
@@ -896,7 +923,7 @@ def scan_code(
         # Save to database
         if vulnerabilities:
             scan = Scan(
-                name=f"Code Scan - {language.upper()} - {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                name=f"Code Scan - {language.upper()} - {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
                 scan_type=f"code_{language}",
                 target=f"direct_input:{filename}",
                 status="completed",
@@ -934,5 +961,5 @@ def scan_code(
     finally:
         try:
             os.unlink(temp_path)
-        except:
+        except Exception:
             pass

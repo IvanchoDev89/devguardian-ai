@@ -16,12 +16,17 @@ export interface NavItem {
 export function useNavigation() {
   const authStore = useAuthStore()
 
-  const userRole = computed(() => authStore.user?.role || 'guest')
-  const userPlan = computed(() => authStore.plan || 'free')
+  const effectiveRole = computed(() => {
+    if (authStore.user?.is_superuser) return 'super_admin'
+    if (authStore.plan === 'enterprise') return 'enterprise'
+    if (authStore.plan === 'pro') return 'pro'
+    return authStore.user?.role || 'guest'
+  })
 
   const hasAccess = (requiredRoles?: string[]): boolean => {
-    if (!requiredRoles || requiredRoles.length === 0) return true
-    return requiredRoles.includes(userRole.value)
+    if (!requiredRoles) return true
+    if (requiredRoles.length === 0) return false
+    return requiredRoles.includes(effectiveRole.value)
   }
 
   const navigation: NavItem[] = [
@@ -202,8 +207,6 @@ export function useNavigation() {
     groupedNavigation,
     categoryLabels,
     categoryIcons,
-    hasAccess,
-    userRole,
-    userPlan
+    hasAccess
   }
 }
