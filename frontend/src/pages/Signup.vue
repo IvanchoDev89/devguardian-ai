@@ -74,6 +74,7 @@
               class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               placeholder="•••••••••"
             />
+            <PasswordStrength :password="form.password" />
           </div>
 
           <!-- Confirm Password -->
@@ -102,9 +103,9 @@
             />
             <label for="terms" class="ml-2 text-sm text-gray-300">
               I agree to the 
-              <span class="text-gray-500 cursor-not-allowed">Terms of Service</span>
+              <a href="https://devguardian.ai/terms" target="_blank" class="text-blue-400 hover:text-blue-300 transition-colors">Terms of Service</a>
               and 
-              <span class="text-gray-500 cursor-not-allowed">Privacy Policy</span>
+              <a href="https://devguardian.ai/privacy" target="_blank" class="text-blue-400 hover:text-blue-300 transition-colors">Privacy Policy</a>
             </label>
           </div>
 
@@ -187,6 +188,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import PasswordStrength from '../components/PasswordStrength.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -235,7 +237,7 @@ const handleSignup = async () => {
     if (result.success) {
       router.push('/scan')
     } else {
-      error.value = result.error || 'Registration failed'
+      error.value = result.message || 'Registration failed'
     }
   } catch (err: any) {
     error.value = err.message || 'Registration failed. Please try again.'

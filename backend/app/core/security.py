@@ -12,25 +12,21 @@ from app.models.models import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-# Try to use passlib with bcrypt, fallback to sha256
-try:
-    from passlib.context import CryptContext
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    USE_BCRYPT = True
-except ImportError:
-    USE_BCRYPT = False
+import bcrypt
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    if USE_BCRYPT:
-        return pwd_context.verify(plain_password, hashed_password)
-    return hashlib.sha256(plain_password.encode()).hexdigest() == hashed_password
+    return bcrypt.checkpw(
+        plain_password.encode('utf-8'),
+        hashed_password.encode('utf-8')
+    )
 
 
 def get_password_hash(password: str) -> str:
-    if USE_BCRYPT:
-        return pwd_context.hash(password)
-    return hashlib.sha256(password.encode()).hexdigest()
+    return bcrypt.hashpw(
+        password.encode('utf-8'),
+        bcrypt.gensalt(rounds=12)
+    ).decode('utf-8')
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

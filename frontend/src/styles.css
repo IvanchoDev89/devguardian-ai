@@ -6,6 +6,20 @@
   body {
     @apply bg-gray-50 text-gray-900;
   }
+  
+  /* Improved focus styles for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-900;
+  }
+  
+  /* Skip to content link for keyboard users */
+  .skip-link {
+    @apply absolute -top-10 left-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-md;
+  }
+  
+  .skip-link:focus {
+    @apply top-4;
+  }
 }
 
 @layer components {

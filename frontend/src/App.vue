@@ -1,5 +1,8 @@
 <template>
   <div id="app" class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <!-- Skip to content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
     <!-- Navigation - Only show on public routes -->
     <Navbar v-if="!isAppRoute" />
     
@@ -19,7 +22,7 @@
     </div>
     
     <!-- Main Content -->
-    <main>
+    <main id="main-content">
       <router-view />
     </main>
   </div>

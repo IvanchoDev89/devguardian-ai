@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
+import json
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -8,6 +9,21 @@ from app.models.models import User
 from app.models.schemas import UserProfile, UserProfileUpdate, Settings, SettingsUpdate
 
 router = APIRouter(prefix="/api/users", tags=["users"])
+
+
+def _get_settings_dict(user: User) -> dict:
+    if not user.settings:
+        return {}
+    if isinstance(user.settings, dict):
+        return user.settings
+    try:
+        return json.loads(user.settings)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
+def _set_settings_dict(user: User, data: dict):
+    user.settings = json.dumps(data)
 
 
 @router.get("/me", response_model=UserProfile)
@@ -74,11 +90,12 @@ def get_user_settings(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    settings = _get_settings_dict(user)
     return {
-        "theme": user.settings.get("theme", "dark") if user.settings else "dark",
-        "language": user.settings.get("language", "en") if user.settings else "en",
-        "notifications_email": user.settings.get("notifications_email", True) if user.settings else True,
-        "notifications_scan": user.settings.get("notifications_scan", True) if user.settings else True,
+        "theme": settings.get("theme", "dark"),
+        "language": settings.get("language", "en"),
+        "notifications_email": settings.get("notifications_email", True),
+        "notifications_scan": settings.get("notifications_scan", True),
     }
 
 
@@ -92,23 +109,25 @@ def update_user_settings(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    if not user.settings:
-        user.settings = {}
+    settings = _get_settings_dict(user)
     
     if settings_data.theme is not None:
-        user.settings["theme"] = settings_data.theme
+        settings["theme"] = settings_data.theme
     if settings_data.language is not None:
-        user.settings["language"] = settings_data.language
+        settings["language"] = settings_data.language
     if settings_data.notifications_email is not None:
-        user.settings["notifications_email"] = settings_data.notifications_email
+        settings["notifications_email"] = settings_data.notifications_email
     if settings_data.notifications_scan is not None:
-        user.settings["notifications_scan"] = settings_data.notifications_scan
+        settings["notifications_scan"] = settings_data.notifications_scan
     
+    _set_settings_dict(user, settings)
     db.commit()
+    db.refresh(user)
     
+    saved = _get_settings_dict(user)
     return {
-        "theme": user.settings.get("theme", "dark"),
-        "language": user.settings.get("language", "en"),
-        "notifications_email": user.settings.get("notifications_email", True),
-        "notifications_scan": user.settings.get("notifications_scan", True),
+        "theme": saved.get("theme", "dark"),
+        "language": saved.get("language", "en"),
+        "notifications_email": saved.get("notifications_email", True),
+        "notifications_scan": saved.get("notifications_scan", True),
     }

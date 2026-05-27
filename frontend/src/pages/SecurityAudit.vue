@@ -128,41 +128,17 @@
           
           <button
             @click="runAudit"
-            :disabled="isRunningAudit"
+            :disabled="loading"
             class="bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-2 rounded-lg hover:from-red-500 hover:to-orange-500 disabled:opacity-50"
           >
-            {{ isRunningAudit ? 'Running Audit...' : 'Run Security Audit' }}
+            {{ loading ? 'Loading...' : 'Run Security Audit' }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Audit Progress -->
-    <div v-if="isRunningAudit" class="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl">
-      <div class="px-6 py-4 border-b border-gray-700/50">
-        <h2 class="text-lg font-medium text-white">Audit Progress</h2>
-      </div>
-      <div class="p-6">
-        <div class="space-y-4">
-          <div>
-            <div class="flex justify-between text-sm text-gray-400 mb-1">
-              <span>{{ currentPhase }}</span>
-              <span>{{ auditProgress }}%</span>
-            </div>
-            <div class="w-full bg-gray-700 rounded-full h-2">
-              <div class="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300" :style="{ width: `${auditProgress}%` }"></div>
-            </div>
-          </div>
-          <div class="text-sm text-gray-400">
-            <p>Files scanned: {{ filesScanned }}</p>
-            <p>Issues found: {{ issuesFound }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Audit Results -->
-    <div v-if="auditData.summary && !isRunningAudit" class="space-y-6">
+    <div v-if="auditData.summary" class="space-y-6">
       <!-- Summary Section -->
       <div class="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl">
         <div class="px-6 py-4 border-b border-gray-700/50">
@@ -229,8 +205,14 @@
           <h2 class="text-lg font-medium text-white">Security Findings</h2>
         </div>
         <div class="p-6">
-          <div v-if="securityFindings.length === 0" class="text-center py-8 text-gray-500">
-            No security issues found
+          <div v-if="loading" class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+          </div>
+          <div v-else-if="securityFindings.length === 0" class="text-center py-8">
+            <svg class="w-12 h-12 mx-auto text-gray-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-gray-500">No security issues found</p>
           </div>
           
           <div v-else class="space-y-4">
@@ -344,6 +326,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { api } from '../services/api_client'
+import { useAuthStore } from '../stores/auth'
+import { useNotificationStore } from '../stores/notifications'
+
+const authStore = useAuthStore()
+const notification = useNotificationStore()
 
 interface AuditForm {
   scope: string
@@ -418,11 +406,7 @@ const auditData = ref<AuditData>({
   performance_metrics: []
 })
 
-const isRunningAudit = ref(false)
-const auditProgress = ref(0)
-const currentPhase = ref('')
-const filesScanned = ref(0)
-const issuesFound = ref(0)
+const loading = ref(false)
 
 const securityFindings = computed(() => auditData.value.security_findings || [])
 const dependencyVulnerabilities = computed(() => auditData.value.dependency_vulnerabilities || [])
@@ -431,141 +415,30 @@ const memoryIssuesCount = computed(() =>
 )
 
 const runAudit = async () => {
-  isRunningAudit.value = true
-  auditProgress.value = 0
-  filesScanned.value = 0
-  issuesFound.value = 0
-  
-  const phases = [
-    { name: 'Initializing audit...', duration: 10 },
-    { name: 'Scanning files...', duration: 30 },
-    { name: 'Analyzing security patterns...', duration: 25 },
-    { name: 'Checking dependencies...', duration: 15 },
-    { name: 'Analyzing performance...', duration: 15 },
-    { name: 'Generating recommendations...', duration: 5 }
-  ]
-  
+  loading.value = true
   try {
-    for (let i = 0; i < phases.length; i++) {
-      const phase = phases[i]
-      currentPhase.value = phase.name
-      
-      for (let j = 0; j <= phase.duration; j += 5) {
-        await new Promise(resolve => setTimeout(resolve, 100))
-        auditProgress.value = Math.round(((i * phase.duration) + j) / 150 * 100)
-        
-        if (Math.random() > 0.7) {
-          issuesFound.value += Math.floor(Math.random() * 3) + 1
-        }
-        filesScanned.value += Math.floor(Math.random() * 10) + 5
-      }
+    const token = authStore.token
+    if (!token) {
+      notification.error('Not authenticated', 'Please log in first')
+      return
     }
     
-    auditData.value = generateMockAuditResults()
+    const [summaryRes, vulnsRes] = await Promise.all([
+      api.get<any>('/api/security-audit/summary', token),
+      api.get<any[]>('/api/security-audit/vulnerabilities', token)
+    ])
     
-  } catch (error) {
-    console.error('Audit error:', error)
-    alert('Failed to run security audit. Please try again.')
+    auditData.value = {
+      summary: summaryRes.summary,
+      security_findings: vulnsRes,
+      dependency_vulnerabilities: [],
+      performance_metrics: []
+    }
+  } catch (error: any) {
+    console.error('Failed to load audit:', error)
+    notification.error('Failed to Load', error.message || 'Could not fetch security audit data')
   } finally {
-    isRunningAudit.value = false
-    auditProgress.value = 100
-  }
-}
-
-const generateMockAuditResults = (): AuditData => {
-  const mockFindings = [
-    {
-      type: 'sql_injection',
-      severity: 'critical',
-      file: '/backend/app/controllers/UserController.php',
-      line: 45,
-      code: '$query = "SELECT * FROM users WHERE id = " . $_GET["id"];',
-      confidence: 0.95,
-      description: 'SQL injection vulnerability detected'
-    },
-    {
-      type: 'xss',
-      severity: 'high',
-      file: '/frontend/src/components/UserProfile.vue',
-      line: 23,
-      code: 'document.getElementById("output").innerHTML = userInput;',
-      confidence: 0.88,
-      description: 'Cross-site scripting vulnerability detected'
-    },
-    {
-      type: 'hardcoded_secrets',
-      severity: 'critical',
-      file: '/ai-service/config.py',
-      line: 12,
-      code: 'API_KEY = "sk-1234567890abcdef"',
-      confidence: 0.92,
-      description: 'Hardcoded API key detected'
-    },
-    {
-      type: 'weak_crypto',
-      severity: 'medium',
-      file: '/backend/app/utils/encryption.php',
-      line: 8,
-      code: '$hash = md5($password);',
-      confidence: 0.85,
-      description: 'Weak cryptographic algorithm detected'
-    }
-  ]
-  
-  const mockDeps = [
-    {
-      package: 'requests<2.25.0',
-      file: '/requirements.txt',
-      description: 'Known vulnerable package detected'
-    },
-    {
-      package: 'lodash<4.17.21',
-      file: '/frontend/package.json',
-      description: 'Known vulnerable npm package detected'
-    }
-  ]
-  
-  const mockPerf = [
-    {
-      type: 'n_plus_one_query',
-      severity: 'medium',
-      file: '/backend/app/models/Repository.php',
-      line: 67,
-      code: 'foreach ($users as $user) { $user->getDetails(); }',
-      impact: 'high_database_load'
-    },
-    {
-      type: 'missing_error_handling',
-      severity: 'medium',
-      file: '/ai-service/app/api/endpoints/scan.py',
-      line: 34,
-      code: 'except: pass',
-      impact: 'debugging_difficulty'
-    }
-  ]
-  
-  return {
-    summary: {
-      total_issues: mockFindings.length + mockDeps.length + mockPerf.length,
-      severity_breakdown: {
-        critical: 2,
-        high: 1,
-        medium: 3,
-        low: 0
-      },
-      security_score: 65,
-      performance_score: 78,
-      recommendations: [
-        'CRITICAL: Address all critical security vulnerabilities immediately',
-        'Update all vulnerable dependencies to latest secure versions',
-        'Implement proper authentication and authorization for all API endpoints',
-        'Review and secure all configuration files',
-        'Optimize performance issues to improve application responsiveness'
-      ]
-    },
-    security_findings: mockFindings,
-    dependency_vulnerabilities: mockDeps,
-    performance_metrics: mockPerf
+    loading.value = false
   }
 }
 

@@ -131,22 +131,27 @@ const userInitials = computed(() => {
   return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 })
 
+const effectiveRole = computed(() => {
+  if (authStore.user?.is_superuser) return 'super_admin'
+  if (authStore.plan === 'enterprise') return 'enterprise'
+  if (authStore.plan === 'pro') return 'pro'
+  return authStore.user?.is_superuser ? 'admin' : 'user'
+})
+
 const userRoleDisplay = computed(() => {
-  const role = userRole.value
+  const role = effectiveRole.value
   const labels: Record<string, string> = {
     super_admin: 'Super Admin',
     admin: 'Admin',
     pro: 'Pro',
     enterprise: 'Enterprise',
     user: 'User',
-    member: 'Member',
-    viewer: 'Viewer'
   }
   return labels[role] || role
 })
 
 const roleBadgeClass = computed(() => {
-  const role = userRole.value
+  const role = effectiveRole.value
   if (role === 'super_admin') return 'bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-400 border border-red-500/30'
   if (role === 'admin') return 'bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-400 border border-violet-500/30'
   if (role === 'enterprise') return 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-400 border border-amber-500/30'

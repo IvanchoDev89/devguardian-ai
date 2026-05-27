@@ -180,7 +180,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { assetsApi } from '../services/api_client'
+import { assetService } from '../services/api_client'
+import { useAuthStore } from '../stores/auth'
+const authStore = useAuthStore()
 
 interface Asset {
   id: number
@@ -214,9 +216,9 @@ onMounted(async () => {
 const loadAssets = async () => {
   loading.value = true
   try {
-    const response = await assetService.getAssets()
-    if (response.success && response.data) {
-      assets.value = response.data
+    const response = await assetService.list(authStore.token!)
+    if (Array.isArray(response)) {
+      assets.value = response
     }
   } catch (error) {
     console.error('Error loading assets:', error)
@@ -228,8 +230,8 @@ const loadAssets = async () => {
 const addAsset = async () => {
   adding.value = true
   try {
-    const response = await assetService.createAsset(newAsset.value)
-    if (response.success) {
+    const response = await assetService.create(authStore.token!, newAsset.value)
+    if (response) {
       showAddModal.value = false
       newAsset.value = { name: '', type: 'web_application', url: '', description: '', ownership_proof: '' }
       await loadAssets()
@@ -243,7 +245,7 @@ const addAsset = async () => {
 
 const verifyAsset = async (id: number) => {
   try {
-    await assetService.verifyAsset(id, 'dns')
+    await assetService.update(authStore.token!, id, { verification_status: 'verified' })
     await loadAssets()
   } catch (error) {
     console.error('Error verifying asset:', error)
@@ -254,7 +256,7 @@ const deleteAsset = async (id: number) => {
   if (!confirm('Are you sure you want to remove this asset?')) return
   
   try {
-    await assetService.deleteAsset(id)
+    await assetService.delete(authStore.token!, id)
     await loadAssets()
   } catch (error) {
     console.error('Error deleting asset:', error)

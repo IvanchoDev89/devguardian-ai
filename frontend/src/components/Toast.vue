@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 
 interface Props {
   show: boolean
@@ -95,6 +95,36 @@ const emit = defineEmits<{
   close: []
   action: []
 }>()
+
+let autoCloseTimeout: ReturnType<typeof setTimeout> | null = null
+
+const clearAutoClose = () => {
+  if (autoCloseTimeout) {
+    clearTimeout(autoCloseTimeout)
+    autoCloseTimeout = null
+  }
+}
+
+onMounted(() => {
+  if (props.show && props.duration > 0) {
+    autoCloseTimeout = setTimeout(() => {
+      emit('close')
+    }, props.duration)
+  }
+})
+
+onUnmounted(() => {
+  clearAutoClose()
+})
+
+watch(() => props.show, (newShow) => {
+  clearAutoClose()
+  if (newShow && props.duration > 0) {
+    autoCloseTimeout = setTimeout(() => {
+      emit('close')
+    }, props.duration)
+  }
+})
 
 const typeClasses = {
   success: {
@@ -135,12 +165,5 @@ const close = () => {
 
 const handleAction = () => {
   emit('action')
-}
-
-// Auto-close after duration
-if (props.duration > 0) {
-  setTimeout(() => {
-    close()
-  }, props.duration)
 }
 </script>

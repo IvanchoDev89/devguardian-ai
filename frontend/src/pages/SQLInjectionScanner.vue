@@ -251,7 +251,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { scannerApi } from '../services/api_client'
+import { api, scansApi } from '../services/api_client'
 import { useNotificationStore } from '../stores/notifications'
 import { useAuthStore } from '../stores/auth'
 import ScanProgress from '../components/ScanProgress.vue'
@@ -268,7 +268,7 @@ const scanType = ref('quick')
 const scanResult = ref<any>(null)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
-const canScan = computed(() => authStore.canScan)
+const canScan = computed(() => authStore.isAuthenticated)
 const plan = computed(() => authStore.plan)
 
 const options = ref({
@@ -298,24 +298,22 @@ const runSampleScan = async () => {
   error.value = null
   
   try {
-    const response = await aiService.scanCode(`
-      // Sample vulnerable SQL injection code
+    const response = await scansApi.scanCode(authStore.token!, {
+      code: `
       const userInput = req.query.id;
       const sql = "SELECT * FROM users WHERE id = '" + userInput + "'";
       connection.query(sql, (err, result) => {
         if (err) throw err;
-        console.log('User found:', result[0]);
       });
-    `, {
-      scanType: 'comprehensive',
-      checkBlindSQL: options.value.checkBlindSQL
-    } as any)
+      `,
+      language: 'javascript'
+    })
     
-    if (response.success && response.data) {
-      scanResult.value = response.data
-      notificationStore.success('Scan Completed', `Found ${response.data.vulnerabilities_found} vulnerabilities`)
+    if (response) {
+      scanResult.value = response
+      notificationStore.success('Scan Completed', `Found ${response.vulnerabilities_found} vulnerabilities`)
     } else {
-      throw new Error(response.message || 'Scan failed')
+      throw new Error('Scan failed')
     }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Sample scan failed'
@@ -332,17 +330,10 @@ const runScan = async () => {
     return
   }
   
-  if (!canScan.value) {
-    notificationStore.warning('Scan Limit Reached', 'You have used your free scan. Upgrade to Pro for unlimited scans.')
-    router.push('/pricing')
-    return
-  }
-  
   loading.value = true
   error.value = null
   
   try {
-    // Validate repository URL
     if (!repositoryUrl.value) {
       throw new Error('Please enter a repository URL')
     }

@@ -3,3 +3,4 @@ from app.api.endpoints.vulnerabilities import router as vulnerabilities_router
 from app.api.endpoints.scans import router as scans_router
 from app.api.endpoints.scanning import router as scanning_router
 from app.api.endpoints.users import router as users_router
+from app.api.endpoints.security_audit import router as security_audit_router

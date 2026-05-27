@@ -1,11 +1,12 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+import os
 import secrets
 
 
 class Settings(BaseSettings):
     APP_NAME: str = "DevGuardian"
-    DEBUG: bool = True
+    DEBUG: bool = False
     VERSION: str = "1.0.0"
     
     # Database
@@ -16,20 +17,28 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379"
     USE_REDIS: bool = False
     
-    # JWT
-    SECRET_KEY: str = secrets.token_urlsafe(32)
+    # JWT - SECRET_KEY must be set in production
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # 30 minutes for access token
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7  # 7 days for refresh token
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     
     # Security
     ALLOWED_HOSTS: list = ["localhost", "127.0.0.1"]
     
     # Auth settings
-    EMAIL_VERIFICATION_REQUIRED: bool = False  # Set to True in production
+    EMAIL_VERIFICATION_REQUIRED: bool = False
     
     class Config:
         env_file = ".env"
+        extra = "ignore"
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.SECRET_KEY:
+            if os.environ.get("ENVIRONMENT") == "production":
+                raise ValueError("SECRET_KEY must be set in production")
+            self.SECRET_KEY = secrets.token_urlsafe(32)
 
 
 @lru_cache()

@@ -258,6 +258,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { aiFixApi } from '../services/api_client'
+import { useAuthStore } from '../stores/auth'
+const authStore = useAuthStore()
 
 interface AiFix {
   id: string
@@ -338,8 +340,8 @@ const loadAiFixes = async () => {
   error.value = ''
   
   try {
-    const response = await aiFixApi.getAiFixes()
-    aiFixes.value = (response.data as AiFix[]) || []
+    const response = await aiFixApi.getAiFixes(authStore.token!)
+    aiFixes.value = (response as AiFix[]) || []
   } catch (err: any) {
     error.value = 'Failed to load AI fixes: ' + (err.response?.data?.message || err.message)
     console.error('Error loading AI fixes:', err)
@@ -358,8 +360,7 @@ const closeModal = () => {
 
 const approveFix = async (fixId: string) => {
   try {
-    await aiFixApi.approveFix(fixId, true)
-    // Update fix in local array
+    await aiFixApi.approve(authStore.token!, fixId as any)
     const fix = aiFixes.value.find(f => f.id === fixId)
     if (fix) {
       fix.status = 'approved'
@@ -371,8 +372,7 @@ const approveFix = async (fixId: string) => {
 
 const applyFix = async (fixId: string) => {
   try {
-    await aiFixApi.applyFix(fixId)
-    // Update fix in local array
+    await aiFixApi.applyFix(authStore.token!, fixId as any)
     const fix = aiFixes.value.find(f => f.id === fixId)
     if (fix) {
       fix.status = 'applied'
@@ -384,8 +384,7 @@ const applyFix = async (fixId: string) => {
 
 const rejectFix = async (fixId: string) => {
   try {
-    await aiFixApi.rejectFix(fixId, 'Rejected by user')
-    // Update fix in local array
+    await aiFixApi.reject(authStore.token!, fixId as any)
     const fix = aiFixes.value.find(f => f.id === fixId)
     if (fix) {
       fix.status = 'rejected'

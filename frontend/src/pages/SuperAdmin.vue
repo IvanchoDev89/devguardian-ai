@@ -50,7 +50,7 @@
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Top Bar -->
       <header class="flex items-center h-16 px-6 bg-slate-900/50 backdrop-blur-sm border-b border-white/10">
-        <h1 class="text-lg font-semibold text-white">{{ currentSection.title }}</h1>
+        <h1 class="text-lg font-semibold text-white">{{ currentSection.name }}</h1>
         
         <div class="flex-1"></div>
         
@@ -168,13 +168,13 @@
               <!-- Resource Usage -->
               <div class="mt-6">
                 <h3 class="text-sm font-medium text-gray-400 mb-3">Resource Usage</h3>
-                <div v-for="resource in resources" :key="resource.name" class="mb-3">
+                <div v-for="(value, key) in resources" :key="key" class="mb-3">
                   <div class="flex justify-between text-sm mb-1">
-                    <span class="text-gray-400">{{ resource.name }}</span>
-                    <span class="text-white">{{ resource.value }}%</span>
+                    <span class="text-gray-400 capitalize">{{ key }}</span>
+                    <span class="text-white">{{ value }}%</span>
                   </div>
                   <div class="w-full bg-slate-700 rounded-full h-2">
-                    <div class="bg-cyan-500 h-2 rounded-full" :style="{ width: resource.value + '%' }"></div>
+                    <div class="bg-cyan-500 h-2 rounded-full" :style="{ width: value + '%' }"></div>
                   </div>
                 </div>
               </div>
@@ -505,7 +505,7 @@
           <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
             <h2 class="text-xl font-bold text-white mb-4">Audit Logs</h2>
             <p class="text-gray-400">View system audit logs and security events.</p>
-            <button @click="fetchAuditLogs" class="mt-4 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg">
+            <button @click="viewAuditLogs" class="mt-4 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg">
               View Audit Logs
             </button>
           </div>
@@ -540,7 +540,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
-import { adminApi } from '../services/api_client'
+import { adminApi, superAdminApi, api } from '../services/api_client'
+import { useAuthStore } from '../stores/auth'
+const authStore = useAuthStore()
 import { 
   LayoutDashboard, 
   Users, 
@@ -661,18 +663,14 @@ const fetchDashboardData = async () => {
   error.value = null
   
   try {
-    const response = await superAdminApi.getDashboard(timeRange.value)
+    const data = await superAdminApi.getStats(authStore.token!)
     
-    if (response.success && response.data) {
-      const data = response.data
-      
+    if (data) {
       // Update quick stats
-      if (data.stats) {
-        quickStats.value[0].value = (data.stats.total_users || 0).toLocaleString()
-        quickStats.value[1].value = (data.stats.active_scans || 0).toLocaleString()
-        quickStats.value[2].value = (data.stats.vulnerabilities_found || 0).toLocaleString()
-        quickStats.value[3].value = formatNumber(data.stats.api_requests || 0)
-      }
+      quickStats.value[0].value = (data.total_users || 0).toLocaleString()
+      quickStats.value[1].value = (data.active_scans || 0).toLocaleString()
+      quickStats.value[2].value = (data.vulnerabilities_found || 0).toLocaleString()
+      quickStats.value[3].value = formatNumber(data.api_requests || 0)
       
       // Update system health
       if (data.system_health) {
@@ -870,9 +868,9 @@ const refreshData = () => {
 
 const runSystemScan = async () => {
   try {
-    const response = await superAdminApi.runSystemScan('full', 'all')
-    if (response.success) {
-      console.log('System scan initiated:', response.data)
+    const response: any = await api.post('/api/scans/run', { scan_type: 'all', target: 'system' }, authStore.token!)
+    if (response && response.scan_id) {
+      console.log('System scan initiated:', response)
     }
   } catch (err) {
     console.error('Failed to run system scan:', err)
@@ -883,14 +881,9 @@ const generateReport = async () => {
   try {
     const now = new Date()
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-    const response = await superAdminApi.generateReport(
-      'detailed',
-      monthAgo.toISOString(),
-      now.toISOString(),
-      'pdf'
-    )
-    if (response.success) {
-      console.log('Report generated:', response.data)
+    const response = await api.post('/api/admin/generate-report', {}, authStore.token!)
+    if (response) {
+      console.log('Report generated:', response)
     }
   } catch (err) {
     console.error('Failed to generate report:', err)
@@ -899,9 +892,9 @@ const generateReport = async () => {
 
 const viewAuditLogs = async () => {
   try {
-    const response = await superAdminApi.getAuditLogs(100, 0)
-    if (response.success) {
-      console.log('Audit logs:', response.data)
+    const response = await superAdminApi.fetchAuditLogs(authStore.token!)
+    if (response) {
+      console.log('Audit logs:', response)
     }
   } catch (err) {
     console.error('Failed to fetch audit logs:', err)
@@ -910,9 +903,9 @@ const viewAuditLogs = async () => {
 
 const manageUsers = async () => {
   try {
-    const response = await superAdminApi.manageUsers('list', { per_page: 10 })
-    if (response.success) {
-      console.log('Users:', response.data)
+    const response = await superAdminApi.getUsers(authStore.token!)
+    if (Array.isArray(response)) {
+      console.log('Users:', response)
     }
   } catch (err) {
     console.error('Failed to fetch users:', err)

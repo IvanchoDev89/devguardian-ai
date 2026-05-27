@@ -218,7 +218,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { billingApi } from '../services/api_client'
+import { api } from '../services/api_client'
 
 const router = useRouter()
 
@@ -253,9 +253,9 @@ const usagePercent = computed(() => {
 
 const loadApiKeys = async () => {
   try {
-    const response = await apiService.get('/api-keys')
-    if (response.success && response.data) {
-      apiKeys.value = response.data
+    const response = await api.get('/api-keys')
+    if (Array.isArray(response)) {
+      apiKeys.value = response
     }
   } catch (error) {
     console.error('Failed to load API keys:', error)
@@ -264,13 +264,13 @@ const loadApiKeys = async () => {
 
 const createKey = async () => {
   try {
-    const response = await apiService.post('/api-keys', {
+    const response: any = await api.post('/api-keys', {
       name: newKey.value.name,
       plan: newKey.value.plan
     })
     
-    if (response.success && response.data) {
-      createdKey.value = response.data.key
+    if (response) {
+      createdKey.value = response.key || ''
       showCreateModal.value = false
       showSuccessModal.value = true
       loadApiKeys()
@@ -290,9 +290,10 @@ const rotateKey = async (key: ApiKey) => {
   if (!confirm('Are you sure you want to rotate this key? The old key will stop working.')) return
   
   try {
-    const response = await apiService.post(`/api-keys/${key.key_id}/rotate`)
-    if (response.success && response.data) {
-      createdKey.value = response.data.key
+    const token = localStorage.getItem('token') || ''
+    const response: any = await api.post(`/api-keys/${key.key_id}/rotate`, {}, token)
+    if (response) {
+      createdKey.value = response.key || ''
       showSuccessModal.value = true
     }
   } catch (error) {
@@ -304,7 +305,7 @@ const deleteKey = async (key: ApiKey) => {
   if (!confirm('Are you sure you want to delete this key?')) return
   
   try {
-    await apiService.delete(`/api-keys/${key.key_id}`)
+    await api.delete(`/api-keys/${key.key_id}`)
     loadApiKeys()
   } catch (error) {
     console.error('Failed to delete key:', error)

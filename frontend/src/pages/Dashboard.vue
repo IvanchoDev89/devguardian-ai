@@ -71,8 +71,20 @@
       <div v-if="loading" class="text-gray-400 text-center py-8">
         Loading...
       </div>
-      <div v-else-if="vulnerabilities.length === 0" class="text-gray-400 text-center py-8">
-        No vulnerabilities found. Run a scan to get started.
+      <div v-else-if="vulnerabilities.length === 0" class="text-center py-8">
+        <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+        </svg>
+        <p class="text-gray-400 mb-4">No vulnerabilities found. Run a scan to get started.</p>
+        <router-link 
+          to="/app/scan" 
+          class="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-lg transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Run First Scan
+        </router-link>
       </div>
       <div v-else class="space-y-3">
         <div v-for="vuln in vulnerabilities.slice(0, 5)" :key="vuln.id" 
@@ -97,8 +109,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { api } from '../services/api_client'
+import { useNotificationStore } from '../stores/notifications'
 
 const authStore = useAuthStore()
+const notification = useNotificationStore()
+
 const userName = computed(() => {
   const u = authStore.user
   return u?.username || u?.name || 'User'
@@ -153,8 +168,9 @@ const loadData = async () => {
     stats.value.critical = vulnStats?.critical || 0
     stats.value.fixed = vulnStats?.resolved || 0
     stats.value.score = Math.max(0, 100 - (stats.value.critical * 15))
-  } catch (e) {
+  } catch (e: any) {
     console.error('Failed to load dashboard data:', e)
+    notification.error('Failed to Load', e.message || 'Could not load dashboard data')
   } finally {
     loading.value = false
   }

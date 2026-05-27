@@ -73,11 +73,11 @@ def get_scan_stats(
 def get_scan(
     scan_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user = Depends(get_current_user)
 ):
     scan = db.query(Scan).filter(
         Scan.id == scan_id,
-        Scan.owner_id == current_user["sub"]
+        Scan.owner_id == current_user.id
     ).first()
     
     if not scan:
@@ -91,11 +91,11 @@ def update_scan(
     scan_id: int,
     scan_data: ScanUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user = Depends(get_current_user)
 ):
     scan = db.query(Scan).filter(
         Scan.id == scan_id,
-        Scan.owner_id == current_user["sub"]
+        Scan.owner_id == current_user.id
     ).first()
     
     if not scan:
@@ -113,11 +113,11 @@ def update_scan(
 def delete_scan(
     scan_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user = Depends(get_current_user)
 ):
     scan = db.query(Scan).filter(
         Scan.id == scan_id,
-        Scan.owner_id == current_user["sub"]
+        Scan.owner_id == current_user.id
     ).first()
     
     if not scan:

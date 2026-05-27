@@ -27,8 +27,8 @@
     </div>
 
     <!-- Vulnerabilities Table -->
-    <div class="vulnerabilities-section" v-if="result?.vulnerabilities?.length > 0">
-      <h3>Found Vulnerabilities ({{ result.vulnerabilities.length }})</h3>
+    <div class="vulnerabilities-section" v-if="(result?.vulnerabilities?.length ?? 0) > 0">
+      <h3>Found Vulnerabilities ({{ result?.vulnerabilities?.length ?? 0 }})</h3>
       
       <div class="table-container">
         <table class="vulnerabilities-table">
@@ -43,7 +43,7 @@
           </thead>
           <tbody>
             <tr 
-              v-for="(vuln, index) in result.vulnerabilities" 
+              v-for="(vuln, index) in result?.vulnerabilities ?? []" 
               :key="index"
               :class="`severity-${vuln.severity}`"
             >

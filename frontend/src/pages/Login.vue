@@ -47,7 +47,7 @@
             />
           </div>
 
-          <!-- Remember Me -->
+          <!-- Remember Me / Forgot Password -->
           <div class="flex items-center justify-between">
             <label class="flex items-center">
               <input
@@ -57,9 +57,9 @@
               />
               <span class="ml-2 text-sm text-gray-400">Remember me</span>
             </label>
-            <span class="text-sm text-gray-500 cursor-not-allowed">
+            <router-link to="/forgot-password" class="text-sm text-blue-400 hover:text-blue-300 transition-colors">
               Forgot password?
-            </span>
+            </router-link>
           </div>
 
           <!-- Error Message -->
@@ -175,7 +175,7 @@ const handleLogin = async () => {
     if (result.success) {
       router.push('/app/dashboard')
     } else {
-      error.value = result.error || 'Invalid credentials'
+      error.value = result.message || 'Invalid credentials'
     }
   } catch (err: any) {
     error.value = err.message || 'Login failed. Please try again.'

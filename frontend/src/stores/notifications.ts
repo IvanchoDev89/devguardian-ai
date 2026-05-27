@@ -13,6 +13,7 @@ export interface Notification {
 
 export const useNotificationStore = defineStore('notifications', () => {
   const notifications = ref<Notification[]>([])
+  const timeoutMap = new Map<string, ReturnType<typeof setTimeout>>()
 
   const addNotification = (notification: Omit<Notification, 'id' | 'timestamp'>) => {
     const id = Date.now().toString()
@@ -26,15 +27,20 @@ export const useNotificationStore = defineStore('notifications', () => {
     
     notifications.value.unshift(newNotification)
     
-    // Auto-remove after duration
     if (notification.duration && notification.duration > 0) {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         removeNotification(id)
       }, notification.duration)
+      timeoutMap.set(id, timeout)
     }
   }
 
   const removeNotification = (id: string) => {
+    const timeout = timeoutMap.get(id)
+    if (timeout) {
+      clearTimeout(timeout)
+      timeoutMap.delete(id)
+    }
     const index = notifications.value.findIndex(n => n.id === id)
     if (index > -1) {
       notifications.value.splice(index, 1)
@@ -42,6 +48,8 @@ export const useNotificationStore = defineStore('notifications', () => {
   }
 
   const clearAll = () => {
+    timeoutMap.forEach(timeout => clearTimeout(timeout))
+    timeoutMap.clear()
     notifications.value = []
   }
 

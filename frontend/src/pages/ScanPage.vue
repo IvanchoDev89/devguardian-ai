@@ -17,9 +17,35 @@
       <!-- Scan Configuration -->
       <div class="lg:col-span-2 space-y-6">
         <div class="bg-slate-800/50 rounded-xl border border-white/10 p-6">
-          <h2 class="text-lg font-semibold text-white mb-4">New Scan</h2>
-          
-          <form @submit.prevent="startScan" class="space-y-4">
+          <!-- Mode Tabs -->
+          <div class="flex gap-1 mb-6 p-1 bg-white/5 rounded-lg">
+            <button
+              @click="scanMode = 'repo'"
+              :class="[
+                'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all',
+                scanMode === 'repo'
+                  ? 'bg-blue-600 text-white shadow'
+                  : 'text-gray-400 hover:text-white'
+              ]"
+            >
+              🔗 Repository Scan
+            </button>
+            <button
+              @click="scanMode = 'code'"
+              :class="[
+                'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all',
+                scanMode === 'code'
+                  ? 'bg-blue-600 text-white shadow'
+                  : 'text-gray-400 hover:text-white'
+              ]"
+            >
+              📝 Paste Code
+            </button>
+          </div>
+
+          <!-- Repository Scan Mode -->
+          <form v-if="scanMode === 'repo'" @submit.prevent="startScan" class="space-y-4">
+            <h2 class="text-lg font-semibold text-white">New Scan</h2>
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-2">Scan Type</label>
               <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -83,6 +109,67 @@
             </div>
           </form>
 
+          <!-- Paste Code Mode -->
+          <form v-else @submit.prevent="startCodeScan" class="space-y-4">
+            <h2 class="text-lg font-semibold text-white">Scan Code</h2>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">Language</label>
+              <div class="flex gap-2">
+                <button
+                  v-for="lang in languages"
+                  :key="lang.value"
+                  type="button"
+                  @click="codeForm.language = lang.value"
+                  :class="[
+                    'px-4 py-2 rounded-lg border transition-all text-sm',
+                    codeForm.language === lang.value
+                      ? 'border-blue-500 bg-blue-500/10 text-blue-300'
+                      : 'border-white/10 text-gray-400 hover:border-white/30'
+                  ]"
+                >
+                  {{ lang.label }}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">Code</label>
+              <textarea
+                v-model="codeForm.code"
+                required
+                rows="16"
+                placeholder="Paste your code here..."
+                class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white font-mono text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              ></textarea>
+            </div>
+
+            <div class="flex gap-3">
+              <button
+                type="submit"
+                :disabled="codeLoading"
+                class="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 transition-all"
+              >
+                <span v-if="codeLoading" class="flex items-center justify-center gap-2">
+                  <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  Scanning...
+                </span>
+                <span v-else>🔍 Analyze Code</span>
+              </button>
+              <button
+                type="button"
+                @click="codeForm.code = ''"
+                :disabled="!codeForm.code"
+                class="px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 disabled:opacity-50"
+              >
+                Clear
+              </button>
+            </div>
+          </form>
+
           <div v-if="error" class="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
             <p class="text-red-400 text-sm">{{ error }}</p>
           </div>
@@ -98,14 +185,20 @@
                 {{ lastResult.vulnerabilities_found }} found
               </span>
             </h2>
-            <button @click="lastResult = null" class="text-gray-400 hover:text-white">
-              ✕
-            </button>
+            <div class="flex items-center gap-2">
+              <span v-if="lastResult.language" class="text-xs text-gray-500">
+                {{ lastResult.language.toUpperCase() }}
+              </span>
+              <button @click="lastResult = null" class="text-gray-400 hover:text-white">
+                ✕
+              </button>
+            </div>
           </div>
 
-          <div class="mb-4 flex gap-2 flex-wrap">
+          <!-- Tool filter tabs (repo scan) -->
+          <div v-if="lastResult.results" class="mb-4 flex gap-2 flex-wrap">
             <button
-              v-for="tool in Object.keys(lastResult.results || {})"
+              v-for="tool in Object.keys(lastResult.results)"
               :key="tool"
               @click="selectedTool = tool"
               :class="[
@@ -120,11 +213,13 @@
             </button>
           </div>
 
+          <!-- Tool error (repo scan) -->
           <div v-if="selectedTool && lastResult.results?.[selectedTool]?.error" 
                class="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
             <p class="text-yellow-400 text-sm">{{ lastResult.results[selectedTool].error }}</p>
           </div>
 
+          <!-- No vulnerabilities -->
           <div v-else-if="vulnsToShow.length === 0" class="text-center py-8 text-gray-400">
             <span class="text-4xl">✅</span>
             <p class="mt-2">No vulnerabilities found!</p>
@@ -214,12 +309,27 @@ import { scansApi } from '../services/api_client'
 
 const authStore = useAuthStore()
 
+const scanMode = ref<'repo' | 'code'>('repo')
+
 const form = ref({
   scan_type: 'all',
   target: ''
 })
 
+const codeForm = ref({
+  code: '',
+  language: 'python'
+})
+
+const languages = [
+  { value: 'python', label: 'Python' },
+  { value: 'javascript', label: 'JavaScript' },
+  { value: 'typescript', label: 'TypeScript' },
+  { value: 'other', label: 'Other' },
+]
+
 const loading = ref(false)
+const codeLoading = ref(false)
 const error = ref('')
 const scans = ref<any[]>([])
 const lastResult = ref<any>(null)
@@ -247,14 +357,23 @@ const toolsList = [
 ]
 
 const vulnsToShow = computed(() => {
-  if (!lastResult.value?.results) return []
+  if (!lastResult.value) return []
+  
+  // Code scan: vulnerabilities are directly in the response
+  if (lastResult.value.vulnerabilities && Array.isArray(lastResult.value.vulnerabilities)) {
+    return lastResult.value.vulnerabilities
+  }
+  
+  // Repo scan: vulnerabilities are nested per tool
+  if (!lastResult.value.results) return []
   
   if (selectedTool.value && lastResult.value.results[selectedTool.value]?.vulnerabilities) {
     return lastResult.value.results[selectedTool.value].vulnerabilities
   }
   
   const all: any[] = []
-  for (const toolResults of Object.values(lastResult.value.results)) {
+  const results = lastResult.value.results as Record<string, any>
+  for (const toolResults of Object.values(results)) {
     if (toolResults?.vulnerabilities) {
       all.push(...toolResults.vulnerabilities)
     }
@@ -265,7 +384,7 @@ const vulnsToShow = computed(() => {
 function updateActiveTools(type: string) {
   const toolMap: Record<string, string[]> = {
     all: ['semgrep', 'bandit', 'gosec', 'gitleaks', 'pip-audit', 'npm-audit'],
-    python: ['semgrep', 'bandit', 'gosec'],
+    python: ['semgrep', 'bandit'],
     javascript: ['semgrep', 'npm-audit'],
     go: ['gosec', 'semgrep'],
     secrets: ['gitleaks'],
@@ -286,6 +405,10 @@ onMounted(async () => {
 })
 
 async function startScan() {
+  if (!authStore.token) {
+    error.value = 'You must be logged in'
+    return
+  }
   loading.value = true
   error.value = ''
   lastResult.value = null
@@ -307,6 +430,29 @@ async function startScan() {
     error.value = e.message || 'Scan failed'
   } finally {
     loading.value = false
+  }
+}
+
+async function startCodeScan() {
+  if (!authStore.token) {
+    error.value = 'You must be logged in'
+    return
+  }
+  codeLoading.value = true
+  error.value = ''
+  lastResult.value = null
+  selectedTool.value = null
+
+  try {
+    const result = await scansApi.scanCode(authStore.token, {
+      code: codeForm.value.code,
+      language: codeForm.value.language,
+    })
+    lastResult.value = result
+  } catch (e: any) {
+    error.value = e.message || 'Code scan failed'
+  } finally {
+    codeLoading.value = false
   }
 }
 

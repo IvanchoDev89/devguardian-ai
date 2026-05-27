@@ -260,7 +260,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { scannerApi } from '../services/api_client'
+import { api } from '../services/api_client'
 
 interface ScanForm {
   code: string
@@ -322,8 +322,8 @@ const runAdvancedScan = async () => {
 
   isScanning.value = true
   try {
-    const response = await apiService.post('/api/advanced-ml/advanced-scan', scanForm.value)
-    scanResults.value = response.data.results
+    const response: any = await api.post('/api/advanced-ml/advanced-scan', scanForm.value)
+    scanResults.value = response?.results
   } catch (error) {
     console.error('Advanced scan error:', error)
     alert('Failed to run advanced scan. Please try again.')
@@ -335,8 +335,8 @@ const runAdvancedScan = async () => {
 const loadModelPerformance = async () => {
   isLoadingPerformance.value = true
   try {
-    const response = await apiService.get('/api/advanced-ml/model-performance')
-    performanceData.value = response.data.performance_comparison
+    const response: any = await api.get('/api/advanced-ml/model-performance')
+    performanceData.value = response?.performance_comparison
   } catch (error) {
     console.error('Performance data error:', error)
     alert('Failed to load performance data. Please try again.')

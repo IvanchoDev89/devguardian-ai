@@ -11,15 +11,33 @@
         <h2 class="text-lg font-semibold text-white mb-4">Profile</h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm text-gray-400 mb-2">Name</label>
-            <input v-model="name" type="text" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500" />
+            <label class="block text-sm text-gray-400 mb-2">Full Name</label>
+            <input 
+              v-model="form.name" 
+              type="text" 
+              class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500"
+              placeholder="Your full name"
+            />
           </div>
           <div>
             <label class="block text-sm text-gray-400 mb-2">Email</label>
-            <input v-model="email" type="email" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500" />
+            <input 
+              v-model="form.email" 
+              type="email" 
+              class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500"
+              placeholder="your@email.com"
+            />
           </div>
-          <button class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-lg transition-colors">
-            Save Changes
+          <button 
+            @click="saveProfile" 
+            :disabled="saving"
+            class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+          >
+            <svg v-if="saving" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>{{ saving ? 'Saving...' : 'Save Changes' }}</span>
           </button>
         </div>
       </div>
@@ -30,11 +48,15 @@
         <div class="space-y-4">
           <div class="p-3 bg-slate-900/50 rounded-lg">
             <p class="text-gray-400 text-sm">Plan</p>
-            <p class="text-white font-medium">{{ plan }}</p>
+            <p class="text-white font-medium capitalize">{{ plan }}</p>
           </div>
           <div class="p-3 bg-slate-900/50 rounded-lg">
             <p class="text-gray-400 text-sm">Role</p>
-            <p class="text-white font-medium">{{ role }}</p>
+            <p class="text-white font-medium capitalize">{{ role }}</p>
+          </div>
+          <div class="p-3 bg-slate-900/50 rounded-lg">
+            <p class="text-gray-400 text-sm">Member Since</p>
+            <p class="text-white font-medium">{{ createdAt }}</p>
           </div>
         </div>
       </div>
@@ -45,11 +67,63 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { useNotificationStore } from '../stores/notifications'
 
 const authStore = useAuthStore()
+const notification = useNotificationStore()
 
-const name = ref(authStore.user?.name || '')
-const email = ref(authStore.user?.email || '')
+const form = ref({
+  name: authStore.user?.full_name || authStore.user?.username || '',
+  email: authStore.user?.email || ''
+})
+
+const saving = ref(false)
+
 const plan = computed(() => authStore.plan || 'free')
 const role = computed(() => authStore.user?.role || 'user')
+const createdAt = computed(() => {
+  const date = authStore.user?.created_at
+  if (date) {
+    return new Date(date).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })
+  }
+  return 'N/A'
+})
+
+const saveProfile = async () => {
+  saving.value = true
+  try {
+    const token = authStore.token
+    if (!token) throw new Error('Not authenticated')
+    
+    await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002'}/api/users/me`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        full_name: form.value.name,
+        email: form.value.email
+      })
+    })
+    
+    authStore.user = {
+      ...authStore.user,
+      full_name: form.value.name,
+      email: form.value.email
+    } as any
+    
+    localStorage.setItem('user', JSON.stringify(authStore.user))
+    
+    notification.success('Profile Updated', 'Your profile has been saved successfully')
+  } catch (err: any) {
+    notification.error('Save Failed', err.message || 'Could not save profile')
+  } finally {
+    saving.value = false
+  }
+}
 </script>

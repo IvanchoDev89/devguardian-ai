@@ -2,11 +2,27 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002'
+const logger = {
+  warn: (msg: string, ...args: any[]) => console.warn(`[Auth] ${msg}`, ...args),
+  error: (msg: string, ...args: any[]) => console.error(`[Auth] ${msg}`, ...args),
+}
+
+export interface User {
+  id: number
+  email: string
+  username: string
+  full_name?: string
+  name?: string
+  role?: string
+  is_superuser?: boolean
+  is_active?: boolean
+  created_at?: string
+}
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<{ id: number; email: string; username: string; full_name?: string } | null>(null)
-  const token = ref<string | null>(localStorage.getItem('dev_token'))
-  const refreshToken = ref<string | null>(localStorage.getItem('dev_refresh_token'))
+  const user = ref<User | null>(null)
+  const token = ref<string | null>(null)
+  const refreshToken = ref<string | null>(null)
   const isLoading = ref(false)
   const plan = ref<string>('free')
   const scansUsed = ref(0)
@@ -36,7 +52,8 @@ export const useAuthStore = defineStore('auth', () => {
       const data = await response.json()
       token.value = data.access_token
       refreshToken.value = data.refresh_token
-      localStorage.setItem('dev_token', data.access_token)
+
+      localStorage.setItem('access_token', data.access_token)
       localStorage.setItem('dev_refresh_token', data.refresh_token)
 
       await fetchUser()
@@ -95,8 +112,6 @@ export const useAuthStore = defineStore('auth', () => {
       const data = await response.json()
       token.value = data.access_token
       refreshToken.value = data.refresh_token
-      localStorage.setItem('dev_token', data.access_token)
-      localStorage.setItem('dev_refresh_token', data.refresh_token)
       return true
     } catch {
       logout()
@@ -112,7 +127,6 @@ export const useAuthStore = defineStore('auth', () => {
       })
       if (response.ok) {
         user.value = await response.json()
-        localStorage.setItem('user', JSON.stringify(user.value))
       } else if (response.status === 401) {
         // Try to refresh token
         const refreshed = await refreshAccessToken()
@@ -125,13 +139,24 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function logout() {
+  async function logout() {
     if (refreshToken.value) {
-      fetch(`${API_BASE}/api/auth/logout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshToken.value }),
-      }).catch(() => {})
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/logout`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token.value}`
+          },
+          body: JSON.stringify({ refresh_token: refreshToken.value }),
+        })
+        
+        if (!response.ok) {
+          logger.warn('Logout request failed, clearing local state anyway')
+        }
+      } catch (err) {
+        logger.warn('Logout request error, clearing local state:', err)
+      }
     }
     
     user.value = null
@@ -140,30 +165,49 @@ export const useAuthStore = defineStore('auth', () => {
     plan.value = 'free'
     scansUsed.value = 0
     scansQuota.value = 50
-    localStorage.removeItem('dev_token')
-    localStorage.removeItem('dev_refresh_token')
     localStorage.removeItem('user')
     localStorage.removeItem('plan')
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('dev_refresh_token')
   }
 
   function initAuthState() {
-    const storedToken = localStorage.getItem('dev_token')
-    const storedRefresh = localStorage.getItem('dev_refresh_token')
     const storedUser = localStorage.getItem('user')
     const storedPlan = localStorage.getItem('plan')
+    const storedRefresh = localStorage.getItem('dev_refresh_token')
+    const storedToken = localStorage.getItem('access_token')
     
+    if (storedUser) {
+      try {
+        user.value = JSON.parse(storedUser)
+      } catch {}
+    }
+    if (storedPlan) {
+      plan.value = storedPlan
+    }
     if (storedToken) {
       token.value = storedToken
-      refreshToken.value = storedRefresh
-      if (storedUser) {
-        try {
-          user.value = JSON.parse(storedUser)
-        } catch {}
-      }
-      if (storedPlan) {
-        plan.value = storedPlan
-      }
       fetchUser()
+    }
+    if (storedRefresh) {
+      refreshToken.value = storedRefresh
+      refreshAccessToken().then(success => {
+        if (!success) {
+          refreshToken.value = null
+          localStorage.removeItem('dev_refresh_token')
+          localStorage.removeItem('access_token')
+          token.value = null
+        } else {
+          localStorage.setItem('access_token', token.value || '')
+        }
+      })
+    }
+  }
+
+  function incrementScans() {
+    scansUsed.value++
+    if (scansUsed.value >= scansQuota.value) {
+      plan.value = 'pro'
     }
   }
 
@@ -182,6 +226,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     fetchUser,
     refreshAccessToken,
-    initAuthState
+    initAuthState,
+    incrementScans
   }
 })

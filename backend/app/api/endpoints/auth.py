@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from datetime import timedelta, datetime
-from collections import defaultdict
 import secrets
 import hashlib
 from app.core.database import get_db
@@ -19,24 +19,89 @@ from app.core.config import settings
 from app.models.models import User, RefreshToken, PasswordResetToken
 from app.models.schemas import UserCreate, UserResponse, Token, TokenResponse, RefreshTokenResponse
 
+import logging
+import json
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
-# Rate limiting
-rate_limit_store = defaultdict(list)
+CSRF_TOKEN_EXPIRE_MINUTES = 60
+csrf_tokens: dict[str, tuple[str, datetime]] = {}
+
+
+def generate_csrf_token(user_id: int) -> str:
+    token = secrets.token_urlsafe(32)
+    expires = datetime.utcnow() + timedelta(minutes=CSRF_TOKEN_EXPIRE_MINUTES)
+    csrf_tokens[token] = (str(user_id), expires)
+    return token
+
+
+def validate_csrf_token(token: str, user_id: int) -> bool:
+    if token not in csrf_tokens:
+        return False
+    stored_user_id, expires = csrf_tokens[token]
+    if datetime.utcnow() > expires:
+        del csrf_tokens[token]
+        return False
+    return stored_user_id == str(user_id)
+
+
 RATE_LIMIT = 5
 RATE_WINDOW = 60
 
 
-def check_rate_limit(request: Request):
+def check_rate_limit(request: Request, endpoint: str = "default"):
+    """Rate limiting with Redis fallback to in-memory"""
     client_ip = request.client.host if request.client else "unknown"
     now = datetime.utcnow()
-    rate_limit_store[client_ip] = [
-        t for t in rate_limit_store[client_ip]
+    key = f"rate_limit:{endpoint}:{client_ip}"
+    
+    if settings.USE_REDIS and settings.REDIS_URL:
+        try:
+            import redis
+            redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+            current_count = redis_client.get(key)
+            
+            if current_count and int(current_count) >= RATE_LIMIT:
+                raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+            
+            pipe = redis_client.pipeline()
+            pipe.incr(key)
+            pipe.expire(key, RATE_WINDOW)
+            pipe.execute()
+            return
+        except Exception as e:
+            logger.warning(f"Redis rate limiting failed, falling back to in-memory: {e}")
+    
+    # In-memory fallback with automatic cleanup
+    if not hasattr(check_rate_limit, 'store'):
+        check_rate_limit.store = {}
+        check_rate_limit.last_cleanup = now
+    
+    store = check_rate_limit.store
+    
+    if client_ip not in store:
+        store[client_ip] = []
+    
+    store[client_ip] = [
+        t for t in store[client_ip]
         if (now - t).total_seconds() < RATE_WINDOW
     ]
-    if len(rate_limit_store[client_ip]) >= RATE_LIMIT:
+    
+    if len(store[client_ip]) >= RATE_LIMIT:
         raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
-    rate_limit_store[client_ip].append(now)
+    
+    store[client_ip].append(now)
+    
+    # Periodic cleanup
+    if len(store) > 10000:
+        expired_keys = [
+            k for k, v in store.items()
+            if not v or (now - max(v)).total_seconds() > RATE_WINDOW * 2
+        ]
+        for k in expired_keys[:5000]:
+            del store[k]
 
 
 class EmailSchema(BaseModel):
@@ -95,9 +160,13 @@ def register(user: UserCreate, db: Session = Depends(get_db), request: Request =
     return db_user
 
 
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
 @router.post("/verify-email")
-def verify_email(token: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.verification_token == token).first()
+def verify_email(data: VerifyEmailRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.verification_token == data.token).first()
     if not user:
         raise HTTPException(status_code=400, detail="Invalid verification token")
     
@@ -108,7 +177,7 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     return {"message": "Email verified successfully"}
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login")
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
@@ -136,6 +205,9 @@ def login(
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
     
+    # Generate CSRF token
+    csrf_token = generate_csrf_token(user.id)
+    
     # Store refresh token
     db_refresh = RefreshToken(
         token=hashlib.sha256(refresh_token.encode()).hexdigest(),
@@ -145,11 +217,43 @@ def login(
     db.add(db_refresh)
     db.commit()
     
-    return {
+    # Audit logging
+    logger.info(f"User {user.id} ({user.email}) logged in from IP {request.client.host if request else 'unknown'}")
+    
+    # Set httpOnly cookies for tokens (production)
+    response = JSONResponse({
         "access_token": access_token,
         "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
+        "token_type": "bearer",
+        "csrf_token": csrf_token
+    })
+    
+    # In production, these cookies would be httpOnly and Secure
+    # For now, we include them in response body for backward compatibility
+    # But also set cookies for enhanced security
+    is_production = not settings.DEBUG
+    
+    if is_production:
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=True,
+            samesite="strict",
+            max_age=30 * 60,
+            path="/"
+        )
+        response.set_cookie(
+            key="refresh_token", 
+            value=refresh_token,
+            httponly=True,
+            secure=True,
+            samesite="strict",
+            max_age=30 * 24 * 60 * 60,
+            path="/"
+        )
+    
+    return response
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -193,11 +297,23 @@ def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/logout")
-def logout(request: RefreshTokenRequest, db: Session = Depends(get_db)):
-    token_hash = hashlib.sha256(request.refresh_token.encode()).hexdigest()
+def logout(
+    token_data: RefreshTokenRequest,
+    fastapi_request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Validate CSRF token
+    csrf_from_header = fastapi_request.headers.get("X-CSRF-Token")
+    if csrf_from_header and not validate_csrf_token(csrf_from_header, current_user.id):
+        raise HTTPException(status_code=403, detail="Invalid CSRF token")
+    
+    token_hash = hashlib.sha256(token_data.refresh_token.encode()).hexdigest()
     db_token = db.query(RefreshToken).filter(RefreshToken.token == token_hash).first()
     
     if db_token:
+        user_email = db_token.user.email if db_token.user else "unknown"
+        logger.info(f"User {user_email} logged out")
         db.delete(db_token)
         db.commit()
     
@@ -207,7 +323,7 @@ def logout(request: RefreshTokenRequest, db: Session = Depends(get_db)):
 @router.post("/request-password-reset")
 def request_password_reset(data: PasswordResetRequest, db: Session = Depends(get_db), request: Request = None):
     if request:
-        check_rate_limit(request)
+        check_rate_limit(request, "password_reset")
     
     user = db.query(User).filter(User.email == data.email).first()
     
@@ -228,9 +344,11 @@ def request_password_reset(data: PasswordResetRequest, db: Session = Depends(get
     db.add(db_token)
     db.commit()
     
+    logger.info(f"Password reset requested for user {user.id} ({user.email})")
+    
     # TODO: Send email with reset link
     # In production: send email with link containing reset_token
-    print(f"Password reset token for {user.email}: {reset_token}")
+    pass
     
     return {"message": "If the email exists, a reset link has been sent"}
 

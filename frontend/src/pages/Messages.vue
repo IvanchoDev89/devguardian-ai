@@ -17,8 +17,17 @@
             Loading messages...
           </div>
           
-          <div v-else-if="messages.length === 0" class="p-4 text-center text-gray-400">
-            No messages yet
+          <div v-else-if="messages.length === 0" class="p-8 text-center">
+            <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            <p class="text-gray-400 mb-4">No messages yet</p>
+            <button class="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-lg transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+              </svg>
+              Send Message
+            </button>
           </div>
           
           <div v-else class="divide-y divide-white/5">
@@ -128,7 +137,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { messagesApi } from '../services/api_client'
+import { messageService } from '../services/api_client'
+import { useAuthStore } from '../stores/auth'
+const authStore = useAuthStore()
 
 interface Message {
   id: number
@@ -161,9 +172,9 @@ onMounted(async () => {
 const loadMessages = async () => {
   loading.value = true
   try {
-    const response = await messageService.getMessages()
-    if (response.success && response.data) {
-      messages.value = response.data
+    const response = await messageService.list(authStore.token!)
+    if (Array.isArray(response)) {
+      messages.value = response
     }
   } catch (error) {
     console.error('Error loading messages:', error)
@@ -181,7 +192,6 @@ const selectMessage = async (message: Message) => {
 
 const markAsRead = async (id: number) => {
   try {
-    await messageService.markAsRead(id)
     const message = messages.value.find(m => m.id === id)
     if (message) {
       message.is_read = true
@@ -197,13 +207,13 @@ const sendMessage = async () => {
   
   sending.value = true
   try {
-    const response = await messageService.sendMessage({
+    const response = await messageService.send(authStore.token!, {
       receiver_id: newMessage.value.receiver_id,
       subject: newMessage.value.subject,
       body: newMessage.value.body
     })
     
-    if (response.success) {
+    if (response) {
       newMessage.value = { receiver_id: null, subject: '', body: '' }
       await loadMessages()
     }

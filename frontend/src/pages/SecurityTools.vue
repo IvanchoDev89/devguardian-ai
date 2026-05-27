@@ -126,6 +126,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useAuthStore } from '../stores/auth'
+
+const authStore = useAuthStore()
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002'
 
 const activeTool = ref('')
 const results = ref<any[]>([])
@@ -140,13 +144,16 @@ const getSeverityClass = (severity?: string) => {
 
 const testCloudScanner = async () => {
   try {
-    const res = await fetch('http://localhost:8003/api/v1/cloud/scan', {
+    const res = await fetch(`${API_BASE}/api/scans/run`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ config: 'resource "aws_s3_bucket" "test" { acl = "public" }', provider: 'aws' })
+      headers: { 
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authStore.token}`
+      },
+      body: JSON.stringify({ scan_type: 'cloud', target: 'aws' })
     })
     const data = await res.json()
-    results.value = data.findings || []
+    results.value = data.vulnerabilities || []
   } catch (e) {
     console.error('Cloud scan failed:', e)
   }
@@ -154,9 +161,13 @@ const testCloudScanner = async () => {
 
 const loadPosture = async () => {
   try {
-    const res = await fetch('http://localhost:8003/api/v1/posture/trend')
-    const data = await res.json()
-    results.value = [{ title: 'Security Trend', severity: data.trend || 'stable' }]
+    const res = await fetch(`${API_BASE}/api/scans`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      results.value = [{ title: 'Security Scans', severity: 'medium' }]
+    }
   } catch (e) {
     console.error('Failed to load posture:', e)
   }
@@ -164,9 +175,13 @@ const loadPosture = async () => {
 
 const loadRules = async () => {
   try {
-    const res = await fetch('http://localhost:8003/api/v1/rules/')
-    const data = await res.json()
-    results.value = data.map((r: any) => ({ title: r.name, severity: r.severity }))
+    const res = await fetch(`${API_BASE}/api/vulnerabilities`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      results.value = data.slice(0, 10).map((r: any) => ({ title: r.title, severity: r.severity }))
+    }
   } catch (e) {
     console.error('Failed to load rules:', e)
   }

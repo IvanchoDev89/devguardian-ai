@@ -63,6 +63,14 @@ docker-compose.override.yml
 *.log
 logs/
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Build artifacts
+frontend/tsconfig.tsbuildinfo
+
 # Temporary files
 tmp/
 temp/

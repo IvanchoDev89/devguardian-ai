@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { api } from '../services/api_client'
+import { api as apiClient } from '../services/api_client'
 
 export interface UserNotification {
   id: number
@@ -52,7 +52,8 @@ export const useUserNotificationsStore = defineStore('userNotifications', () => 
 
   const markAsRead = async (id: number) => {
     try {
-      const response = await apiClient.post<{ success: boolean }>(`/v1/notifications/${id}/read`)
+      const token = localStorage.getItem('token') || ''
+      const response = await apiClient.post<{ success: boolean }>(`/v1/notifications/${id}/read`, {}, token)
       if (response.success) {
         const notification = notifications.value.find(n => n.id === id)
         if (notification) {
@@ -67,7 +68,8 @@ export const useUserNotificationsStore = defineStore('userNotifications', () => 
 
   const markAllAsRead = async () => {
     try {
-      const response = await apiClient.post<{ success: boolean }>('/v1/notifications/read-all')
+      const token = localStorage.getItem('token') || ''
+      const response = await apiClient.post<{ success: boolean }>('/v1/notifications/read-all', {}, token)
       if (response.success) {
         notifications.value.forEach(n => {
           n.is_read = true

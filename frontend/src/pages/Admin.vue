@@ -324,7 +324,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { adminApi } from '../services/api_client'
+import { adminApi, api } from '../services/api_client'
+import { useAuthStore } from '../stores/auth'
+const authStore = useAuthStore()
 
 const loading = ref(true)
 const todayScans = ref(0)
@@ -401,20 +403,19 @@ function formatShortDate(dateStr: string): string {
 async function loadData() {
   try {
     loading.value = true
-    const data = await scannerApi.getAdminStats()
+    const data = await adminApi.getStats(authStore.token!)
     
-    const overview = data.overview || {}
     stats.value = {
-      totalScans: overview.total_scans || 0,
-      totalVulnerabilities: overview.total_vulnerabilities || 0,
-      openVulns: data.vuln_status?.open || 0,
-      fixedVulns: data.vuln_status?.fixed || 0,
-      totalUsers: overview.total_users || 0,
-      activeUsers: overview.total_users || 0,
-      totalApiKeys: overview.total_api_keys || 0,
-      activeApiKeys: overview.active_api_keys || 0,
-      totalWebhooks: overview.total_webhooks || 0,
-      avgScore: overview.avg_security_score || 0,
+      totalScans: data.total_scans || 0,
+      totalVulnerabilities: data.total_vulnerabilities || 0,
+      openVulns: data.open_vulns || 0,
+      fixedVulns: data.fixed_vulns || 0,
+      totalUsers: data.total_users || 0,
+      activeUsers: 0,
+      totalApiKeys: 0,
+      activeApiKeys: 0,
+      totalWebhooks: 0,
+      avgScore: data.avg_security_score || 0,
       criticalVulns: data.severity_breakdown?.critical || 0
     }
     

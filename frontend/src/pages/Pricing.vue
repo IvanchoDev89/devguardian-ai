@@ -96,7 +96,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { billingApi } from '../services/api_client'
+import { api } from '../services/api_client'
 
 const router = useRouter()
 
@@ -136,9 +136,9 @@ const faqs = [
 
 const loadPlans = async () => {
   try {
-    const response = await apiService.aiGet('/plans')
-    if (response.success && response.data) {
-      plans.value = response.data
+    const response = await api.get('/api/plans')
+    if (Array.isArray(response)) {
+      plans.value = response
     }
   } catch (error) {
     console.error('Failed to load plans:', error)

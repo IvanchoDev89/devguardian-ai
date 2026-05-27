@@ -30,8 +30,20 @@
 
     <!-- List -->
     <div class="bg-slate-800/50 rounded-xl border border-white/10 overflow-hidden">
-      <div v-if="vulnerabilities.length === 0" class="text-gray-400 text-center py-12">
-        No vulnerabilities found
+      <div v-if="vulnerabilities.length === 0" class="text-center py-12">
+        <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+        </svg>
+        <p class="text-gray-400 mb-4">No vulnerabilities found. Scan your code to find security issues.</p>
+        <router-link 
+          to="/app/scan" 
+          class="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-lg transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Scan Repository
+        </router-link>
       </div>
       <div v-else class="divide-y divide-white/10">
         <div v-for="vuln in vulnerabilities" :key="vuln.id" 
@@ -66,6 +78,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '../stores/auth'
+
+const authStore = useAuthStore()
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002'
 
 const vulnerabilities = ref<any[]>([])
 
@@ -95,8 +111,12 @@ const severityBadge = (severity: string) => {
 
 onMounted(async () => {
   try {
-    const res = await fetch('http://localhost:8003/api/v1/vulnerabilities')
-    vulnerabilities.value = await res.json()
+    const res = await fetch(`${API_BASE}/api/vulnerabilities`, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    if (res.ok) {
+      vulnerabilities.value = await res.json()
+    }
   } catch (e) {
     console.error('Failed to load vulnerabilities:', e)
   }

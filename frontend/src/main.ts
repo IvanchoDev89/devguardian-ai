@@ -21,6 +21,16 @@ const routes = [
     name: 'Signup',
     component: () => import('./pages/Signup.vue')
   },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('./pages/ForgotPassword.vue')
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: () => import('./pages/ResetPassword.vue')
+  },
   
   // Protected routes - with AppLayout
   {
@@ -105,6 +115,26 @@ const routes = [
         path: 'super-admin',
         name: 'SuperAdmin',
         component: () => import('./pages/SuperAdmin.vue')
+      },
+      {
+        path: 'notifications',
+        name: 'Notifications',
+        component: () => import('./pages/Notifications.vue')
+      },
+      {
+        path: 'messages',
+        name: 'Messages',
+        component: () => import('./pages/Messages.vue')
+      },
+      {
+        path: 'sql-injection-scanner',
+        name: 'SQLInjectionScanner',
+        component: () => import('./pages/SQLInjectionScanner.vue')
+      },
+      {
+        path: 'pricing',
+        name: 'Pricing',
+        component: () => import('./pages/Pricing.vue')
       }
     ]
   },

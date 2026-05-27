@@ -199,7 +199,7 @@ async function createVuln() {
   const result = await vulnStore.createVulnerability({
     title: newVuln.value.title,
     description: newVuln.value.description,
-    severity: newVuln.value.severity,
+    severity: newVuln.value.severity as 'critical' | 'high' | 'medium' | 'low',
     cwe_id: newVuln.value.cwe_id || undefined,
   })
 

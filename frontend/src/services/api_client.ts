@@ -45,22 +45,9 @@ class ApiClient {
 
       return response.json()
     } catch (e) {
-      console.warn(`API call to ${endpoint} failed, returning mock data`)
-      return this.getMockData(endpoint, method) as T
+      console.error(`API call to ${endpoint} failed:`, e)
+      throw e
     }
-  }
-
-  private getMockData(endpoint: string, method: string): any {
-    if (endpoint.includes('vulnerabilities')) {
-      return []
-    }
-    if (endpoint.includes('scans')) {
-      return []
-    }
-    if (endpoint.includes('auth/me')) {
-      return { id: 1, email: 'user@example.com', username: 'user' }
-    }
-    return {}
   }
 
   async get<T>(endpoint: string, token?: string): Promise<T> {
@@ -93,22 +80,24 @@ export const authApi = {
     formData.append('username', email)
     formData.append('password', password)
     
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData,
-      })
-      
-      if (!response.ok) throw new Error('Login failed')
-      return response.json()
-    } catch (e) {
-      return {
-        access_token: 'mock_token_' + Date.now(),
-        refresh_token: 'mock_refresh_' + Date.now(),
-        token_type: 'bearer'
-      }
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData,
+    })
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Login failed' }))
+      throw new Error(error.detail || 'Login failed')
     }
+    
+    const data = await response.json()
+    
+    if (!data.access_token) {
+      throw new Error('Invalid response from server')
+    }
+    
+    return data
   },
 
   logout: async (token: string) => api.post('/api/auth/logout', {}, token),
@@ -169,6 +158,9 @@ export const scansApi = {
 
   run: (token: string, data: { scan_type: string; target: string; options?: any }) => 
     api.post<any>('/api/scans/run', data, token),
+
+  scanCode: (token: string, data: { code: string; language: string; filename?: string }) =>
+    api.post<any>('/api/scans/scan-code', data, token),
 }
 
 // Health check
@@ -211,43 +203,99 @@ export const assetsApi = {
   delete: (token: string, id: number) => api.delete(`/api/assets/${id}`, token),
 }
 
-// Admin API (placeholder)
+// Admin API
 export const adminApi = {
   getStats: (token: string) => api.get<any>('/api/admin/stats', token),
   getUsers: (token: string) => api.get<any[]>('/api/admin/users', token),
   updateUser: (token: string, id: number, data: any) => api.put(`/api/admin/users/${id}`, data, token),
 }
 
-// Repository API (placeholder)
+// Repository API
 export const repoApi = {
   list: (token: string) => api.get<any[]>('/api/repositories', token),
   add: (token: string, data: any) => api.post('/api/repositories', data, token),
   scan: (token: string, id: number) => api.post(`/api/repositories/${id}/scan`, {}, token),
   delete: (token: string, id: number) => api.delete(`/api/repositories/${id}`, token),
+  scanRepo: (token: string, repoUrl: string, provider?: string, branch?: string) =>
+    api.post('/api/repositories', { repo_url: repoUrl, provider, branch }, token),
+  getResults: (token: string, scanId: string) => api.get(`/api/scanner/results/${scanId}`, token),
+  getRepoScanResults: (token: string, scanId: string) => api.get(`/api/scanner/repo/results/${scanId}`, token),
 }
 
-// AI Fixes API (placeholder)
+// AI Fixes API
 export const aiFixApi = {
   list: (token: string) => api.get<any[]>('/api/ai-fixes', token),
-  approve: (token: string, id: number) => api.post(`/api/ai-fixes/${id}/approve`, {}, token),
-  reject: (token: string, id: number) => api.post(`/api/ai-fixes/${id}/reject`, {}, token),
+  getAiFixes: (token: string) => api.get<any[]>('/api/vulnerabilities?ai_fixed=true', token),
+  approve: (token: string, id: number) => api.post(`/api/vulnerabilities/${id}/approve`, {}, token),
+  reject: (token: string, id: number) => api.post(`/api/vulnerabilities/${id}/reject`, {}, token),
+  applyFix: (token: string, id: number) => api.post(`/api/vulnerabilities/${id}/apply-fix`, {}, token),
 }
 
-// Pentest API (placeholder)
+// Pentest API
 export const pentestApi = {
-  startScan: (token: string, data: any) => api.post('/api/pentest/start', data, token),
-  getStatus: (token: string, scanId: string) => api.get(`/api/pentest/${scanId}`, token),
-  getFindings: (token: string, scanId: string) => api.get(`/api/pentest/${scanId}/findings`, token),
-  stopScan: (token: string, scanId: string) => api.post(`/api/pentest/${scanId}/stop`, {}, token),
+  startScan: (token: string, data: any) => api.post('/api/scans/run', data, token),
+  getStatus: (token: string, scanId: string) => api.get(`/api/scans/${scanId}`, token),
+  getFindings: (token: string, scanId: string) => api.get(`/api/vulnerabilities?scan_id=${scanId}`, token),
+  stopScan: (token: string, scanId: string) => api.put(`/api/scans/${scanId}`, { status: 'stopped' }, token),
+  getScanStatus: (token: string, scanId: string) => api.get(`/api/scans/${scanId}`, token),
+  getScanFindings: (token: string, scanId: string) => api.get(`/api/vulnerabilities?scan_id=${scanId}`, token),
+  getZeroDayThreats: (token: string, scanId: string) => api.get(`/api/vulnerabilities?type=zero_day&scan_id=${scanId}`, token),
 }
 
-// Scanner API (placeholder)
+// Scanner API
 export const scannerApi = {
   analyze: (token: string, code: string, language: string) => 
     api.post('/api/scanner/analyze', { code, language }, token),
-  
   scanRepo: (token: string, repoUrl: string, provider?: string, branch?: string) =>
     api.post('/api/scanner/repo', { repo_url: repoUrl, provider, branch }, token),
-  
   getResults: (token: string, scanId: string) => api.get(`/api/scanner/results/${scanId}`, token),
+  getZeroDayThreats: (token: string, scanId: string) => api.get(`/api/scanner/threats/${scanId}`, token),
+  getRepoScanResults: (token: string, scanId: string) => api.get(`/api/scanner/repo/results/${scanId}`, token),
+}
+
+// Super Admin API
+export const superAdminApi = {
+  getStats: (token: string) => api.get<any>('/api/admin/stats', token),
+  getUsers: (token: string) => api.get<any[]>('/api/admin/users', token),
+  updateUser: (token: string, id: number, data: any) => api.put(`/api/admin/users/${id}`, data, token),
+  fetchAuditLogs: (token: string, params?: any) => api.get<any[]>('/api/admin/audit-logs', token),
+}
+
+// AI Service API
+export const aiService = {
+  analyze: (token: string, code: string, language: string) => 
+    api.post('/api/scanner/analyze', { code, language }, token),
+  getZeroDayThreats: (token: string) => api.get('/api/vulnerabilities?type=zero_day', token),
+  scanDependencies: (token: string, target: string) => 
+    api.post('/api/scans/run', { scan_type: 'dependencies', target }, token),
+}
+
+// Pricing API
+export const pricingApi = {
+  list: () => api.get<any[]>('/api/plans'),
+  getCurrent: (token: string) => api.get<any>('/api/users/me', token),
+}
+
+// Asset Service API
+export const assetService = {
+  list: (token: string) => api.get<any[]>('/api/assets', token),
+  create: (token: string, data: any) => api.post('/api/assets', data, token),
+  update: (token: string, id: number, data: any) => api.put(`/api/assets/${id}`, data, token),
+  delete: (token: string, id: number) => api.delete(`/api/assets/${id}`, token),
+}
+
+// Message Service API
+export const messageService = {
+  list: (token: string) => api.get<any[]>('/api/messages', token),
+  send: (token: string, data: any) => api.post('/api/messages', data, token),
+  delete: (token: string, id: number) => api.delete(`/api/messages/${id}`, token),
+}
+
+// API Client service for legacy compatibility
+export const apiClient = api
+
+// apiService alias for backwards compatibility
+export const apiService = {
+  ...scansApi,
+  ...vulnApi,
 }
