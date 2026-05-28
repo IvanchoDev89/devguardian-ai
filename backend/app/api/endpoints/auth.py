@@ -6,6 +6,7 @@ from pydantic import BaseModel, EmailStr, field_validator
 from datetime import timedelta, datetime
 import secrets
 import hashlib
+import re
 from app.core.database import get_db
 from app.core.security import (
     verify_password,

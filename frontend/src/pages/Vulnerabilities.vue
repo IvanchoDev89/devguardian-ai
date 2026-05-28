@@ -62,7 +62,7 @@
                     {{ vuln.file_path }}
                   </span>
                   <span v-if="vuln.cwe_id">{{ vuln.cwe_id }}</span>
-                  <span v-if="vuln.cvss_score">CVSS: {{ vuln.cvss_score }}</span>
+                  <span v-if="vuln.cvss_score !== undefined && vuln.cvss_score !== null">CVSS: {{ vuln.cvss_score }}</span>
                 </div>
               </div>
             </div>

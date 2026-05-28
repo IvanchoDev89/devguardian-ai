@@ -100,14 +100,12 @@ const saveProfile = async () => {
     const token = authStore.token
     if (!token) throw new Error('Not authenticated')
     
-    await api.put('/api/users/me', {
+    const updatedUser: { full_name?: string } = await api.put('/api/users/me', {
       full_name: form.value.name,
-      email: form.value.email
     }, token)
     
     if (authStore.user) {
-      authStore.user.full_name = form.value.name
-      authStore.user.email = form.value.email
+      authStore.user.full_name = updatedUser.full_name || form.value.name
       localStorage.setItem('user', JSON.stringify(authStore.user))
     }
     

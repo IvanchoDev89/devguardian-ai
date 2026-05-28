@@ -198,7 +198,7 @@
                 {{ index + 1 }}
               </div>
               <div class="flex-1">
-                <p class="text-white font-medium">{{ user.name }}</p>
+                <p class="text-white font-medium">{{ user.full_name || user.name }}</p>
                 <p class="text-gray-400 text-sm">{{ user.email }}</p>
               </div>
               <div class="text-right">
@@ -605,6 +605,7 @@ const fetchDashboardData = async () => {
       // Update top users
       if (data.top_users) {
         topUsers.value = data.top_users.map((user: any, index: number) => ({
+          full_name: user.full_name || user.name,
           name: user.name,
           email: user.email,
           scans: user.repo_count || 0,

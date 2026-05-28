@@ -125,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { scansApi, vulnApi } from '../services/api_client'
 
@@ -133,6 +133,21 @@ const authStore = useAuthStore()
 
 const activeTool = ref('')
 const results = ref<any[]>([])
+const scanning = ref(false)
+
+watch(activeTool, async (tool) => {
+  if (!tool || !authStore.token) return
+  scanning.value = true
+  try {
+    const data = await scansApi.run(authStore.token, { scan_type: tool, target: '.' })
+    results.value = data?.vulnerabilities || []
+  } catch (e) {
+    console.error(`${tool} scan failed:`, e)
+    results.value = []
+  } finally {
+    scanning.value = false
+  }
+})
 
 const getSeverityClass = (severity?: string) => {
   const s = severity?.toLowerCase() || 'medium'
@@ -144,11 +159,14 @@ const getSeverityClass = (severity?: string) => {
 
 const testCloudScanner = async () => {
   if (!authStore.token) return
+  scanning.value = true
   try {
-    const data = await scansApi.run(authStore.token, { scan_type: 'cloud', target: 'aws' })
+    const data = await scansApi.run(authStore.token, { scan_type: 'secrets', target: '.' })
     results.value = data?.vulnerabilities || []
   } catch (e) {
     console.error('Cloud scan failed:', e)
+  } finally {
+    scanning.value = false
   }
 }
 

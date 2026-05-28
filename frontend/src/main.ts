@@ -99,7 +99,7 @@ const routes = [
       {
         path: 'teams',
         name: 'Teams',
-        component: () => import('./pages/Settings.vue')
+        redirect: '/app/settings'
       },
       {
         path: 'settings',

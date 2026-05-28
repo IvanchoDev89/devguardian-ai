@@ -96,22 +96,19 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { Vulnerability as BaseVulnerability } from '../services/types'
 
-interface Vulnerability {
-  line_number: number
-  vulnerability_type: string
-  severity: string
-  description: string
-  cwe_id?: string
+interface ResultVulnerability extends BaseVulnerability {
+  vulnerability_type?: string
 }
 
 interface AnalysisResult {
-  vulnerabilities: Vulnerability[]
+  vulnerabilities: ResultVulnerability[]
   summary: string
   score: number
   language: string
   scan_id: string
-  timestamp: string
+  timestamp?: string
 }
 
 const props = defineProps<{

@@ -210,16 +210,16 @@ export const adminApi = {
   updateUser: (token: string, id: number, data: any) => api.put(`/api/admin/users/${id}`, data, token),
 }
 
-// Repository API
+// Repository API (maps to real /api/scans endpoints)
 export const repoApi = {
-  list: (token: string) => api.get<any[]>('/api/repositories', token),
-  add: (token: string, data: any) => api.post('/api/repositories', data, token),
-  scan: (token: string, id: number) => api.post(`/api/repositories/${id}/scan`, {}, token),
-  delete: (token: string, id: number) => api.delete(`/api/repositories/${id}`, token),
+  list: (token: string) => api.get<any[]>('/api/scans', token),
+  add: (token: string, data: any) => api.post('/api/scans/run', data, token),
+  scan: (token: string, id: number) => api.post(`/api/scans/run`, { scan_type: 'all', target: `scan_${id}` }, token),
+  delete: (token: string, id: number) => api.delete(`/api/scans/${id}`, token),
   scanRepo: (token: string, repoUrl: string, provider?: string, branch?: string) =>
-    api.post('/api/repositories', { repo_url: repoUrl, provider, branch }, token),
-  getResults: (token: string, scanId: string) => api.get(`/api/scanner/results/${scanId}`, token),
-  getRepoScanResults: (token: string, scanId: string) => api.get(`/api/scanner/repo/results/${scanId}`, token),
+    api.post('/api/scans/run', { scan_type: 'all', target: repoUrl, options: { provider, branch } }, token),
+  getResults: (token: string, scanId: string) => api.get(`/api/scans/${scanId}`, token),
+  getRepoScanResults: (token: string, scanId: string) => api.get(`/api/scans/${scanId}`, token),
 }
 
 // AI Fixes API
@@ -242,15 +242,15 @@ export const pentestApi = {
   getZeroDayThreats: (token: string, scanId: string) => api.get(`/api/vulnerabilities?type=zero_day&scan_id=${scanId}`, token),
 }
 
-// Scanner API
+// Scanner API (maps to real /api/scans endpoints)
 export const scannerApi = {
   analyze: (token: string, code: string, language: string) => 
-    api.post('/api/scanner/analyze', { code, language }, token),
+    api.post('/api/scans/scan-code', { code, language }, token),
   scanRepo: (token: string, repoUrl: string, provider?: string, branch?: string) =>
-    api.post('/api/scanner/repo', { repo_url: repoUrl, provider, branch }, token),
-  getResults: (token: string, scanId: string) => api.get(`/api/scanner/results/${scanId}`, token),
-  getZeroDayThreats: (token: string, scanId: string) => api.get(`/api/scanner/threats/${scanId}`, token),
-  getRepoScanResults: (token: string, scanId: string) => api.get(`/api/scanner/repo/results/${scanId}`, token),
+    api.post('/api/scans/run', { scan_type: 'all', target: repoUrl, options: { provider, branch } }, token),
+  getResults: (token: string, scanId: string) => api.get(`/api/scans/${scanId}`, token),
+  getZeroDayThreats: (token: string, scanId: string) => api.get(`/api/vulnerabilities?scan_id=${scanId}&type=zero_day`, token),
+  getRepoScanResults: (token: string, scanId: string) => api.get(`/api/scans/${scanId}`, token),
 }
 
 // Super Admin API
@@ -272,11 +272,13 @@ export const aiService = {
 
 // Pricing API
 export const pricingApi = {
-  list: () => api.get<any[]>('/api/plans'),
+  list: () => api.get<any[]>('/api/users/me/settings'),
   getCurrent: (token: string) => api.get<any>('/api/users/me', token),
 }
 
-// Asset Service API
+
+
+// Asset Service API (placeholder — backend endpoints not yet implemented)
 export const assetService = {
   list: (token: string) => api.get<any[]>('/api/assets', token),
   create: (token: string, data: any) => api.post('/api/assets', data, token),
@@ -284,7 +286,7 @@ export const assetService = {
   delete: (token: string, id: number) => api.delete(`/api/assets/${id}`, token),
 }
 
-// Message Service API
+// Message Service API (placeholder — backend endpoints not yet implemented)
 export const messageService = {
   list: (token: string) => api.get<any[]>('/api/messages', token),
   send: (token: string, data: any) => api.post('/api/messages', data, token),

@@ -38,7 +38,6 @@ def validate_target(target: str) -> bool:
 
 
 def validate_tool_path(path: str, allowed_paths: list[str]) -> str:
-    import os.path
     normalized = os.path.normpath(path)
     for allowed in allowed_paths:
         if normalized.startswith(allowed):
